@@ -324,9 +324,11 @@ button,input{font-family:inherit; font-size:16px; color:var(--ink)}
   box-shadow:0 0 0 1px var(--line), 0 3px 10px rgba(88,72,44,.13);
 }
 .ph img{width:100%; height:100%; object-fit:cover; display:block}
+/* 名牌：貼在照片左下角的白色小標籤（2026-10-24，本來是壓在底部的深灰色帶，跟暖白的紙不搭） */
 .ph .cap{
-  position:absolute; left:0; right:0; bottom:0; padding:5px 8px;
-  background:rgba(32,40,34,.68); color:#fff; font-size:13px;
+  position:absolute; left:8px; bottom:8px; max-width:calc(100% - 16px); padding:3px 10px 4px;
+  background:#fffdf6; color:#2a3a33; font-size:13px; font-weight:600;
+  border-radius:8px 10px 9px 7px; box-shadow:0 1px 0 rgba(88,72,44,.18), 0 3px 8px rgba(88,72,44,.18);
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 /* ── 我們的藝術旅程 ───────────────────────────────────────
@@ -358,6 +360,13 @@ button,input{font-family:inherit; font-size:16px; color:var(--ink)}
    單元名稱也可以折成兩行——但不會再有一張被藏到右邊捲不到的地方。
    700 以下維持原本的可以橫捲：那裡一排放不下八張，硬塞的話 621 寬時每張只剩 68px、
    一個單元名折成四行、頁籤 145px 高（量過）。 */
+/* 700 以下可以橫捲：兩邊淡出，看得出還能往旁邊滑，被切到的半個字也不會像壞掉（2026-10-24）。
+   左右各留 18px，捲到最前面／最後面時第一張、最後一張是完整的。 */
+@media screen and (max-width:699px){
+  .jrn{padding:0 18px;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 18px,#000 calc(100% - 18px),transparent 100%);
+            mask-image:linear-gradient(90deg,transparent 0,#000 18px,#000 calc(100% - 18px),transparent 100%)}
+}
 @media (min-width:700px){
   .jrn{overflow-x:visible}
   .jrn .step{min-width:0; padding:9px 11px 10px}
