@@ -1504,14 +1504,16 @@ textarea{min-height:92px; resize:vertical; line-height:1.7}
   padding:2px 8px; border-radius:999px;
 }
 .ph.pq.send img{opacity:.8}
-/* 連拍相機（2026-11-02 試用）。黑底全螢幕，快門在拇指的位置 */
-.qk-burst{
-  display:flex; flex-direction:column; align-items:center; gap:2px;
-  width:100%; margin-top:8px; padding:10px; border-radius:16px; cursor:pointer;
-  background:#fff8f0; color:#a4471f; border:2px dashed #e2b79a;
-  font-size:16px; font-weight:700;
+/* 連拍相機（2026-11-02 定案為「拍照」鍵）。黑底全螢幕，快門在拇指的位置 */
+/* 2026-11-02 定案：上面「拍照」＝連拍相機（不關，一直按一直存），下面「匯入照片」＝從照片庫選 */
+.qk-pick{
+  display:flex; align-items:center; justify-content:center; gap:9px;
+  width:100%; margin-top:8px; padding:11px; border-radius:16px; cursor:pointer;
+  background:#fff8f0; color:#a4471f; border:2px solid #e2b79a;
+  font-size:17px; font-weight:700;
 }
-.qk-burst span{font-size:12.5px; font-weight:500; color:#8a6d3b}
+.qk-pick .ico{font-size:21px}
+.qk-pick:disabled{opacity:.55}
 html.cam-on, html.cam-on body{overflow:hidden}
 .cam{position:fixed; inset:0; z-index:300; background:#000; display:flex; flex-direction:column}
 .cam video{flex:1 1 auto; min-height:0; width:100%; object-fit:contain; background:#000}
@@ -3099,7 +3101,7 @@ h3 .ci, summary .ci{width:1.2em; height:1.2em; vertical-align:-.25em}
 /* 這一支檔案（畫面）自己的版本。
    Code.gs 的 APP_VER 只認得伺服器那一支——只貼 Index.html、沒動 Code.gs 的時候，
    光看那個對不出來有沒有貼成功。系統設定頁會把兩個版本一起列出來。 */
-var UI_VER = '2026-11-02d';
+var UI_VER = '2026-11-02e';
 
 var S = null;
 var PAGE = 'home';
@@ -3137,6 +3139,7 @@ var ICONS = {
   folder: '<path d="M3.6 7.4a2 2 0 0 1 2-2h3.2l2 2.4h7.6a2 2 0 0 1 2 2v8.6a2 2 0 0 1-2 2H5.6a2 2 0 0 1-2-2z"/>',
   slide : '<path d="M3.8 7.6h9.4M17.9 7.6h2.3M3.8 16.4h4.3M12.8 16.4h7.4"/>' +
           '<circle cx="15.5" cy="7.6" r="2.3"/><circle cx="10.4" cy="16.4" r="2.3"/>',
+  pic   : '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 16l-5-5-9 9"/>',
   cam   : '<path d="M3.6 9a2 2 0 0 1 2-2h2.1l1.4-2.2h5.8L16.3 7h2.1a2 2 0 0 1 2 2v8.2a2 2 0 0 1-2 2H5.6a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.4"/>',
   save  : '<path d="M5.4 4.6h9.4l4 4v10.8a1.8 1.8 0 0 1-1.8 1.8H5.4a1.8 1.8 0 0 1-1.8-1.8V6.4a1.8 1.8 0 0 1 1.8-1.8z"/><path d="M7.8 4.6v4.6h6.4V4.6"/><path d="M7.8 21.2v-5.6h8.4v5.6"/>',
   /* 四個進度狀態的記號：空圈 → 左半滿 → 四分之三滿 → 打勾。
@@ -4963,8 +4966,8 @@ function vQuick() {
   /* 照片 */
   h += '<section><div class="lb">作品照片 <em>Photos</em>' +
     '<span class="n">' + phs.length + ' 張</span></div>' +
-    '<button class="qk-cam" id="qCam">' + ico('cam') + '拍照 / 選照片</button>' +
-    '<button class="qk-burst" id="qBurst">📸 連拍模式（試用）<span>相機不關，一直按就一直存</span></button>' +
+    '<button class="qk-cam" id="qCam">' + ico('cam') + '拍照</button>' +
+    '<button class="qk-pick" id="qPick">' + ico('pic') + '匯入照片</button>' +
     /* ⚠️ 格子一律畫出來（沒照片時是空的、:empty 會把它收起來）：
        還在佇列裡的照片要插進這一格（pqPaint 找 data-pq） */
     '<div class="qk-photos" data-pq="' + esc(q.prgId || '') + '">' + phs.map(function (p) {
@@ -5087,19 +5090,20 @@ function aquick() {
 
   $('qNote').oninput = function () { q.note = this.value; };
 
-  $('qCam').onclick = function () {
+  /* 匯入照片：從照片庫選（iPhone 選單裡也還有「拍照」可以用，網頁相機打不開時的退路） */
+  $('qPick').onclick = function () {
     q.note = $('qNote').value;
     if (!q.status && !q.prgId) {
       return toast('照片要掛在進度紀錄上，請先點一個進度狀態。', true);
     }
-    $('qCam').disabled = true;
+    $('qPick').disabled = true;
     ensurePrg().then(function (id) {
-      $('qCam').disabled = false;
+      $('qPick').disabled = false;
       pickPhotos(id);
-    }).catch(function (e) { $('qCam').disabled = false; fail(e); });
+    }).catch(function (e) { $('qPick').disabled = false; fail(e); });
   };
-  /* 相機在按下去的當下就開（iPhone 要在手勢裡要權限），紀錄同時去存——兩件事一起跑 */
-  $('qBurst').onclick = function () {
+  /* 拍照＝連拍相機。相機在按下去的當下就開（iPhone 要在手勢裡要權限），紀錄同時去存——兩件事一起跑 */
+  $('qCam').onclick = function () {
     q.note = $('qNote').value;
     if (!q.status && !q.prgId) {
       return toast('照片要掛在進度紀錄上，請先點一個進度狀態。', true);
@@ -6990,7 +6994,7 @@ var CAM_Q = { max: 2048, q: 0.9 };
 var CAM_PEND = 3;        /* 最多幾張畫面在排隊縮圖（見 shootCam） */
 function openCam(prgReady) {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    return toast('這台裝置的瀏覽器開不了網頁相機，請用上面的「拍照 / 選照片」。', true);
+    return toast('這台裝置的瀏覽器開不了網頁相機，請改用下面的「匯入照片」。', true);
   }
   closeCam();
   CAM = { stream: null, prgId: '', n: 0 };
@@ -7036,8 +7040,8 @@ function openCam(prgReady) {
     closeCam();
     var n = e && e.name;
     toast(n === 'NotAllowedError'
-      ? '沒有拿到相機權限。到「設定 › Safari › 相機」改成「允許」，或先用上面的「拍照 / 選照片」。'
-      : '打不開相機（' + (n || e) + '），請先用上面的「拍照 / 選照片」。', true);
+      ? '沒有拿到相機權限。到「設定 › Safari › 相機」改成「允許」，或先用下面的「匯入照片」。'
+      : '打不開相機（' + (n || e) + '），請先用下面的「匯入照片」。', true);
   });
 }
 function camReady() {
