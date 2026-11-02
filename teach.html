@@ -1522,6 +1522,7 @@ html.cam-on, html.cam-on body{overflow:hidden}
   color:#fff; font-size:16px; font-weight:700;
   background:linear-gradient(rgba(0,0,0,.6), rgba(0,0,0,0));
 }
+.cam-top small{display:block; font-size:11px; font-weight:500; opacity:.7}
 .cam-top button{
   background:#fff; color:#285a4a; border:0; border-radius:999px;
   padding:9px 22px; font-size:17px; font-weight:700; cursor:pointer;
@@ -3098,7 +3099,7 @@ h3 .ci, summary .ci{width:1.2em; height:1.2em; vertical-align:-.25em}
 /* 這一支檔案（畫面）自己的版本。
    Code.gs 的 APP_VER 只認得伺服器那一支——只貼 Index.html、沒動 Code.gs 的時候，
    光看那個對不出來有沒有貼成功。系統設定頁會把兩個版本一起列出來。 */
-var UI_VER = '2026-11-02c';
+var UI_VER = '2026-11-02d';
 
 var S = null;
 var PAGE = 'home';
@@ -6911,6 +6912,7 @@ var PQ_DONE = 0, PQ_BAD = [];
 var PQ_DB = null;
 /* 這些是後台明講「不行」的，再傳幾次都一樣，直接記成失敗 */
 var PQ_FINAL = /最多|請先|沒有收到|沒有這個功能|封存|權限|不存在|找不到/;
+var PHOTO_CAP_UI = 30;     /* ⚠️ 跟 Code.gs 的 PHOTO_CAP 一樣；連拍時用來先停住快門 */
 
 function pqDb() {
   if (PQ_DB) return PQ_DB;
@@ -6936,6 +6938,12 @@ function pqTx(mode, fn) {
     });
   });
 }
+/* 大圖：記憶體裡有就用，沒有就去 IndexedDB 拿（用完不留） */
+function pqBig(it) {
+  if (it.big) return Promise.resolve(it.big);
+  return pqTx('readonly', function (st) { return st.get(it.id); })
+    .then(function (r) { return r && r.big; });
+}
 function pqSave(it) {
   return pqTx('readwrite', function (st) {
     return st.put({ id: it.id, prgId: it.prgId, big: it.big, small: it.small, at: it.at });
@@ -6953,7 +6961,7 @@ function pqResume() {
     PQ.forEach(function (x) { have[x.id] = 1; });
     (list || []).sort(function (a, b) { return a.at - b.at; }).forEach(function (x) {
       if (have[x.id]) return;
-      x.tries = 0; x.st = 'wait';
+      x.tries = 0; x.st = 'wait'; x.big = null;   /* 大圖留在 IndexedDB，傳的時候再拿 */
       PQ.push(x);
     });
     if (PQ.length) {
@@ -6976,6 +6984,10 @@ function pqResume() {
  *  ⚠️ 切到別的 App 就關鏡頭（iPhone 本來就會停掉，留著只會回來看到黑畫面）。
  * ═══════════════════════════════════════════════════════════════ */
 var CAM = null;          /* { stream, prgId, n } */
+/* 連拍存檔用的大圖：比一般照片大一級（2026-11-02 他說連拍畫質要再高一點）。
+   一張大約 0.5～1 MB，縮圖（640）不變，格子和成果頁的速度不受影響。 */
+var CAM_Q = { max: 2048, q: 0.9 };
+var CAM_PEND = 3;        /* 最多幾張畫面在排隊縮圖（見 shootCam） */
 function openCam(prgReady) {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     return toast('這台裝置的瀏覽器開不了網頁相機，請用上面的「拍照 / 選照片」。', true);
@@ -7003,9 +7015,15 @@ function openCam(prgReady) {
     me.prgId = String(id); camReady();
   }).catch(function (e) { closeCam(); fail(e); });
 
-  navigator.mediaDevices.getUserMedia({
-    audio: false,
-    video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1440 } }
+  /* 2026-11-02 他要連拍畫質再高一點：跟手機要最大的，**一定要 4:3**（跟相機 App 拍的照片同比例）。
+     只寫「希望 4:3」的話，瀏覽器會挑 3840×2160 那種 16:9（算分時解析度贏過比例），
+     直拿就變成又窄又長。要不到 4:3 的機型才退回「給我最大的就好」。
+     iPhone 實際給多少，相機上方那行小字會寫出來。 */
+  var big = { facingMode: { ideal: 'environment' }, width: { ideal: 4032 }, height: { ideal: 3024 } };
+  var want43 = { facingMode: big.facingMode, width: big.width, aspectRatio: { exact: 4 / 3 } };
+  navigator.mediaDevices.getUserMedia({ audio: false, video: want43 }).catch(function (e) {
+    if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) throw e;   /* 沒權限就不用再試 */
+    return navigator.mediaDevices.getUserMedia({ audio: false, video: big });
   }).then(function (st) {
     if (CAM !== me) { st.getTracks().forEach(function (t) { t.stop(); }); return; }
     me.stream = st;
@@ -7028,18 +7046,40 @@ function camReady() {
   $('camB').disabled = false;
   camCount();
 }
+/* 這一格（班級×單元）滿 30 張了沒：已存的＋排隊中的＋正在縮的。
+   滿了就停住快門——不然多拍的要到最後才一張張被後台退回。 */
+function camFull() {
+  if (!CAM || !CAM.prgId) return false;
+  var n = photosOf(CAM.prgId).length + PQ_PREPN;
+  PQ.forEach(function (x) { if (x.prgId === CAM.prgId) n++; });
+  return n >= PHOTO_CAP_UI;
+}
 function camCount() {
   if (!CAM || !$('camN')) return;
   var left = PQ.length + PQ_PREPN;
-  $('camN').textContent = '已拍 ' + CAM.n + ' 張' + (left ? ' · 待上傳 ' + left : '');
+  var full = camFull();
+  if ($('camB') && CAM.prgId) $('camB').disabled = full || PQ_PREPN >= CAM_PEND;
+  var v = $('camV'), res = (v && v.videoWidth) ? v.videoWidth + '×' + v.videoHeight : '';
+  $('camN').innerHTML = (full ? '這一格已滿 ' + PHOTO_CAP_UI + ' 張，請按完成' : '已拍 ' + CAM.n + ' 張') +
+    (left ? ' · 待上傳 ' + left : '') +
+    (res ? '<small>' + res + '</small>' : '');
 }
 function shootCam() {
   var v = $('camV');
   if (!CAM || !CAM.prgId || !v || !v.videoWidth) return;
+  /* ⚠️ 記憶體優先（2026-11-02 他說的）：還沒縮好的畫面最多堆 CAM_PEND 張（一張約 12 MB），
+     快門按得比手機處理得快時，快門先變灰，處理完一張就恢復（camCount 會開回來）。
+     以前沒有上限，連按二十下就是二十張畫面同時壓在記憶體裡。 */
+  if (PQ_PREPN >= CAM_PEND || camFull()) return camCount();
   /* 這一格當下就畫下來（同步），之後的縮圖、存檔都交給佇列——快門才能連按 */
-  var cv = document.createElement('canvas');
-  cv.width = v.videoWidth; cv.height = v.videoHeight;
-  cv.getContext('2d').drawImage(v, 0, 0, cv.width, cv.height);
+  /* ⚠️ 直接畫成存檔的大小（長邊 CAM_Q.max），不要照鏡頭的原尺寸：
+     4032×3024 一格就是 48 MB，連按幾下排隊等縮圖，舊 iPhone 的分頁會被記憶體撐掉。
+     反正最後也是縮到這個大小，畫質一樣。 */
+  var cv = document.createElement('canvas'), sz0 = fitSize(v.videoWidth, v.videoHeight, CAM_Q.max);
+  cv.width = sz0[0]; cv.height = sz0[1];
+  var cx0 = cv.getContext('2d');
+  cx0.imageSmoothingQuality = 'high';
+  cx0.drawImage(v, 0, 0, cv.width, cv.height);
   CAM.n++;
   var f = $('camF');
   f.className = 'cam-flash on';
@@ -7051,7 +7091,7 @@ function shootCam() {
   var strip = $('camS');
   strip.insertBefore(th, strip.firstChild);
   while (strip.children.length > 6) strip.removeChild(strip.lastChild);
-  queuePhotos(CAM.prgId, [cv]);
+  queuePhotos(CAM.prgId, [cv], CAM_Q);
   camCount();
 }
 function closeCam() {
@@ -7080,18 +7120,22 @@ function pickPhotos(prgId) {
 }
 
 /* 縮圖排成一條（一次只解一張，十幾張 12MP 同時解，舊 iPhone 記憶體會爆） */
-function queuePhotos(prgId, files) {
+/* opt：{ max, q } 大圖的長邊與壓縮品質；沒給就是一般照片的 1600／0.82 */
+function queuePhotos(prgId, files, opt) {
   files.forEach(function (f) {
     PQ_PREPN++;
     PQ_PREP = PQ_PREP.then(function () {
-      return snap(f).then(function (two) {
+      return snap(f, opt).then(function (two) {
         var it = {
           id: 'q' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
           prgId: String(prgId), big: two.big, small: two.small,
           at: Date.now(), tries: 0, st: 'wait'
         };
         PQ.push(it);
-        pqSave(it);
+        /* 記憶體優先：大圖已經安全存進 IndexedDB，就不要再留一份在記憶體裡
+           （一張約 1 MB，三十張就是三四十 MB）。要傳的時候 pqBig() 再去拿。
+           存不進去（無痕模式）才留著。 */
+        pqSave(it).then(function (k) { if (k && it.st !== 'send') it.big = null; });
       }).catch(function (e) {
         PQ_BAD.push((f.name || '照片') + '：' + ((e && e.message) || e));
       }).then(function () {
@@ -7124,7 +7168,11 @@ function pqSend(it) {
     setTimeout(function () { no(new Error('NET 兩分鐘沒有回應')); }, 120000);
   });
   /* 最後一個參數 it.id：後台用它認出「這張已經存過了」，斷線重傳不會多一張（舊後台會忽略它） */
-  Promise.race([call('apiAddPhoto', it.prgId, '', it.big, it.small, 'image/jpeg', it.id), cut])
+  var send = pqBig(it).then(function (big) {
+    if (!big) throw new Error('這張照片在手機裡找不到了（可能被清掉了瀏覽器資料），請重拍。');
+    return call('apiAddPhoto', it.prgId, '', big, it.small, 'image/jpeg', it.id);
+  });
+  Promise.race([send, cut])
     .then(function (r) {
       var ph = r && r.photo;
       if (ph && S && S.photoIdx) {
@@ -7270,18 +7318,21 @@ function b64Of(cv, q) {
 /* 作品照片：解一次，同時出兩份。
    大圖 1600／0.82 存檔用；小圖 640／0.72 是格子上的預覽（桌機約 250px、手機約 210px，
    2 倍螢幕也夠清楚——2026-10-06 從 800／0.75 調下來的，只影響之後上傳的）。 */
-function snap(file) {
+function snap(file, opt) {
+  var max = (opt && opt.max) || 1600, qual = (opt && opt.q) || 0.82;
   /* 連拍相機給的是 canvas（已經是畫好的一格），不用再解碼 */
   var src = (file && file.getContext)
     ? Promise.resolve({ img: file, done: function () { file.width = file.height = 0; } })
     : loadImg(file);
   return src.then(function (o) {
     var w = o.img.naturalWidth || o.img.width, h = o.img.naturalHeight || o.img.height;
-    var a = fitSize(w, h, 1600), b = fitSize(w, h, 640);
-    var big = drawTo(o.img, a[0], a[1]);
-    o.done();
+    var a = fitSize(w, h, max), b = fitSize(w, h, 640);
+    /* 連拍給的 canvas 已經是存檔大小：直接用，不要再複製一張一樣大的（記憶體） */
+    var same = !!o.img.getContext && a[0] === w && a[1] === h;
+    var big = same ? o.img : drawTo(o.img, a[0], a[1]);
+    if (!same) o.done();
     var small = drawTo(big, b[0], b[1]);
-    return b64Of(big, 0.82).then(function (B) {
+    return b64Of(big, qual).then(function (B) {
       return b64Of(small, 0.72).then(function (s) {
         big.width = big.height = small.width = small.height = 0;   /* 早點還記憶體給 iPhone */
         return { big: B, small: s };
