@@ -1504,6 +1504,46 @@ textarea{min-height:92px; resize:vertical; line-height:1.7}
   padding:2px 8px; border-radius:999px;
 }
 .ph.pq.send img{opacity:.8}
+/* 連拍相機（2026-11-02 試用）。黑底全螢幕，快門在拇指的位置 */
+.qk-burst{
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  width:100%; margin-top:8px; padding:10px; border-radius:16px; cursor:pointer;
+  background:#fff8f0; color:#a4471f; border:2px dashed #e2b79a;
+  font-size:16px; font-weight:700;
+}
+.qk-burst span{font-size:12.5px; font-weight:500; color:#8a6d3b}
+html.cam-on, html.cam-on body{overflow:hidden}
+.cam{position:fixed; inset:0; z-index:300; background:#000; display:flex; flex-direction:column}
+.cam video{flex:1 1 auto; min-height:0; width:100%; object-fit:contain; background:#000}
+.cam-top{
+  position:absolute; left:0; right:0; top:0; z-index:2;
+  display:flex; justify-content:space-between; align-items:center; gap:12px;
+  padding:calc(10px + env(safe-area-inset-top)) 16px 14px;
+  color:#fff; font-size:16px; font-weight:700;
+  background:linear-gradient(rgba(0,0,0,.6), rgba(0,0,0,0));
+}
+.cam-top button{
+  background:#fff; color:#285a4a; border:0; border-radius:999px;
+  padding:9px 22px; font-size:17px; font-weight:700; cursor:pointer;
+}
+.cam-strip{
+  position:absolute; left:12px; right:12px; z-index:2; pointer-events:none;
+  bottom:calc(122px + env(safe-area-inset-bottom)); display:flex; gap:6px;
+}
+.cam-strip canvas{width:54px; height:54px; object-fit:cover; border-radius:8px; border:2px solid #fff}
+.cam-bot{
+  flex:0 0 auto; display:flex; justify-content:center; background:#000;
+  padding:18px 0 calc(22px + env(safe-area-inset-bottom));
+}
+.cam-shut{
+  width:78px; height:78px; border-radius:50%; cursor:pointer;
+  border:5px solid #fff; background:#b2432c; box-shadow:0 0 0 3px rgba(255,255,255,.25);
+  touch-action:manipulation;
+}
+.cam-shut:active{transform:scale(.9)}
+.cam-shut:disabled{opacity:.4}
+.cam-flash{position:absolute; inset:0; z-index:1; background:#fff; opacity:0; pointer-events:none; transition:opacity .2s}
+.cam-flash.on{opacity:.55; transition:none}
 .ph.pq.send i{background:#b2432c}
 .mask{
   position:fixed; inset:0; background:rgba(40,44,34,.58); z-index:150;
@@ -3058,7 +3098,7 @@ h3 .ci, summary .ci{width:1.2em; height:1.2em; vertical-align:-.25em}
 /* 這一支檔案（畫面）自己的版本。
    Code.gs 的 APP_VER 只認得伺服器那一支——只貼 Index.html、沒動 Code.gs 的時候，
    光看那個對不出來有沒有貼成功。系統設定頁會把兩個版本一起列出來。 */
-var UI_VER = '2026-11-02a';
+var UI_VER = '2026-11-02c';
 
 var S = null;
 var PAGE = 'home';
@@ -4923,6 +4963,7 @@ function vQuick() {
   h += '<section><div class="lb">作品照片 <em>Photos</em>' +
     '<span class="n">' + phs.length + ' 張</span></div>' +
     '<button class="qk-cam" id="qCam">' + ico('cam') + '拍照 / 選照片</button>' +
+    '<button class="qk-burst" id="qBurst">📸 連拍模式（試用）<span>相機不關，一直按就一直存</span></button>' +
     /* ⚠️ 格子一律畫出來（沒照片時是空的、:empty 會把它收起來）：
        還在佇列裡的照片要插進這一格（pqPaint 找 data-pq） */
     '<div class="qk-photos" data-pq="' + esc(q.prgId || '') + '">' + phs.map(function (p) {
@@ -5055,6 +5096,14 @@ function aquick() {
       $('qCam').disabled = false;
       pickPhotos(id);
     }).catch(function (e) { $('qCam').disabled = false; fail(e); });
+  };
+  /* 相機在按下去的當下就開（iPhone 要在手勢裡要權限），紀錄同時去存——兩件事一起跑 */
+  $('qBurst').onclick = function () {
+    q.note = $('qNote').value;
+    if (!q.status && !q.prgId) {
+      return toast('照片要掛在進度紀錄上，請先點一個進度狀態。', true);
+    }
+    openCam(ensurePrg());
   };
 
   Array.prototype.forEach.call(document.querySelectorAll('[data-delph]'), function (b) {
@@ -6852,7 +6901,8 @@ function lightbox(fileId) {
  *  ⚠️ 通行證過期（LOCKED）就停下來，畫面上那顆提示點下去輸入通行碼，解鎖後自己接著傳。
  * ═══════════════════════════════════════════════════════════════ */
 var PQ = [];               /* {id, prgId, big, small, at, tries, st: 'wait'|'send'|'retry'} */
-var PQ_RUN = false;        /* 有一張正在傳 */
+var PQ_RUN = 0;            /* 正在傳的張數 */
+var PQ_MAX = 2;            /* 同時最多傳幾張 */
 var PQ_HOLD = '';          /* '' | 'net'（等網路）| 'lock'（等通行碼） */
 var PQ_T = null;           /* 等網路時的重試計時 */
 var PQ_PREPN = 0;          /* 還在縮圖的張數 */
@@ -6913,6 +6963,111 @@ function pqResume() {
   });
 }
 
+/* ══ 連拍相機（2026-11-02 試用）══════════════════════════════════
+ *  一般的「拍照」是叫手機自己的相機 App：每一張都要等它打開、拍、按「使用照片」、
+ *  關回來——小朋友早就跑掉了。這裡直接在網頁裡開鏡頭，**一直按快門就一直存**，
+ *  每一張丟進照片佇列（queuePhotos 收 canvas），背景慢慢傳。
+ *
+ *  ⚠️ 拍到的是鏡頭的影像畫格（要求 1920×1440），不是相機 App 那種 12MP 照片；
+ *     反正存檔本來就縮到 1600，夠用。不能開閃光燈。
+ *  ⚠️ 鏡頭畫面用 contain 不用 cover：cover 會裁掉邊，看到的會比拍到的少。
+ *  ⚠️ 打不開（沒給權限、舊瀏覽器）就只說原因，不要自己去點檔案選擇器——
+ *     不在使用者手勢裡，iPhone 會擋掉，看起來就像按了沒反應。
+ *  ⚠️ 切到別的 App 就關鏡頭（iPhone 本來就會停掉，留著只會回來看到黑畫面）。
+ * ═══════════════════════════════════════════════════════════════ */
+var CAM = null;          /* { stream, prgId, n } */
+function openCam(prgReady) {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    return toast('這台裝置的瀏覽器開不了網頁相機，請用上面的「拍照 / 選照片」。', true);
+  }
+  closeCam();
+  CAM = { stream: null, prgId: '', n: 0 };
+  var box = document.createElement('div');
+  box.className = 'cam'; box.id = 'cam';
+  box.innerHTML =
+    '<video id="camV" playsinline muted autoplay></video>' +
+    '<div class="cam-flash" id="camF"></div>' +
+    '<div class="cam-top"><span id="camN">連拍 · 準備中…</span>' +
+    '<button id="camX">完成</button></div>' +
+    '<div class="cam-strip" id="camS"></div>' +
+    '<div class="cam-bot"><button class="cam-shut" id="camB" aria-label="拍照" disabled></button></div>';
+  document.body.appendChild(box);
+  document.documentElement.classList.add('cam-on');
+  $('camX').onclick = closeCam;
+  $('camB').onclick = shootCam;
+
+  var me = CAM;
+  prgReady.then(function (id) {
+    if (CAM !== me) return;
+    if (!id) return closeCam();
+    me.prgId = String(id); camReady();
+  }).catch(function (e) { closeCam(); fail(e); });
+
+  navigator.mediaDevices.getUserMedia({
+    audio: false,
+    video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1440 } }
+  }).then(function (st) {
+    if (CAM !== me) { st.getTracks().forEach(function (t) { t.stop(); }); return; }
+    me.stream = st;
+    var v = $('camV');
+    v.srcObject = st;
+    var pl = v.play && v.play();
+    if (pl && pl.catch) pl.catch(function () {});
+    v.onloadedmetadata = camReady;
+  }).catch(function (e) {
+    closeCam();
+    var n = e && e.name;
+    toast(n === 'NotAllowedError'
+      ? '沒有拿到相機權限。到「設定 › Safari › 相機」改成「允許」，或先用上面的「拍照 / 選照片」。'
+      : '打不開相機（' + (n || e) + '），請先用上面的「拍照 / 選照片」。', true);
+  });
+}
+function camReady() {
+  var v = $('camV');
+  if (!CAM || !CAM.prgId || !v || !v.videoWidth) return;
+  $('camB').disabled = false;
+  camCount();
+}
+function camCount() {
+  if (!CAM || !$('camN')) return;
+  var left = PQ.length + PQ_PREPN;
+  $('camN').textContent = '已拍 ' + CAM.n + ' 張' + (left ? ' · 待上傳 ' + left : '');
+}
+function shootCam() {
+  var v = $('camV');
+  if (!CAM || !CAM.prgId || !v || !v.videoWidth) return;
+  /* 這一格當下就畫下來（同步），之後的縮圖、存檔都交給佇列——快門才能連按 */
+  var cv = document.createElement('canvas');
+  cv.width = v.videoWidth; cv.height = v.videoHeight;
+  cv.getContext('2d').drawImage(v, 0, 0, cv.width, cv.height);
+  CAM.n++;
+  var f = $('camF');
+  f.className = 'cam-flash on';
+  setTimeout(function () { if (f) f.className = 'cam-flash'; }, 60);
+  if (navigator.vibrate) navigator.vibrate(25);
+  var th = document.createElement('canvas'), sz = fitSize(cv.width, cv.height, 120);
+  th.width = sz[0]; th.height = sz[1];
+  th.getContext('2d').drawImage(cv, 0, 0, sz[0], sz[1]);
+  var strip = $('camS');
+  strip.insertBefore(th, strip.firstChild);
+  while (strip.children.length > 6) strip.removeChild(strip.lastChild);
+  queuePhotos(CAM.prgId, [cv]);
+  camCount();
+}
+function closeCam() {
+  if (CAM && CAM.stream) CAM.stream.getTracks().forEach(function (t) { t.stop(); });
+  CAM = null;
+  var b = $('cam');
+  if (b) b.parentNode.removeChild(b);
+  document.documentElement.classList.remove('cam-on');
+  pqPaint();
+  /* 還在傳的話，傳完 pqKick 自己會叫 pqFinish；已經傳完的現在交代 */
+  if (pqFinish.later && !PQ.length && !PQ_PREPN) { pqFinish.later = false; pqFinish(); }
+}
+document.addEventListener('visibilitychange', function () {
+  if (document.hidden && CAM) closeCam();
+});
+
 function pickPhotos(prgId) {
   var inp = $('filePick');
   inp.value = '';
@@ -6951,16 +7106,25 @@ function queuePhotos(prgId, files) {
 function pqKick() {
   clearTimeout(PQ_T); PQ_T = null;
   if (PQ_HOLD === 'net') PQ_HOLD = '';
-  if (PQ_RUN || PQ_HOLD) return pqPaint();
-  var it = PQ.filter(function (x) { return x.st !== 'send'; })[0];
-  if (!it) { pqPaint(); if (!PQ_PREPN) pqFinish(); return; }
-  PQ_RUN = true; it.st = 'send';
+  if (PQ_HOLD) return pqPaint();
+  /* 一次兩張：後台 2026-11-02a 起把寫雲端硬碟移到鎖外面，兩張真的能一起跑。
+     舊的後台也不會壞，只是第二張會在後台排隊（鎖最多等 25 秒）。 */
+  while (PQ_RUN < PQ_MAX) {
+    var it = PQ.filter(function (x) { return x.st !== 'send'; })[0];
+    if (!it) break;
+    pqSend(it);
+  }
   pqPaint();
+  if (!PQ_RUN && !PQ.length && !PQ_PREPN) pqFinish();
+}
+function pqSend(it) {
+  PQ_RUN++; it.st = 'send';
   /* 學校的 Wi-Fi 會卡住不回也不斷：兩分鐘沒回音就當作斷線，等一下再傳 */
   var cut = new Promise(function (_, no) {
     setTimeout(function () { no(new Error('NET 兩分鐘沒有回應')); }, 120000);
   });
-  Promise.race([call('apiAddPhoto', it.prgId, '', it.big, it.small, 'image/jpeg'), cut])
+  /* 最後一個參數 it.id：後台用它認出「這張已經存過了」，斷線重傳不會多一張（舊後台會忽略它） */
+  Promise.race([call('apiAddPhoto', it.prgId, '', it.big, it.small, 'image/jpeg', it.id), cut])
     .then(function (r) {
       var ph = r && r.photo;
       if (ph && S && S.photoIdx) {
@@ -6981,17 +7145,20 @@ function pqKick() {
       }
       /* 網路不穩、後台忙（Lock timeout）、Google 回了一頁錯誤：等一下再傳同一張 */
       it.st = 'retry'; it.err = m;
-      PQ_HOLD = 'net';
+      if (PQ_HOLD !== 'lock') PQ_HOLD = 'net';
       var wait = [3, 6, 15, 30, 60][Math.min(it.tries - 1, 4)] * 1000;
+      clearTimeout(PQ_T);
       PQ_T = setTimeout(pqKick, wait);
     })
-    .then(function () { PQ_RUN = false; if (!PQ_HOLD) pqKick(); else pqPaint(); });
+    .then(function () { PQ_RUN--; if (!PQ_HOLD) pqKick(); else pqPaint(); });
 }
 window.addEventListener('online', function () { if (PQ_HOLD === 'net') pqKick(); });
 
 /* 整批傳完：重畫一次、交代結果。正在打札記就等打完再重畫（重畫會把鍵盤收掉） */
 function pqFinish() {
   if (!PQ_DONE && !PQ_BAD.length) return;
+  /* 連拍相機開著：先不重畫底下的畫面、也先不報數（繼續累計），關相機時再一起交代 */
+  if (CAM) { pqFinish.later = true; return; }
   var n = PQ_DONE, bad = PQ_BAD;
   PQ_DONE = 0; PQ_BAD = [];
   var msg = bad.length ? ('上傳完成 ' + n + ' 張，有 ' + bad.length + ' 張沒成功')
@@ -7038,6 +7205,7 @@ function pqPaint() {
       pill.className = cls;
     }
   }
+  camCount();
   Array.prototype.forEach.call(document.querySelectorAll('[data-pq]'), function (box) {
     Array.prototype.forEach.call(box.querySelectorAll('.ph.pq'), function (x) { x.remove(); });
     var prg = box.dataset.pq, add = box.querySelector('.ph.add');
@@ -7103,7 +7271,11 @@ function b64Of(cv, q) {
    大圖 1600／0.82 存檔用；小圖 640／0.72 是格子上的預覽（桌機約 250px、手機約 210px，
    2 倍螢幕也夠清楚——2026-10-06 從 800／0.75 調下來的，只影響之後上傳的）。 */
 function snap(file) {
-  return loadImg(file).then(function (o) {
+  /* 連拍相機給的是 canvas（已經是畫好的一格），不用再解碼 */
+  var src = (file && file.getContext)
+    ? Promise.resolve({ img: file, done: function () { file.width = file.height = 0; } })
+    : loadImg(file);
+  return src.then(function (o) {
     var w = o.img.naturalWidth || o.img.width, h = o.img.naturalHeight || o.img.height;
     var a = fitSize(w, h, 1600), b = fitSize(w, h, 640);
     var big = drawTo(o.img, a[0], a[1]);
