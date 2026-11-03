@@ -3749,6 +3749,23 @@ body.studio .stu-khead > .card.open .k-goal-en{display:block}
 body.studio .stu-khead > .card.open .k-more{order:4}
 /* 班級成果頁（圖圖的作品框）：一排三班，九班剛好三排滿版（他 11-03） */
 body.studio .stu-frame #shBody{grid-template-columns:repeat(3, minmax(0, 1fr)) !important; gap:14px !important}
+/* 工具箱：左邊一排抽屜標籤、右邊拉出一格（他 11-03：版面不要有的收、有的很長） */
+.stu-box .drawers.dlist{display:grid !important; grid-template-columns:250px minmax(0,1fr) !important; gap:20px !important; align-items:start}
+.stu-box .dnav{display:flex; flex-direction:column; gap:10px; position:sticky; top:12px}
+.stu-box .dbtn{position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:1px; text-align:left; cursor:pointer; font:inherit;
+  border:0; border-radius:14px; padding:26px 16px 10px; background:#fffdf6; color:var(--ink);
+  box-shadow:inset 0 -3px 0 rgba(120,90,50,.12), 0 3px 0 #6f8c79, 0 5px 10px rgba(0,0,0,.12); transition:transform .12s}
+.stu-box .dbtn:hover{transform:translateX(3px)}
+.stu-box .dbtn b{font-size:17px}
+.stu-box .dbtn small{font-size:12.5px; color:var(--ink2); opacity:.8}
+.stu-box .dbtn .dtag{top:6px; left:12px; font-size:11.5px}
+.stu-box .dbtn.on{transform:translateX(10px); background:#fff; box-shadow:0 0 0 3px var(--grn), 0 3px 0 #6f8c79, 0 6px 12px rgba(0,0,0,.15)}
+.stu-box .dbtn.c8{margin-top:6px; background:#fbeef2}
+.stu-box .dpanel{min-width:0}
+.stu-box .dpanel > .drawer2{display:none}
+.stu-box .dpanel > .drawer2.on{display:block}
+.stu-box .dpanel > .drawer2 > .dtag{display:none}
+.stu-box .dpanel > .drawer2{padding:12px}
 
 </style>
 </head>
@@ -9603,8 +9620,32 @@ var PHONE = isPhone();
       var tag = TAGS.filter(function (x) { return x[0].test(t); })[0];
       var d = el('div', 'drawer2 ' + (tag ? tag[2] : 'c0')); d.appendChild(el('span', 'dtag', tag ? tag[1] : '抽屜')); d.appendChild(c); tray.appendChild(d);
     });
-    var note = el('div', 'drawer2 c8'); note.innerHTML = '<span class="dtag">貼在蓋子上的標籤</span><div class="card"><p style="font-size:15px">👨‍👩‍👧 班級成果頁搬到圖圖的<b>作品框</b>了</p><button class="btn" data-go2="show">去作品框 →</button></div>';
-    tray.appendChild(note);
+    /* 他 11-03：「有的收起來、有的又很長，版面亂」→ 左邊一排抽屜標籤，右邊只拉出一格（記住上次開哪一格）。
+       收起來的那幾張（<details>）拉出來時自動打開。原本的卡片整張搬進來，功能不動。 */
+    var drs = Array.prototype.slice.call(tray.children), nav = el('div', 'dnav'), panel = el('div', 'dpanel');
+    var last = 0; try { last = +(localStorage.getItem('tpBox') || 0); } catch (e) {}
+    if (!(last >= 0 && last < drs.length)) last = 0;
+    drs.forEach(function (d, i) {
+      var c = d.querySelector('.card'), h = c && c.querySelector(':scope > h3, :scope > summary');
+      var en = h && h.querySelector('.en2'), zh = '';
+      if (h) { var hc = h.cloneNode(true); Array.prototype.forEach.call(hc.querySelectorAll('button, .en2, .right, .ci'), function (x) { x.remove(); }); zh = hc.textContent.replace(/[＋+]\s*$/, '').replace(/[\u{1F000}-\u{1FFFF}\u2600-\u27BF\uFE0F]/gu, '').trim(); }
+      var b = el('button', 'dbtn ' + d.className.replace('drawer2', '').trim(),
+        '<span class="dtag">' + esc((d.querySelector('.dtag') || {}).textContent || '') + '</span><b>' + esc(zh) + '</b><small>' + esc(en ? en.textContent : '') + '</small>');
+      b.type = 'button';
+      b.addEventListener('click', function () { pull(i); });
+      nav.appendChild(b); panel.appendChild(d);
+    });
+    var gob = el('button', 'dbtn c8', '<span class="dtag">作品框</span><b>班級成果頁 →</b><small>在圖圖的角落</small>');
+    gob.type = 'button'; gob.dataset.go2 = 'show'; nav.appendChild(gob);
+    function pull(i) {   /* ⚠️ 不要叫 show：會蓋掉 sceneSet 的參數 show（函式宣告會提升） */
+      drs.forEach(function (d, j) {
+        d.classList.toggle('on', j === i); nav.children[j].classList.toggle('on', j === i);
+        if (j === i) { var dt = d.querySelector('details'); if (dt) dt.open = true; if (d.firstElementChild && d.firstElementChild.tagName === 'DETAILS') d.firstElementChild.open = true; }
+      });
+      try { localStorage.setItem('tpBox', i); } catch (e) {}
+    }
+    tray.appendChild(nav); tray.appendChild(panel); tray.classList.add('dlist');
+    pull(last);
     if (sc) { sc.style.display = 'none'; p.appendChild(sc); }
     box.appendChild(lid); box.appendChild(tray);
     Array.prototype.slice.call(p.children).forEach(function (n) { if (!n.classList.contains('hero') && n !== sc) n.style.display = 'none'; });
