@@ -3128,7 +3128,7 @@ body.studio .stu-tools .search input{border:0; background:transparent; font:inhe
 .stu-chalk .ln .en{display:block; font-size:.78em; font-weight:500; color:#d9e3dc; margin-top:2px}
 .stu-chalk .ln .by{display:block; font-size:.72em; font-weight:500; color:#d9e3dc}
 .stu-jar{left:84%; top:53.2%; width:4.6%; z-index:3}
-.stu-jar .tag2{top:30%; right:104%}
+.stu-jar .tag2{top:30%; left:104%}
 .stu-tool{left:91%; bottom:2%; width:8%}
 .stu-tool .tag2{left:50%; top:96%; transform:translateX(-50%)}
 
@@ -3308,7 +3308,7 @@ body.stu-skin .picks .pick.on{background:linear-gradient(#f3fbf5, #e2f1e6) !impo
 /* 掛紙板：每一節平均分掉紙的高度（不要上半滿、下半空） */
 .stu-fcin{display:flex; flex-direction:column}
 .stu-fcin > .stu-today{flex:1 1 auto; display:flex; flex-direction:column}
-.stu-today .today-grid{flex:1 1 auto; justify-content:space-between}
+.stu-today .today-grid{flex:0 0 auto; justify-content:flex-start}
 .stu-today .tcard{flex:0 0 auto; padding-top:5px; padding-bottom:5px}
 .stu-today h3{font-size:19px !important}
 .stu-today .tcard{grid-template-columns:62px auto 1fr auto}
@@ -3557,7 +3557,8 @@ body.stu-phone .ps-m.hop img{animation:stuHop .45s ease}
 body.stu-phone .ps-m .pl{display:block; margin:-4px 0 10px; width:100%; padding:5px 2px 6px; border-radius:12px; text-align:center;
   background:#fffaf0; box-shadow:0 2px 0 rgba(150,110,60,.25), 0 3px 6px rgba(110,80,40,.12); font-size:11.5px; line-height:1.3}
 body.stu-phone .ps-m .pl b{display:block; font-size:13.5px; color:var(--ink)}
-body.stu-phone .ps-m[data-pgo] .pl b::after{content:' ›'; color:#c08a3e}
+body.stu-phone .ps-m .pl b::after{content:' ›'; color:#c08a3e}
+body.stu-phone .ps-m.obj img{width:78%; margin-top:16%}
 
 /* 今天要做的＝掛紙板（上面兩個夾子）；本週課表＝軟木板 */
 body.stu-phone .card.ps-fc{position:relative; background:#fffdf6 !important; border-radius:6px 6px 18px 18px !important; margin-top:22px;
@@ -3575,19 +3576,21 @@ body.stu-phone .card.ps-cork h3{display:inline-flex; background:#fffaf0; padding
 body.stu-phone .card.ps-cork [data-ttd]{box-shadow:0 2px 0 rgba(120,80,40,.3)}
 
 /* 角色站（快速記錄＝點點、教學進度＝步步）：角色＋對話框 */
-body.stu-phone .ps-st{display:flex; align-items:flex-end; gap:6px; padding:8px 10px 0 4px; border-radius:22px;
+body.stu-phone .ps-st{display:flex; align-items:center; gap:6px; padding:8px 10px 0 4px; border-radius:22px;
   background:radial-gradient(120% 90% at 12% 0,#fffaf0 0,rgba(255,250,240,0) 60%),linear-gradient(180deg,#f6ead2,#efdcbb);
   box-shadow:inset 0 2px 0 #fffaf0, inset 0 -3px 0 rgba(150,110,60,.15), 0 6px 14px rgba(120,85,40,.14)}
-body.stu-phone .ps-who{width:92px; flex:0 0 auto; aspect-ratio:224/280; filter:drop-shadow(0 5px 4px rgba(110,80,40,.25))}
-body.stu-phone .ps-say{position:relative; flex:1; margin:0 0 14px; padding:10px 13px; border-radius:16px; background:#fffaf0;
+body.stu-phone .ps-who{width:84px; height:84px; flex:0 0 auto; margin:0 0 10px 6px; border-radius:50%; overflow:hidden;
+  background:radial-gradient(circle at 35% 30%,#fffaf0,#f1e2c4); box-shadow:inset 0 -3px 0 rgba(150,110,60,.18), 0 3px 0 rgba(150,110,60,.25), 0 5px 10px rgba(110,80,40,.15)}
+body.stu-phone .ps-who img{width:150%; margin:-4% 0 0 -25%; display:block}
+body.stu-phone .ps-say{position:relative; flex:1; margin:0 0 10px; padding:10px 13px; border-radius:16px; background:#fffaf0;
   box-shadow:0 2px 0 rgba(150,110,60,.25), 0 4px 8px rgba(110,80,40,.12); font-size:14px; line-height:1.5; color:var(--ink2)}
-body.stu-phone .ps-say::before{content:''; position:absolute; left:-9px; bottom:18px; border:9px solid transparent; border-right-color:#fffaf0; border-left:0}
+body.stu-phone .ps-say::before{content:''; position:absolute; left:-9px; top:50%; margin-top:-9px; border:9px solid transparent; border-right-color:#fffaf0; border-left:0}
 body.stu-phone .ps-say .nm{display:block; font-size:13px; color:#a0712f; margin-bottom:2px}
 body.stu-phone .ps-say span b{color:var(--ink); font-size:16px}
 
 /* 快速記錄＝點點的記錄本：整份放在一頁紙上（左邊裝訂線） */
-body.stu-phone #views.ps-quick > .qk{position:relative; background:#fffdf6; border-radius:8px 18px 18px 8px; padding:14px 12px 14px 22px;
-  box-shadow:inset 9px 0 0 #e7c48f, inset 11px 0 0 #c99a5a, 0 3px 0 rgba(150,110,60,.22), 0 10px 18px rgba(110,80,40,.14)}
+body.stu-phone #views.ps-quick > .qk{position:relative; background:#fffdf6; border-radius:18px; padding:12px 10px;
+  box-shadow:0 3px 0 rgba(150,110,60,.22), 0 10px 18px rgba(110,80,40,.14)}
 /* 教學進度＝步步的地圖卡：每個單元是一張用紙膠帶貼著的卡 */
 body.stu-phone #views.ps-prog .unit{position:relative; background:#fffdf6 !important; border-radius:14px !important; margin-top:6px;
   box-shadow:0 3px 0 rgba(150,110,60,.22), 0 8px 16px rgba(110,80,40,.13) !important}
@@ -3597,12 +3600,20 @@ body.stu-phone #views.ps-prog .unit::before{content:''; position:absolute; top:-
 /* 導覽列：總覽＝四位的小頭、快速記錄＝點點、教學進度＝步步 */
 body.stu-phone .nav .ic img.stu-nh{width:calc(30px * var(--nav-k,1)); height:calc(30px * var(--nav-k,1)); object-fit:cover; object-position:50% 8%; border-radius:50%;
   background:#fffaf0; box-shadow:0 1px 0 rgba(150,110,60,.3)}
-body.stu-phone .nav .ic .stu-nh4{display:flex}
+body.stu-phone .nav .ic img.stu-nh.door{object-fit:contain; object-position:50% 50%; padding:2px}
 body.stu-phone .nav .ic .stu-nh4 img{width:calc(20px * var(--nav-k,1)); height:calc(20px * var(--nav-k,1)); object-fit:cover; object-position:50% 8%; border-radius:50%;
   background:#fffaf0; margin-left:-7px; box-shadow:0 1px 0 rgba(150,110,60,.3)}
 body.stu-phone .nav .ic .stu-nh4 img:first-child{margin-left:0}
 body.stu-phone .nav a:not(.on) .ic img{filter:grayscale(.6) opacity(.85)}
 @media print{ body.stu-phone .stu-ps{display:none} }
+/* 頁尾：原本的水彩條＋彩色鉛筆換成「四位在工作室」（他 11-03）。高度照原本（量到 192px），上緣照原本的遮罩刷淡 */
+body.stu-phone .foot{height:192px; padding:0; background:url(studio/foot_studio.webp) center bottom / auto 100% no-repeat, linear-gradient(180deg,rgba(248,232,208,0),#f8e8d0)}
+body.stu-phone .foot > *{display:none}
+
+/* 掛紙板上少掉的那幾節：同一排的格式、淡一點，看得出今天這節不上 */
+.stu-today .tcard.lost{opacity:.72}
+.stu-today .tcard.lost .m .a{color:#a0712f}
+.stu-today .tcard.lost .f .s{color:var(--muted)}
 
 </style>
 </head>
@@ -9174,6 +9185,22 @@ var PHONE = isPhone();
       var t3 = todayCard.querySelector('h3');
       if (t3) t3.innerHTML = '📌 今天要做的 <span class="d">' + esc(md(S.today)) + '（' + ['日','一','二','三','四','五','六'][new Date().getDay()] + '）・' + k.today + ' 節</span>';
       todayCard.classList.add('stu-today'); fc.appendChild(todayCard);
+      /* 少掉的節（期中考、停課…）照節次排進清單裡，不要另起一排擠在最下面（他 11-03 圈的：第 1、2 節 201 期中考應該列在第 3 節上面） */
+      var grid = todayCard.querySelector('.today-grid'), lostRow = todayCard.querySelector('.lost-row');
+      if (lostRow) {
+        if (!grid) { grid = el('div', 'today-grid'); lostRow.parentNode.insertBefore(grid, lostRow); }
+        var no = function (e) { var m = /第\s*(\d+)\s*節/.exec(e.textContent); return m ? +m[1] : 99; };
+        Array.prototype.slice.call(lostRow.querySelectorAll('.lost-i')).forEach(function (li) {
+          var b = li.querySelector('b'), pl = li.querySelector('.plate'), n = no(li);
+          var why = li.textContent.replace(b ? b.textContent : '', '').replace(pl ? pl.textContent : '', '').trim();
+          var row = el('div', 'tcard lost');
+          row.innerHTML = '<div class="h"><span class="p">第 ' + n + ' 節</span></div>' +
+            '<div class="m">' + (pl ? pl.outerHTML : '') + '<div class="tx"><div class="a">' + esc(why) + '</div></div></div><div class="f"><span class="s">不上課</span></div>';
+          var after = Array.prototype.filter.call(grid.children, function (c) { return no(c.querySelector('.h') || c) > n; })[0];
+          grid.insertBefore(row, after || null);
+        });
+        lostRow.remove();
+      }
     }
     setLine(line);
     fitRoom();
@@ -9443,7 +9470,7 @@ var PHONE = isPhone();
       var p = a.dataset.p, k = NAVMATE[p];
       ic.dataset.stu = 1;
       ic.innerHTML = k ? '<img class="stu-nh" src="' + pim(k) + '" alt="">'
-                       : '<span class="stu-nh4">' + ['dd', 'bb', 'tt', 'xx'].map(function (x) { return '<img src="' + pim(x) + '" alt="">'; }).join('') + '</span>';
+                       : '<img class="stu-nh door" src="' + im('m_door') + '" alt="">';   /* 總覽＝工作室的門（手機只有點點、步步兩位） */
     });
     if (window.fitNav) fitNav();
   }
@@ -9451,14 +9478,16 @@ var PHONE = isPhone();
     var k = stats(), p = PAGE, sc = el('div', 'stu-ps no-print');
     if (p === 'home') {
       var line = pickLine();
+      /* ⚠️ 手機只有點點、步步兩位（圖圖、想想管的頁面手機上沒有）；另外兩格用工作室裡的物件：掛鐘＝今天幾節、獎盃＝完成幾個單元 */
       var who = [['dd', '待記 ' + k.pending + ' 班', 'quick'], ['bb', k.started + ' 個單元進行中', 'prog'],
-                 ['tt', '作品 ' + k.photos + ' 件', ''], ['xx', '札記 ' + k.notes + ' 則', '']];
+                 ['wallclock', '今天 ' + k.today + ' 節', 'quick', '掛鐘'], ['st_trophy', '完成 ' + k.done + ' / ' + k.units + ' 單元', 'prog', '獎盃']];
       sc.className += ' ps-home';
       sc.innerHTML =
         '<div class="ps-chalk" id="stuChalk" title="點一下換一句"><div class="hi">' + esc(greetEn()) + ' ' + esc(myName()) + '!</div><div class="ln" id="stuLine"></div></div>' +
         '<div class="ps-crew">' + who.map(function (w) {
-          return '<button class="ps-m m-' + w[0] + '"' + (w[2] ? ' data-pgo="' + w[2] + '"' : ' data-hop') + '><img src="' + pim(w[0]) + '" alt="">' +
-            '<span class="pl"><b>' + ST[w[0]].name + '</b>' + esc(w[1]) + '</span></button>';
+          var obj = !ST[w[0]];
+          return '<button class="ps-m m-' + w[0] + (obj ? ' obj' : '') + '" data-pgo="' + w[2] + '"><img src="' + (obj ? im('m_' + w[0]) : pim(w[0])) + '" alt="">' +
+            '<span class="pl"><b>' + (obj ? w[3] : ST[w[0]].name) + '</b>' + esc(w[1]) + '</span></button>';
         }).join('') + '</div>';
       v.insertBefore(sc, v.firstChild);
       setLine(line);
@@ -9478,7 +9507,7 @@ var PHONE = isPhone();
         say = '已完成 <b>' + k.done + '</b> / ' + k.units + ' 個單元，<b>' + k.started + '</b> 個進行中。<br>每一格是一班走到哪裡。';
       }
       sc.className += ' ps-st ps-' + m;
-      sc.innerHTML = '<img class="ps-who" src="' + pim(m) + '" alt=""><div class="ps-say"><b class="nm">' + ST[m].name + '・' + ST[m].role + '</b><span>' + say + '</span></div>';
+      sc.innerHTML = '<span class="ps-who"><img src="' + pim(m) + '" alt=""></span><div class="ps-say"><b class="nm">' + ST[m].name + '・' + ST[m].role + '</b><span>' + say + '</span></div>';
       v.insertBefore(sc, v.firstChild);
       v.classList.add('ps-' + p);
     }
