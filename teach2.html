@@ -3777,6 +3777,43 @@ body.studio .stu-book .pg-r .photos .ph.add span{font-size:22px}
   body.studio .stu-kbar select, body.studio .stu-kbar input{font-size:17px !important; padding:8px 12px !important}
   body.studio .stu-book .pg-r .photos .ph.add{font-size:11px}
 }
+/* ══ 想想：單元省思＝書架上的書、點了開記錄本 ══ */
+.rf-shelf{display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:22px 18px; padding:6px 4px 18px;
+  background:linear-gradient(transparent calc(100% - 14px), #d9b27c calc(100% - 14px), #c59c66 100%)}
+.rf-book{position:relative; display:flex; flex-direction:column; align-items:stretch; gap:3px; text-align:left; border:0; background:none; padding:0; cursor:pointer; font:inherit; color:var(--ink); transition:transform .15s}
+.rf-book:hover{transform:translateY(-5px) rotate(-1deg)}
+.rf-book .cv{position:relative; display:flex; align-items:center; justify-content:center; aspect-ratio:3/4; border-radius:4px 12px 12px 4px; overflow:hidden; font-size:54px;
+  background:#f3ead6; box-shadow:inset 8px 0 0 rgba(0,0,0,.12), inset 10px 0 0 rgba(255,255,255,.3), 0 4px 0 rgba(120,80,40,.25), 0 8px 14px rgba(110,80,40,.2)}
+.rf-book .cv img{width:100%; height:100%; object-fit:cover}
+.rf-book .cv .no{position:absolute; left:14px; top:8px; font-style:normal; font-size:14px; font-weight:800; color:#fff; background:var(--grn); border-radius:10px; padding:0 8px}
+.rf-book:not(.done) .cv{filter:saturate(.55) brightness(1.02)}
+.rf-book b{font-size:16px; margin-top:6px; line-height:1.25}
+.rf-book small{font-size:12px; color:var(--ink2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.rf-book .st{display:flex; justify-content:space-between; font-size:12.5px; color:var(--muted)}
+.rf-book.done .st{color:var(--grn); font-weight:700}
+.rf-book .st em{font-style:normal; color:var(--ink2)}
+/* 彈窗：一本打開的記錄本 */
+.modal.stu-rbook{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr); gap:0; width:min(980px, 94vw); max-width:none; padding:0; overflow:hidden; border-radius:20px;
+  background:linear-gradient(90deg, #fffdf6 0 calc(43.5% - 10px), #e8dcc4 calc(43.5% - 4px), #fffdf6 calc(43.5% + 4px))}
+.stu-rbook .rb-l{padding:24px 26px; max-height:82vh; overflow:auto}
+.stu-rbook .rb-r{padding:24px 26px; display:flex; flex-direction:column; gap:8px}
+.stu-rbook .cv{aspect-ratio:4/3; border-radius:12px; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:64px; background:#f3ead6}
+.stu-rbook .cv img{width:100%; height:100%; object-fit:cover}
+.stu-rbook h3{margin:14px 0 6px; font-size:22px; border:0 !important; padding:0 !important; display:block}
+.stu-rbook h3 .no{display:inline-block; background:var(--grn); color:#fff; border-radius:10px; padding:0 9px; margin-right:8px; font-size:16px; vertical-align:3px}
+.stu-rbook h3 small{display:block; font-size:14px; color:var(--ink2); font-weight:500; margin-top:2px}
+.stu-rbook .pg{display:flex; align-items:center; gap:8px; margin:6px 0 12px}
+.stu-rbook .pg .bar{flex:1; height:8px; border-radius:6px; background:#ece3cf; overflow:hidden}
+.stu-rbook .pg .bar i{display:block; height:100%; background:var(--grn)}
+.stu-rbook .rn .lb{font-weight:800; margin-bottom:6px}
+.stu-rbook .rn .r{display:flex; gap:8px; align-items:baseline; padding:5px 0; border-bottom:1px dashed #e4dac4; font-size:14px}
+.stu-rbook .rn .r .d{color:var(--muted); white-space:nowrap}
+.stu-rbook .rb-r label{font-weight:800; font-size:17px; display:flex; justify-content:space-between; align-items:baseline}
+.stu-rbook .rb-r label span{font-size:12.5px; font-weight:500; color:var(--muted)}
+.stu-rbook textarea{flex:1; min-height:320px; resize:vertical; font-size:16px; line-height:2; border-radius:12px; padding:6px 14px;
+  background:repeating-linear-gradient(#fffdf6 0 31px, #e6dcc6 31px 32px); background-attachment:local; border:1px solid #e6dcc6}
+.stu-rbook .acts{display:flex; justify-content:flex-end; gap:10px; margin-top:6px}
+body.studio #nWk{max-width:none !important; min-width:170px}
 
 </style>
 </head>
@@ -9606,10 +9643,50 @@ var PHONE = isPhone();
   function sceneNotes(p) {
     var refl = byTitle(p, /單元省思/), wk = byTitle(p, /每週課堂札記/);
     var wrap = el('div', 'stu-notes');
-    if (refl) { var sb = el('div', 'sketchbook'); sb.appendChild(el('div', 'rings')); refl.classList.add('sb-page'); sb.appendChild(refl); wrap.appendChild(sb); }
+    if (refl) {
+      /* 單元省思＝書架上一本一本的書（封面＝單元封面圖），點了才用記錄本彈窗看完整內容、直接在裡面寫（他 11-03） */
+      var box = refl.querySelector('.refls');
+      if (box) {
+        var shelf = el('div', 'rf-shelf');
+        Array.prototype.slice.call(box.querySelectorAll(':scope > .refl')).forEach(function (r) {
+          var bt = r.querySelector('[data-rf]'), id = bt && bt.dataset.rf, u = id && unitOf(id); if (!u) return;
+          var pct = (r.querySelector('.pg b') || {}).textContent || '';
+          var bk = el('button', 'rf-book' + (r.classList.contains('done') ? ' done' : ''));
+          bk.type = 'button';
+          bk.innerHTML = '<span class="cv c-' + esc(u.color || 'blue') + '">' + coverInner(u) + '<i class="no">' + esc(u.ord) + '</i></span>' +
+            '<b>' + esc(u.nameZh || u.nameEn) + '</b><small>' + esc(u.nameEn || '') + '</small>' +
+            '<span class="st">' + (r.classList.contains('done') ? '✍️ 已寫省思' : '還沒寫') + '<em>' + esc(pct) + '</em></span>';
+          bk.addEventListener('click', function () { openRefl(r, u); });
+          shelf.appendChild(bk);
+        });
+        box.style.display = 'none'; box.after(shelf);
+        if (window.loadThumbs) loadThumbs();
+      }
+      var sb = el('div', 'sketchbook'); sb.appendChild(el('div', 'rings')); refl.classList.add('sb-page'); sb.appendChild(refl); wrap.appendChild(sb);
+    }
     if (wk) { var ls = el('div', 'lined2'); wk.classList.add('ln-page'); ls.appendChild(wk); wrap.appendChild(ls); }
     var pal = el('img', 'pal'); pal.src = im('xx_act2'); pal.alt = ''; wrap.appendChild(pal);
     p.insertBefore(wrap, p.firstChild);
+  }
+
+  /* 單元省思的記錄本彈窗：左＝封面與進度、右＝這單元的札記；下面直接寫省思（存檔走原版 apiSaveReflect） */
+  function openRefl(r, u) {
+    var txt = String(u.reflect || ''), when = String(u.reflectAt || '').slice(0, 10);
+    var pg = r.querySelector('.pg'), rn = r.querySelector('.rn');
+    openMask('<div class="modal stu-rbook"><div class="rb-l"><div class="cv c-' + esc(u.color || 'blue') + '">' + coverInner(u) + '</div>' +
+      '<h3><span class="no">' + esc(u.ord) + '</span>' + esc(u.nameZh || '') + '<small>' + esc(u.nameEn || '') + '</small></h3>' +
+      (pg ? '<div class="pg">' + pg.innerHTML + '</div>' : '') + (rn ? '<div class="rn">' + rn.innerHTML + '</div>' : '') + '</div>' +
+      '<div class="rb-r"><label>單元省思 Unit Reflection<span>' + (when ? esc(when) + ' 更新' : '還沒寫') + '</span></label>' +
+      '<textarea id="rbTx" placeholder="整體效果如何？哪裡卡住？下次再教要怎麼調整？"' + (isArchived() ? ' readonly' : '') + '>' + esc(txt) + '</textarea>' +
+      '<div class="hint">清空再儲存，就是把這則省思刪掉。</div>' +
+      '<div class="acts"><button class="btn ghost" id="mCancel">關閉</button>' + (isArchived() ? '' : '<button class="btn" id="mOk">💾 儲存省思</button>') + '</div></div></div>');
+    if (window.loadThumbs) loadThumbs();
+    $('mCancel').onclick = closeModal;
+    if ($('mOk')) $('mOk').onclick = function () {
+      var v = $('rbTx').value.trim(); $('mOk').disabled = true;
+      call('apiSaveReflect', u.id, v).then(function (d) { closeModal(); refresh(d, v ? '省思已儲存' : '省思已清空'); })
+        .catch(function (e) { if ($('mOk')) $('mOk').disabled = false; fail(e); });
+    };
   }
 
   /* ── 工具箱：系統設定＝打開的工具箱，一格一格的抽屜（每格上面一片彩色標籤）
@@ -9774,6 +9851,8 @@ var PHONE = isPhone();
   /* ── 接手 render() ── */
   var _render = window.render;
   window.render = function () {
+    /* 每週課堂札記一進來先只看本週（舊的在選單「全部週次／上週」裡查）。只設第一次，之後照他選的 */
+    if (PAGE === 'notes' && !UI.notes.__stu) { UI.notes.__stu = 1; if (!UI.notes.wk) UI.notes.wk = 'this'; }
     _render.apply(this, arguments);
     var on = !isPhone(), b = document.body;
     b.classList.add('stu-skin');   /* 外觀（黏土按鈕、圖示）手機電腦都套；場景只在電腦（studio） */
