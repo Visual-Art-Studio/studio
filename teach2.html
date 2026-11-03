@@ -3661,6 +3661,59 @@ body.stu-phone .nav .ic img.stu-nh{object-fit:contain !important; object-positio
 .stu-sign::before{left:-16% !important; right:-16% !important; top:-10% !important; bottom:-16% !important;
   background:radial-gradient(ellipse 50% 50% at 50% 50%, rgba(253,222,174,1) 74%, rgba(253,222,174,0) 100%) !important}
 body.stu-phone .nav a:not(.on) .ic img{filter:grayscale(.35) opacity(.9) !important}
+/* 角色站的標題放大（他 11-03）：「點點的角落」＋「每天記錄 Daily Records」 */
+.stu-st .who b{font-size:36px !important; line-height:1.15; letter-spacing:1px}
+.stu-st .who span{display:block; font-size:20px !important; margin-top:4px; font-weight:600}
+/* 中文角色名、英文各一行，不要被擠到斷行；物件標籤、回工作室也不斷行 */
+.stu-st .who, .stu-st .who *{white-space:nowrap}
+.stu-st .who{flex:0 0 auto}
+.stu-st .who span.en{font-size:17px !important; font-weight:500; color:var(--ink2); opacity:.85; margin-top:1px}
+.stu-st .items .it span, .stu-st .items .it b, .stu-back span{white-space:nowrap}
+/* 單元卡下面那排小圓點（他 11-03：縮小也要看得懂）：小尺寸不用細節多的黏土圖，改回「月相」的意思——
+   一顆黏土小圓餅，填了 ¼／½／¾／滿＋勾，顏色＝原本的狀態色（不動）。大按鈕（快速記錄、進度檢核）照用黏土圖。 */
+.unit .dot .stm{--p:25%; --c:#8d8a76; width:1.6em; height:1.6em; border-radius:50%;
+  background:radial-gradient(circle at 34% 28%, rgba(255,255,255,.6), rgba(255,255,255,0) 42%),
+             conic-gradient(var(--c) 0 var(--p), #f6efdf var(--p) 100%) !important;
+  box-shadow:inset 0 0 0 2px var(--c), inset 0 -2px 0 rgba(0,0,0,.14), 0 1px 1.5px rgba(110,80,40,.3)}
+.unit .dot .stm-half{--p:50%; --c:#d9a017}
+.unit .dot .stm-almost{--p:75%; --c:#2e8a58}
+.unit .dot .stm-done{--p:100%; --c:#d6336c; position:relative}
+.unit .dot .stm-done::after{content:''; position:absolute; inset:22% 20% 24% 22%;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 12.5l5 5L20 6.5' fill='none' stroke='%23fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
+/* 圓點本身的底框拿掉，只留圓餅（不要兩圈） */
+.unit .dot:has(.stm){background:none !important; border:0 !important; box-shadow:none !important}
+@media (max-width:1300px){
+  .stu-st .who b{font-size:30px !important}
+  .stu-st .who span{font-size:17px !important}
+  .stu-st .who span.en{font-size:14.5px !important}
+  .stu-st .who img{height:110px}
+  .stu-st .crew .head{width:68px !important; height:68px !important}
+}
+@media (max-width:1300px){
+  .stu-st .items .it img{height:58px !important; width:auto !important}
+  .stu-st .items .it{padding:6px 10px !important; gap:8px !important}
+  .stu-st .crew{gap:4px !important}
+}
+@media (max-width:1300px){
+  .stu-st .cal2{width:92px !important; flex:0 0 auto; margin-left:6px !important}
+  .stu-st .items{margin-left:6px !important; gap:8px !important}
+  .stu-st .crew .head{width:62px !important; height:62px !important}
+}
+@media (max-width:1300px){
+  .stu-st{flex-wrap:nowrap !important}
+  .stu-st .items{flex:0 1 auto; min-width:0}
+  .stu-st .items .it img{height:50px !important}
+  .stu-st .crew{flex:0 0 auto}
+}
+@media (max-width:1300px){
+  .stu-st{gap:8px !important; padding-left:14px !important; padding-right:14px !important}
+  .stu-st .who img{height:96px !important}
+  .stu-st .who b{font-size:28px !important}
+  .stu-st .crew .head{width:54px !important; height:54px !important}
+  .stu-st .crew button > span:last-child{font-size:11.5px}
+  .stu-st .items .it img{height:44px !important}
+  .stu-st .items .it{padding:6px 8px !important}
+}
 
 </style>
 </head>
@@ -9340,7 +9393,7 @@ var PHONE = isPhone();
     var head = el('div', 'stu-st');
     head.innerHTML =
       '<button class="stu-back" data-go2="home" title="回工作室"><img src="' + im('door') + '" alt=""><span>回工作室</span></button>' +
-      '<div class="who"><img src="' + im(s.front) + '" alt=""><div><b>' + s.name + (key === 'tool' ? '' : '的角落') + '</b><span>' + s.role + '　' + s.en + '</span></div></div>' +
+      '<div class="who"><img src="' + im(s.front) + '" alt=""><div><b>' + s.name + (key === 'tool' ? '' : '的角落') + '</b><span>' + s.role + '</span><span class="en">' + s.en + '</span></div></div>' +
       '<div class="items">' + s.items.map(function (it) {
         return '<button class="it' + (it[0] === curPg() ? ' on' : '') + '" data-go2="' + it[0] + '"><img src="' + im(it[1]) + '" alt=""><span><b>' + it[3] + '</b>' + it[2] + '</span></button>';
       }).join('') + '</div>' +
@@ -9531,7 +9584,7 @@ var PHONE = isPhone();
   var _stMark = window.stMark;
   window.stMark = function (k) {
     if (!/^(just|half|almost|done)$/.test(k)) return _stMark(k);   /* 手機也換（他 11-03：手機功能照原版、版面可以更新） */
-    return '<i class="stm" aria-hidden="true" style="background-image:url(' + IMG + 'ci/st_' + k + '.webp)"></i>';
+    return '<i class="stm stm-' + k + '" aria-hidden="true" style="background-image:url(' + IMG + 'ci/st_' + k + '.webp)"></i>';
   };
 
   function curPg() { return (PAGE === 'set' && window.__STU_SHOW) ? 'show' : PAGE; }
