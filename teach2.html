@@ -3858,6 +3858,18 @@ body.studio #nWk{max-width:none !important; min-width:170px}
 .stu-unit .su-det > .hint:first-child{grid-column:1 / -1; font-size:12px; line-height:1.5; margin:0 !important}
 .stu-unit .su-det .field label{font-size:13px}
 .stu-rbook .rb-del{margin-top:16px; color:#c2354a !important; border-color:#f0c2cb !important}
+/* 進度狀態按鈕：英文跟中文同一行，太長就縮字，不要掉到下一行（「Halfway Through」那顆跟其他三顆不一樣，他 11-03 圈的） */
+.pick .h{flex-wrap:nowrap !important; min-width:0}
+.pick .h .z{flex:0 0 auto; white-space:nowrap}
+.pick .h .e{min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:12px !important; letter-spacing:-.1px}
+.pick .h{gap:6px !important}
+.pick .h .e{overflow:visible; text-overflow:clip}
+@media (max-width:1300px){
+  .pick .h .z{font-size:15px !important}
+  .pick .h .e{font-size:10.5px !important; letter-spacing:-.2px}
+  .pick{padding-left:10px !important; padding-right:8px !important}
+  .pick .h .dot .stm{width:1.7em !important; height:1.7em !important}
+}
 
 </style>
 </head>
