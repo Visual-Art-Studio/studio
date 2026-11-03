@@ -3614,6 +3614,19 @@ body.stu-phone .foot > *{display:none}
 .stu-today .tcard.lost{opacity:.72}
 .stu-today .tcard.lost .m .a{color:#a0712f}
 .stu-today .tcard.lost .f .s{color:var(--muted)}
+/* 軟木板課表：字太滿（他 11-03 圈的）→ 日期＋星期排成一行、班號縮小、每格四周留白 */
+.stu-week .tt th{font-size:16px !important; white-space:nowrap; padding:6px 2px !important; font-weight:700}
+.stu-week .tt th span{display:block; font-size:12px !important; font-weight:500; opacity:.75; margin-top:1px}
+.stu-week .tt td:not(.tm){padding:6px 7px !important}
+.stu-week table.tt{table-layout:fixed}
+.stu-week .slot{border-radius:10px}
+.stu-week .slot .cn{font-size:22px !important; letter-spacing:.5px}
+.stu-week .slot .un, .stu-week .slot small{font-size:11px !important; opacity:.8}
+.stu-week .tt td.tm{font-size:20px !important}
+/* 日期欄兩行：上「週一」、下「11/02 Mon」（日期跟英文同一行、小一點） */
+.stu-week .tt th .wd{display:block !important; font-size:19px !important; font-weight:800; color:var(--ink); opacity:1 !important; margin:0 !important}
+.stu-week .tt th .dt{display:inline !important; font-size:13px !important; font-weight:600; color:var(--ink2); opacity:1 !important; margin:0 4px 0 0 !important}
+.stu-week .tt th span:not(.wd):not(.dt){display:inline !important; font-size:11px !important}
 
 </style>
 </head>
@@ -9165,7 +9178,14 @@ var PHONE = isPhone();
       /* 他每天只有上午四節（2026-11-03）：午休那種休息列拿掉；午休之後整週都空的節次也收起來。
          ⚠️ 那一節只要有任何一格有東西（調課、補課、停課）就照樣顯示——已排的東西不能看不到 */
       /* 左上角不寫 Time／時間；左欄只寫「第 N 節」、不寫時間（他 11-03 要的） */
-      var th0 = weekCard.querySelector('table.tt thead th'); if (th0) th0.textContent = '節次';   /* 左上角寫「節次」，下面只寫數字（他 11-03） */
+      var th0 = weekCard.querySelector('table.tt thead th'); if (th0) th0.textContent = '節次';
+      /* 日期欄「11/02（一）」→「11/02 一」：括號佔掉的寬度讓字太擠（他 11-03） */
+      Array.prototype.forEach.call(weekCard.querySelectorAll('table.tt thead th'), function (th) {
+        Array.prototype.forEach.call(th.childNodes, function (n) {
+          var m = n.nodeType === 3 && /^\s*(\d+\/\d+)\s*（(.)）\s*$/.exec(n.nodeValue);
+          if (m) { var d = el('span', 'wd', '週' + m[2]); var t = el('span', 'dt', m[1]); n.parentNode.insertBefore(d, n); n.parentNode.insertBefore(t, n); n.remove(); }
+        });
+      });   /* 左上角寫「節次」，下面只寫數字（他 11-03） */
       Array.prototype.forEach.call(weekCard.querySelectorAll('table.tt td.tm'), function (td) {
         var b = td.querySelector('b'); if (b) b.remove(); var m = td.textContent.match(/\d+/); td.textContent = m ? m[0] : td.textContent.trim();
       });
