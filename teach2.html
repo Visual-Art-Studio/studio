@@ -3872,6 +3872,7 @@ body.studio #nWk{max-width:none !important; min-width:170px}
 .picks .pick .d{grid-column:2 / -1; grid-row:2}
 .picks .pick .e{white-space:nowrap}
 @media (max-width:1300px){ .picks .pick .e{font-size:11px !important; letter-spacing:-.2px} .picks .pick{column-gap:6px; padding-left:10px !important; padding-right:8px !important} }
+.stu-book h3 .stu-copy{margin-left:10px; font-size:13px !important; padding:4px 12px !important; flex:0 0 auto}
 
 </style>
 </head>
@@ -9625,6 +9626,9 @@ var PHONE = isPhone();
     }
     /* 左右平衡（他 11-03）：左頁＝要記的（單元／日期、狀態、缺席、札記）；右頁＝作品照片（一班二十五張左右，會長）；快速操作（儲存／複製上週）放左頁最下面，兩頁才差不多高 */
     put(L, filt); put(L, khead); put(L, stat); put(L, abs); put(L, note);
+    /* 「複製上週紀錄」搬到課堂札記標題列（按鈕本身是原版那一顆，事件不變；他 11-03） */
+    var cp = quick && quick.querySelector('#kCopy'), nh = note && note.querySelector(':scope > h3');
+    if (cp && nh) { cp.className = 'btn ghost sm stu-copy'; cp.innerHTML = '📋 複製上週紀錄'; nh.appendChild(cp); }
     if (quick) quick.style.display = 'none';   /* 快速操作整欄不放（他 11-03：電腦版不需要；儲存用下面那條紅色的儲存列） */
     put(L, quick);
     put(R, pho);
