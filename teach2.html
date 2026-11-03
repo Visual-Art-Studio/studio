@@ -3532,6 +3532,78 @@ body.studio.stu-home #views, body.studio.stu-home .main{max-width:none !importan
   .stu-cart .pal{position:static; margin:0; width:150px}
 }
 
+/* ══ 手機：工作室的小版（2026-11-03）══════════════════════════
+   功能與排法照原版；只加最上面一段場景，卡片換成場景物件的外觀。 */
+body.stu-phone{background:linear-gradient(180deg,#f7eedd 0,#f3e6cf 340px,#efe2c8 100%) fixed}
+body.stu-phone .stu-ps{position:relative; margin:0 0 14px}
+@keyframes stuHop{0%,100%{transform:translateY(0)}40%{transform:translateY(-10px)}}
+
+/* 首頁：牆上一塊墨綠黑板，四位站在前面 */
+body.stu-phone .ps-home{padding:12px 10px 0; border-radius:22px;
+  background:radial-gradient(120% 90% at 12% 0,#fffaf0 0,rgba(255,250,240,0) 60%),linear-gradient(180deg,#f6ead2,#efdcbb);
+  box-shadow:inset 0 2px 0 #fffaf0, inset 0 -3px 0 rgba(150,110,60,.15), 0 6px 14px rgba(120,85,40,.14)}
+body.stu-phone .ps-chalk{position:relative; z-index:1; min-height:84px; padding:12px 16px 14px; border-radius:16px;
+  background:radial-gradient(90% 120% at 20% 10%,#3e7a5f,#2a5a46 70%); color:#f5f1e4;
+  border:7px solid #d9b27c; box-shadow:inset 0 2px 6px rgba(0,0,0,.25), 0 3px 0 #b88d58, 0 6px 10px rgba(110,80,40,.2); cursor:pointer}
+body.stu-phone .ps-chalk .hi{font-weight:800; font-size:20px; letter-spacing:.3px; color:#fff7d6}
+body.stu-phone .ps-chalk .ln{font-size:15px; line-height:1.45; margin-top:4px}
+body.stu-phone .ps-chalk .ln .en{display:block; font-size:12.5px; opacity:.8; margin-top:2px}
+body.stu-phone .ps-chalk .ln .by{display:block; font-size:11.5px; opacity:.7; text-align:right}
+body.stu-phone .ps-crew{display:grid; grid-template-columns:repeat(4,1fr); gap:4px; margin-top:-6px; position:relative; z-index:2}
+body.stu-phone .ps-m{width:100%; min-width:0; justify-self:stretch; border:0; background:none; padding:0; font:inherit; color:var(--ink2); display:flex; flex-direction:column; align-items:center; cursor:pointer}
+body.stu-phone .ps-m img{width:100%; max-width:96px; aspect-ratio:224/280; object-fit:contain; filter:drop-shadow(0 5px 4px rgba(110,80,40,.25)); transition:transform .15s}
+body.stu-phone .ps-m:active img{transform:scale(.95)}
+body.stu-phone .ps-m.hop img{animation:stuHop .45s ease}
+body.stu-phone .ps-m .pl{display:block; margin:-4px 0 10px; width:100%; padding:5px 2px 6px; border-radius:12px; text-align:center;
+  background:#fffaf0; box-shadow:0 2px 0 rgba(150,110,60,.25), 0 3px 6px rgba(110,80,40,.12); font-size:11.5px; line-height:1.3}
+body.stu-phone .ps-m .pl b{display:block; font-size:13.5px; color:var(--ink)}
+body.stu-phone .ps-m[data-pgo] .pl b::after{content:' ›'; color:#c08a3e}
+
+/* 今天要做的＝掛紙板（上面兩個夾子）；本週課表＝軟木板 */
+body.stu-phone .card.ps-fc{position:relative; background:#fffdf6 !important; border-radius:6px 6px 18px 18px !important; margin-top:22px;
+  box-shadow:0 0 0 8px #d9b27c, 0 3px 0 8px #b88d58, 0 10px 18px 8px rgba(110,80,40,.18) !important; border:0 !important}
+body.stu-phone .card.ps-fc::before, body.stu-phone .card.ps-fc::after{content:''; position:absolute; top:-18px; width:46px; height:22px; border-radius:8px;
+  background:linear-gradient(180deg,#9aa3ac,#6f7a85); box-shadow:inset 0 2px 0 rgba(255,255,255,.5), 0 2px 3px rgba(0,0,0,.2)}
+body.stu-phone .card.ps-fc::before{left:22%} body.stu-phone .card.ps-fc::after{right:22%}
+body.stu-phone .card.ps-cork{margin-top:26px; border:0 !important; border-radius:18px !important;
+  background:radial-gradient(circle at 20% 30%,rgba(120,70,30,.18) 0 1.5px,transparent 2px) 0 0/11px 13px,
+             radial-gradient(circle at 70% 60%,rgba(255,240,210,.35) 0 1.5px,transparent 2px) 0 0/9px 10px,
+             linear-gradient(160deg,#d9a86e,#c98f54) !important;
+  box-shadow:0 0 0 8px #b98654, 0 3px 0 8px #946436, 0 10px 18px 8px rgba(110,80,40,.18) !important}
+body.stu-phone .card.ps-cork > *{position:relative}
+body.stu-phone .card.ps-cork h3{display:inline-flex; background:#fffaf0; padding:5px 14px; border-radius:12px; box-shadow:0 2px 0 rgba(120,80,40,.25)}
+body.stu-phone .card.ps-cork [data-ttd]{box-shadow:0 2px 0 rgba(120,80,40,.3)}
+
+/* 角色站（快速記錄＝點點、教學進度＝步步）：角色＋對話框 */
+body.stu-phone .ps-st{display:flex; align-items:flex-end; gap:6px; padding:8px 10px 0 4px; border-radius:22px;
+  background:radial-gradient(120% 90% at 12% 0,#fffaf0 0,rgba(255,250,240,0) 60%),linear-gradient(180deg,#f6ead2,#efdcbb);
+  box-shadow:inset 0 2px 0 #fffaf0, inset 0 -3px 0 rgba(150,110,60,.15), 0 6px 14px rgba(120,85,40,.14)}
+body.stu-phone .ps-who{width:92px; flex:0 0 auto; aspect-ratio:224/280; filter:drop-shadow(0 5px 4px rgba(110,80,40,.25))}
+body.stu-phone .ps-say{position:relative; flex:1; margin:0 0 14px; padding:10px 13px; border-radius:16px; background:#fffaf0;
+  box-shadow:0 2px 0 rgba(150,110,60,.25), 0 4px 8px rgba(110,80,40,.12); font-size:14px; line-height:1.5; color:var(--ink2)}
+body.stu-phone .ps-say::before{content:''; position:absolute; left:-9px; bottom:18px; border:9px solid transparent; border-right-color:#fffaf0; border-left:0}
+body.stu-phone .ps-say .nm{display:block; font-size:13px; color:#a0712f; margin-bottom:2px}
+body.stu-phone .ps-say span b{color:var(--ink); font-size:16px}
+
+/* 快速記錄＝點點的記錄本：整份放在一頁紙上（左邊裝訂線） */
+body.stu-phone #views.ps-quick > .qk{position:relative; background:#fffdf6; border-radius:8px 18px 18px 8px; padding:14px 12px 14px 22px;
+  box-shadow:inset 9px 0 0 #e7c48f, inset 11px 0 0 #c99a5a, 0 3px 0 rgba(150,110,60,.22), 0 10px 18px rgba(110,80,40,.14)}
+/* 教學進度＝步步的地圖卡：每個單元是一張用紙膠帶貼著的卡 */
+body.stu-phone #views.ps-prog .unit{position:relative; background:#fffdf6 !important; border-radius:14px !important; margin-top:6px;
+  box-shadow:0 3px 0 rgba(150,110,60,.22), 0 8px 16px rgba(110,80,40,.13) !important}
+body.stu-phone #views.ps-prog .unit::before{content:''; position:absolute; top:-10px; left:50%; width:74px; height:20px; transform:translateX(-50%) rotate(-2deg);
+  background:rgba(240,200,120,.75); border-radius:3px; box-shadow:0 1px 2px rgba(110,80,40,.2)}
+
+/* 導覽列：總覽＝四位的小頭、快速記錄＝點點、教學進度＝步步 */
+body.stu-phone .nav .ic img.stu-nh{width:calc(30px * var(--nav-k,1)); height:calc(30px * var(--nav-k,1)); object-fit:cover; object-position:50% 8%; border-radius:50%;
+  background:#fffaf0; box-shadow:0 1px 0 rgba(150,110,60,.3)}
+body.stu-phone .nav .ic .stu-nh4{display:flex}
+body.stu-phone .nav .ic .stu-nh4 img{width:calc(20px * var(--nav-k,1)); height:calc(20px * var(--nav-k,1)); object-fit:cover; object-position:50% 8%; border-radius:50%;
+  background:#fffaf0; margin-left:-7px; box-shadow:0 1px 0 rgba(150,110,60,.3)}
+body.stu-phone .nav .ic .stu-nh4 img:first-child{margin-left:0}
+body.stu-phone .nav a:not(.on) .ic img{filter:grayscale(.6) opacity(.85)}
+@media print{ body.stu-phone .stu-ps{display:none} }
+
 </style>
 </head>
 <body>
@@ -9357,6 +9429,61 @@ var PHONE = isPhone();
   function curPg() { return (PAGE === 'set' && window.__STU_SHOW) ? 'show' : PAGE; }
   addEventListener('hashchange', function () { if (location.hash !== '#set') window.__STU_SHOW = false; });
 
+  /* ══ 手機：同一間工作室的「小版」（他 11-03：「跟網站一樣功能都要保留，但版面可以用場景的方式來呈現」） ══
+     ⚠️ 手機的規則照原版：一樣三頁（總覽／快速記錄／教學進度）、每一頁的內容與順序都不動、不搬 DOM。
+     只在最上面加一段場景（角色＋黑板／對話），卡片換成場景裡的物件外觀（掛紙、軟木板、記錄本、地圖卡）。
+     圖用 m_*_front（280px，一張 16 KB），手機不抓大張。 */
+  var PH = { home: null, quick: 'dd', prog: 'bb' };
+  var NAVMATE = { quick: 'dd', prog: 'bb' };
+  function pim(k) { return im('m_' + k + '_front'); }
+  function phoneNav() {
+    var nav = document.getElementById('nav'); if (!nav) return;
+    Array.prototype.forEach.call(nav.querySelectorAll('a[data-p]'), function (a) {
+      var ic = a.querySelector('.ic'); if (!ic || ic.dataset.stu) return;
+      var p = a.dataset.p, k = NAVMATE[p];
+      ic.dataset.stu = 1;
+      ic.innerHTML = k ? '<img class="stu-nh" src="' + pim(k) + '" alt="">'
+                       : '<span class="stu-nh4">' + ['dd', 'bb', 'tt', 'xx'].map(function (x) { return '<img src="' + pim(x) + '" alt="">'; }).join('') + '</span>';
+    });
+    if (window.fitNav) fitNav();
+  }
+  function phoneScene(v) {
+    var k = stats(), p = PAGE, sc = el('div', 'stu-ps no-print');
+    if (p === 'home') {
+      var line = pickLine();
+      var who = [['dd', '待記 ' + k.pending + ' 班', 'quick'], ['bb', k.started + ' 個單元進行中', 'prog'],
+                 ['tt', '作品 ' + k.photos + ' 件', ''], ['xx', '札記 ' + k.notes + ' 則', '']];
+      sc.className += ' ps-home';
+      sc.innerHTML =
+        '<div class="ps-chalk" id="stuChalk" title="點一下換一句"><div class="hi">' + esc(greetEn()) + ' ' + esc(myName()) + '!</div><div class="ln" id="stuLine"></div></div>' +
+        '<div class="ps-crew">' + who.map(function (w) {
+          return '<button class="ps-m m-' + w[0] + '"' + (w[2] ? ' data-pgo="' + w[2] + '"' : ' data-hop') + '><img src="' + pim(w[0]) + '" alt="">' +
+            '<span class="pl"><b>' + ST[w[0]].name + '</b>' + esc(w[1]) + '</span></button>';
+        }).join('') + '</div>';
+      v.insertBefore(sc, v.firstChild);
+      setLine(line);
+      /* 卡片換成牆上的物件：今天要做的＝掛紙板、本週課表＝軟木板 */
+      Array.prototype.forEach.call(v.querySelectorAll('.card'), function (c) {
+        var t = (c.querySelector('h3') || {}).textContent || '';
+        if (/今天要做的/.test(t)) c.classList.add('ps-fc');
+        else if (/本週課表/.test(t)) c.classList.add('ps-cork');
+      });
+    } else if (PH[p]) {
+      var m = PH[p], say;
+      if (p === 'quick') {
+        var rt = todayRoute();
+        say = rt.length ? '今天 <b>' + rt.length + '</b> 節，還有 <b>' + k.pending + '</b> 班沒記。<br>點上課的班，記完按最下面的儲存。'
+                        : '今天沒有排課。<br>要補記別天的，按「換別班」。';
+      } else {
+        say = '已完成 <b>' + k.done + '</b> / ' + k.units + ' 個單元，<b>' + k.started + '</b> 個進行中。<br>每一格是一班走到哪裡。';
+      }
+      sc.className += ' ps-st ps-' + m;
+      sc.innerHTML = '<img class="ps-who" src="' + pim(m) + '" alt=""><div class="ps-say"><b class="nm">' + ST[m].name + '・' + ST[m].role + '</b><span>' + say + '</span></div>';
+      v.insertBefore(sc, v.firstChild);
+      v.classList.add('ps-' + p);
+    }
+  }
+
   /* ── 接手 render() ── */
   var _render = window.render;
   window.render = function () {
@@ -9365,7 +9492,9 @@ var PHONE = isPhone();
     b.classList.add('stu-skin');   /* 外觀（黏土按鈕、圖示）手機電腦都套；場景只在電腦（studio） */
     b.classList.toggle('studio', on);
     b.classList.remove('stu-home');
-    if (!on) return;
+    b.classList.toggle('stu-phone', !on);
+    var v0 = document.getElementById('views'); v0.classList.remove('ps-quick', 'ps-prog');
+    if (!on) { phoneNav(); phoneScene(v0); return; }
     tools();
     var v = document.getElementById('views');
     if (PAGE === 'home') { b.classList.add('stu-home'); buildRoom(v); }
@@ -9373,6 +9502,12 @@ var PHONE = isPhone();
   };
   /* 場景裡的物件：data-go2＝換頁、data-mate＝進那位夥伴的第一站（⚠️ 不要用 data-st：原版進度狀態按鈕用了）、黑板＝換一句 */
   document.addEventListener('click', function (e) {
+    if (document.body.classList.contains('stu-phone')) {   /* 手機的場景：角色＝換頁，黑板＝換一句 */
+      var pg = e.target.closest('[data-pgo]'); if (pg) { e.preventDefault(); return go(pg.dataset.pgo); }
+      var hp = e.target.closest('[data-hop]'); if (hp) { hp.classList.remove('hop'); void hp.offsetWidth; hp.classList.add('hop'); return; }
+      if (e.target.closest('#stuChalk')) return setLine(pickLine(true));
+      return;
+    }
     if (!document.body.classList.contains('studio')) return;
     var g = e.target.closest('[data-go2]');
     if (g) { e.preventDefault(); var t = g.dataset.go2; window.__STU_SHOW = (t === 'show');
