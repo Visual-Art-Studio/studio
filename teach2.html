@@ -3639,12 +3639,14 @@ body.stu-phone .foot::before{content:''; position:absolute; left:0; right:0; bot
 body.stu-phone .stu-motto{position:relative; z-index:1}
 /* 掛紙板（他 11-03）：節次下面不寫時間、單元名稱整個寫出來、不放「看紀錄」、各列平均鋪滿整張紙 */
 .stu-today .tcard .h .t{display:none !important}
-.stu-today .tcard .m .a{white-space:normal !important; overflow:visible !important; text-overflow:clip !important; line-height:1.25}
+.stu-today .tcard .m .a{white-space:nowrap !important; overflow:visible !important; text-overflow:clip !important; line-height:1.25}
 .stu-today .tcard .stu-hide{display:none !important}
 .stu-today .tcard.stu-tap{cursor:pointer}
 .stu-today .tcard.stu-tap:hover{background:rgba(238,244,236,.7); border-radius:8px}
 .stu-today .today-grid{flex:1 1 auto !important; display:flex; flex-direction:column}
 .stu-today .tcard{flex:1 1 0 !important; max-height:96px; min-height:0}
+/* 手機導覽的新圖示（黏土：黑板／夾板／地圖），不是頭像了：不裁圓、不墊底 */
+body.stu-phone .nav .ic img.stu-nh{object-fit:contain !important; object-position:50% 50% !important; border-radius:0 !important; background:none !important; box-shadow:none !important}
 
 </style>
 </head>
@@ -9285,6 +9287,26 @@ var PHONE = isPhone();
     var f = r.clientWidth * .0105; e.style.fontSize = f + 'px';
     while (e.scrollHeight > e.clientHeight + 1 && f > 8) { f -= .5; e.style.fontSize = f + 'px'; }
   }
+  /* 掛紙板要排多寬（他 11-03：單元名稱一行寫完，拿「所有單元裡最長的名稱」來量，不是只看今天的）：
+     每一列「名稱以外」的寬度取最大的，加上最長名稱的寬度；至少 300（字才夠大） */
+  function fcWidth() {
+    var g = document.querySelector('#stuFcIn .today-grid'); if (!g) return 300;
+    var rows = g.querySelectorAll('.tcard'), a0 = g.querySelector('.tcard:not(.lost) .m .a') || g.querySelector('.tcard .m .a');
+    if (!rows.length || !a0) return 300;
+    var probe = el('span'); probe.style.cssText = 'position:absolute; visibility:hidden; white-space:nowrap; font:' + getComputedStyle(a0).font;
+    document.body.appendChild(probe);
+    var longest = 0;
+    sortedUnits().forEach(function (u) { probe.textContent = u.nameZh || u.nameEn || ''; longest = Math.max(longest, probe.offsetWidth); });
+    var other = 0, inn = document.getElementById('stuFcIn'), w0 = inn.style.width;
+    inn.style.width = 'max-content';
+    Array.prototype.forEach.call(rows, function (r) {
+      var a = r.querySelector('.m .a'); if (!a) return;
+      var keep = a.style.cssText; a.style.cssText = 'display:none';
+      r.style.width = 'max-content'; other = Math.max(other, r.offsetWidth); r.style.width = ''; a.style.cssText = keep;
+    });
+    inn.style.width = w0; probe.remove();
+    return Math.max(300, Math.ceil(other + longest + 14));
+  }
   function fitRoom() {
     var c = document.getElementById('stuCork'), w = c && c.firstElementChild;
     if (w) {
@@ -9293,7 +9315,7 @@ var PHONE = isPhone();
       /* 表格本身拉到軟木板的高度：多出來的高度平均分給每一節 */
       if (tb && k) { var extra = c.clientHeight / k - w.offsetHeight; if (extra > 4) tb.style.height = (tb.offsetHeight + extra - 2) + 'px'; }
     }
-    var f = document.querySelector('.stu-fcv'); if (f) fitBox(f, document.getElementById('stuFcIn'), 300);
+    var f = document.querySelector('.stu-fcv'); if (f) fitBox(f, document.getElementById('stuFcIn'), fcWidth());
     fitLine();
   }
   addEventListener('resize', function () { if (document.body.classList.contains('stu-home')) fitRoom(); });
@@ -9506,16 +9528,15 @@ var PHONE = isPhone();
      只在最上面加一段場景（角色＋黑板／對話），卡片換成場景裡的物件外觀（掛紙、軟木板、記錄本、地圖卡）。
      圖用 m_*_front（280px，一張 16 KB），手機不抓大張。 */
   var PH = { home: null, quick: 'dd', prog: 'bb' };
-  var NAVMATE = { quick: 'dd', prog: 'bb' };
   function pim(k) { return im('m_' + k + '_front'); }
   function phoneNav() {
     var nav = document.getElementById('nav'); if (!nav) return;
     Array.prototype.forEach.call(nav.querySelectorAll('a[data-p]'), function (a) {
       var ic = a.querySelector('.ic'); if (!ic || ic.dataset.stu) return;
-      var p = a.dataset.p, k = NAVMATE[p];
+      var p = a.dataset.p;
       ic.dataset.stu = 1;
-      ic.innerHTML = k ? '<img class="stu-nh" src="' + pim(k) + '" alt="">'
-                       : '<img class="stu-nh door" src="' + im('m_door') + '" alt="">';   /* 總覽＝工作室的門（手機只有點點、步步兩位） */
+      /* 他 11-03：不要門、不要角色本人 → 黑板（總覽）、夾板＋相機（點點的快速記錄）、地圖＋旗子（步步的教學進度） */
+      ic.innerHTML = '<img class="stu-nh" src="' + im('ci/nav_' + (p === 'quick' || p === 'prog' ? p : 'home')) + '" alt="">';
     });
     if (window.fitNav) fitNav();
   }
