@@ -3820,6 +3820,14 @@ body.studio #nWk{max-width:none !important; min-width:170px}
 .rf-book .cv{aspect-ratio:4/3 !important}
 .rf-book.add .cv{font-size:46px; color:var(--grn); background:repeating-linear-gradient(45deg,#f7f0e0 0 10px,#f1e8d4 10px 20px); box-shadow:inset 0 0 0 3px #d8c9a8 !important; filter:none !important}
 .stu-cov{margin-left:auto}
+/* 單元封面一律正方形（他 11-03：封面圖是方的，要看到完整的圖） */
+.units>.unit>.cover, .unit .cover{aspect-ratio:1/1 !important; height:auto !important; min-height:0 !important; align-self:start}
+.cov-pv{width:150px !important; height:150px !important; flex:0 0 150px !important}
+.rf-book .cv{aspect-ratio:1/1 !important}
+.stu-rbook .cv{aspect-ratio:1/1 !important; max-width:300px; margin:0 auto}
+.list .it .thumb{aspect-ratio:1/1}
+.qk-unit-now .ic, .qk-units button .ic{aspect-ratio:1/1; height:auto !important}
+.rf-book .cv img, .stu-rbook .cv img, .unit .cover img, .cov-pv img{object-fit:cover}
 
 </style>
 </head>
