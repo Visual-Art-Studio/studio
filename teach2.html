@@ -3828,6 +3828,32 @@ body.studio #nWk{max-width:none !important; min-width:170px}
 .list .it .thumb{aspect-ratio:1/1}
 .qk-unit-now .ic, .qk-units button .ic{aspect-ratio:1/1; height:auto !important}
 .rf-book .cv img, .stu-rbook .cv img, .unit .cover img, .cov-pv img{object-fit:cover}
+/* 記錄本封面上的「換封面」 */
+.stu-rbook .rb-l .cv{position:relative}
+.stu-rbook .rb-cov{position:absolute; right:10px; bottom:10px; font-size:13px !important; padding:5px 12px !important; opacity:.92}
+/* 單元資訊：寬版、一頁看完寫完 */
+#maskBody:has(.stu-unit){width:min(1320px, 96vw)}
+.modal.stu-unit{width:100% !important; max-width:none; max-height:94vh; padding:22px 28px 18px; border-radius:20px; display:flex; flex-direction:column}
+.modal.stu-unit > h3{font-size:22px; margin-bottom:10px}
+.stu-unit .su-cols{display:grid; grid-template-columns:minmax(0,0.9fr) minmax(0,1.4fr); gap:26px; min-height:0; overflow:auto; padding-right:4px}
+.stu-unit .su-h{font-weight:800; font-size:16px; color:var(--grn); margin-bottom:8px; padding-bottom:6px; border-bottom:2px dashed #e6dcc6}
+.stu-unit .su-h span{font-size:12.5px; font-weight:500; color:var(--muted); margin-left:6px}
+.stu-unit .su-a > .field, .stu-unit .su-a > .row{margin-top:8px !important}
+.stu-unit textarea{min-height:68px !important; height:68px}
+.stu-unit #uGz, .stu-unit #uGe{height:84px}
+.stu-unit .su-det{margin:0 !important; padding:0 !important; border:0 !important; background:none !important; box-shadow:none !important}
+.stu-unit .su-det > .hint:first-of-type{font-size:12.5px; margin-bottom:8px !important}
+.stu-unit .su-det{display:grid !important; grid-template-columns:1fr 1fr; gap:8px 16px; align-content:start}
+.stu-unit .su-det > *{margin-top:0 !important}
+.stu-unit .su-det > .hint:first-of-type, .stu-unit .su-det > summary{grid-column:1 / -1}
+.stu-unit .su-det .field .hint{font-size:11.5px}
+.stu-unit > .acts{align-items:center; margin-top:14px; padding-top:12px; border-top:1px solid #efe6d2}
+.stu-unit .su-del{margin:0 auto 0 0 !important; display:flex; align-items:center; gap:10px}
+.stu-unit .su-del .hint{font-size:12px}
+.stu-unit .su-det{display:grid !important; grid-template-columns:1fr 1fr; gap:10px 18px}
+.stu-unit .su-det > .hint:first-child{grid-column:1 / -1; font-size:12px; line-height:1.5; margin:0 !important}
+.stu-unit .su-det .field label{font-size:13px}
+.stu-rbook .rb-del{margin-top:16px; color:#c2354a !important; border-color:#f0c2cb !important}
 
 </style>
 </head>
@@ -9709,6 +9735,32 @@ var PHONE = isPhone();
       editUnit(u.id);
     };
     if (u.__draft != null) { $('rbTx').value = u.__draft; delete u.__draft; }
+    /* 封面在這一層換（他 11-03：不要躲在單元資訊裡） */
+    var cvb = document.querySelector('.stu-rbook .rb-l .cv');
+    if (cvb && !isArchived()) {
+      var cb = el('button', 'btn sm rb-cov', u.coverId ? '📷 換封面' : '📷 上傳封面'); cb.type = 'button';
+      cb.onclick = function () {
+        pickCover(u.id, function (d) {
+          var nu = (d.units || []).filter(function (x) { return String(x.id) === String(u.id); })[0] || u;
+          var c2 = document.querySelector('.stu-rbook .rb-l .cv'); if (!c2) return;
+          c2.innerHTML = coverInner(nu); c2.appendChild(cb); cb.textContent = '📷 換封面'; if (window.loadThumbs) loadThumbs();
+        });
+      };
+      cvb.appendChild(cb);
+    }
+    /* 刪除單元：放在記錄本左頁最下面，按了一定先問一次（連進度紀錄、作品照片一起刪，不能復原） */
+    if (!isArchived()) {
+      var dl = el('button', 'btn ghost sm rb-del', '🗑 刪除這個單元'); dl.type = 'button';
+      dl.onclick = function () {
+        var nm = u.nameZh || u.nameEn;
+        ask('「' + nm + '」的進度紀錄與作品照片會一起刪掉，無法復原。', '確定刪除', '真的要刪掉「' + nm + '」嗎？')
+          .then(function (yes) {
+            if (!yes) return openRefl(r, u);   /* 取消：回到記錄本 */
+            call('apiDeleteUnit', u.id).then(function (d) { closeModal(); refresh(d, '單元已刪除'); }).catch(fail);
+          });
+      };
+      document.querySelector('.stu-rbook .rb-l').appendChild(dl);
+    }
     if (window.loadThumbs) loadThumbs();
     $('mCancel').onclick = closeModal;
     if ($('mOk')) $('mOk').onclick = function () {
@@ -9726,26 +9778,53 @@ var PHONE = isPhone();
       var ic = $('uIc'), row = ic && ic.closest('.row'); if (row) row.style.display = 'none';
       var pk = $('uIcPick'), f = pk && pk.closest('.field'); if (f) f.style.display = 'none';
       var hd = document.querySelector('#maskBody .modal > h3'); if (hd) hd.textContent = id ? '單元資訊' : '新增單元';
-      Array.prototype.forEach.call(document.querySelectorAll('#maskBody .cov-act .hint'), function (h) { h.textContent = h.textContent.replace('沒放就顯示上面挑的圖示。', '沒放就顯示原本的圖示。'); });
+      /* 一頁看完寫完（他 11-03）：寬版兩欄——左＝課程（名稱、說明、教學目標），右＝成果頁內容（攤開、兩欄小格）；封面改到記錄本那一層換 */
+      var m = document.querySelector('#maskBody .modal'), acts = m && m.querySelector(':scope > .acts');
+      var cov = $('uCovPv') || m.querySelector('.cov-edit'); cov = cov && cov.closest('.field');
+      if (!cov) Array.prototype.forEach.call(m.querySelectorAll(':scope > .field'), function (f) { if (/封面/.test((f.querySelector('label') || {}).textContent || '')) cov = f; });
+      if (cov) cov.style.display = 'none';
+      if (m && acts) {
+        m.classList.add('stu-unit');
+        var cols = el('div', 'su-cols'), a = el('div', 'su-a'), b = el('div', 'su-b');
+        a.appendChild(el('div', 'su-h', '📘 課程 <span>Unit</span>'));
+        var det = m.querySelector(':scope > details');
+        Array.prototype.slice.call(m.children).forEach(function (n) {
+          if (n.tagName === 'H3' || n === acts || n === det) return;
+          a.appendChild(n);
+        });
+        if (det) {
+          det.open = true;
+          var sm = det.querySelector('summary');
+          b.appendChild(el('div', 'su-h', '🎨 成果頁內容 <span>給家長看的，全部可以留白</span>'));
+          /* ⚠️ <details> 裡面排不了 grid → 欄位搬出來放進一般的 div（id 不變，存檔照樣讀得到） */
+          var g = el('div', 'su-det');
+          Array.prototype.slice.call(det.children).forEach(function (n) { if (n !== sm) g.appendChild(n); });
+          det.style.display = 'none'; b.appendChild(g); b.appendChild(det);
+        }
+        cols.appendChild(a); cols.appendChild(b); m.insertBefore(cols, acts);
+        var del = $('uDel'); if (del) del.parentNode.style.display = 'none';   /* 刪除改到記錄本那一層（他 11-03） */
+      }
     }
     return r;
   };
+  /* 上傳／更換單元封面（地圖卡、記錄本封面共用）。done(新的 S) 給呼叫的地方自己更新畫面 */
+  function pickCover(id, done) {
+    if (isArchived()) return toast('這個學期已封存，只能查看。', true);
+    var inp = $('filePick'); inp.value = ''; inp.multiple = false;
+    inp.onchange = function () {
+      var f = (inp.files || [])[0]; inp.multiple = true; if (!f) return;
+      toast('上傳封面中…');
+      shrink(f, 1000, 0.85).then(function (b64) { return call('apiSaveUnitCover', id, b64, 'image/jpeg'); })
+        .then(function (d) { refresh(d, '封面已更新'); if (done) done(d); }).catch(fail);
+    };
+    inp.click();
+  }
   /* 步步的地圖上：單元卡不放「編輯」（改到想想的書架），只留「封面」上傳／更換 */
   function coverBtns(p) {
     Array.prototype.forEach.call(p.querySelectorAll('[data-eu]'), function (b) {
       var id = b.dataset.eu, u = unitOf(id); if (!u) return;
       var c = el('button', 'btn ghost sm no-print stu-cov', u.coverId ? '📷 換封面' : '📷 上傳封面'); c.type = 'button';
-      c.addEventListener('click', function () {
-        if (isArchived()) return toast('這個學期已封存，只能查看。', true);
-        var inp = $('filePick'); inp.value = ''; inp.multiple = false;
-        inp.onchange = function () {
-          var f = (inp.files || [])[0]; inp.multiple = true; if (!f) return;
-          toast('上傳封面中…');
-          shrink(f, 1000, 0.85).then(function (b64) { return call('apiSaveUnitCover', id, b64, 'image/jpeg'); })
-            .then(function (d) { refresh(d, '封面已更新'); }).catch(fail);
-        };
-        inp.click();
-      });
+      c.addEventListener('click', function () { pickCover(id); });
       b.after(c); b.style.display = 'none';
     });
     var add = p.querySelector('#uAdd'); if (add) add.style.display = 'none';
