@@ -3814,6 +3814,12 @@ body.studio .stu-book .pg-r .photos .ph.add span{font-size:22px}
   background:repeating-linear-gradient(#fffdf6 0 31px, #e6dcc6 31px 32px); background-attachment:local; border:1px solid #e6dcc6}
 .stu-rbook .acts{display:flex; justify-content:flex-end; gap:10px; margin-top:6px}
 body.studio #nWk{max-width:none !important; min-width:170px}
+/* 書架：一排四本、兩排（他 11-03） */
+.rf-shelf{grid-template-columns:repeat(4, minmax(0, 1fr)) !important; gap:26px 28px !important; padding:6px 10px 18px !important;
+  background:linear-gradient(transparent calc(50% - 14px), #d9b27c calc(50% - 14px), #c59c66 50%, transparent 50%, transparent calc(100% - 14px), #d9b27c calc(100% - 14px), #c59c66 100%) !important}
+.rf-book .cv{aspect-ratio:4/3 !important}
+.rf-book.add .cv{font-size:46px; color:var(--grn); background:repeating-linear-gradient(45deg,#f7f0e0 0 10px,#f1e8d4 10px 20px); box-shadow:inset 0 0 0 3px #d8c9a8 !important; filter:none !important}
+.stu-cov{margin-left:auto}
 
 </style>
 </head>
@@ -9581,6 +9587,7 @@ var PHONE = isPhone();
   /* ── 步步：教學進度＝牆上的大進度地圖 ──
      上緣：篩選＝地圖上方的磁鐵條　右上：統計＋狀態圖例＝圖例框　中間：單元＝虛線小路上的一站一站（站牌＋編號圖釘） */
   function sceneProg(p) {
+    coverBtns(p);
     var filt = p.querySelector(':scope > .card.no-print'), stats = p.querySelector(':scope > .grid.g4:not(.units)');
     var secT = p.querySelector(':scope > .sec-t'), legend = Array.prototype.filter.call(p.querySelectorAll(':scope > .grid.g4'), function (g) { return g.querySelector('.lg-i'); })[0];
     var units = p.querySelector(':scope > .units');
@@ -9659,6 +9666,10 @@ var PHONE = isPhone();
           bk.addEventListener('click', function () { openRefl(r, u); });
           shelf.appendChild(bk);
         });
+        if (!isArchived()) {   /* 新增單元也搬來這裡（原本在步步的地圖上） */
+          var nb = el('button', 'rf-book add', '<span class="cv">＋</span><b>新增單元</b><small>Add Unit</small>'); nb.type = 'button';
+          nb.addEventListener('click', function () { editUnit(null); }); shelf.appendChild(nb);
+        }
         box.style.display = 'none'; box.after(shelf);
         if (window.loadThumbs) loadThumbs();
       }
@@ -9679,7 +9690,15 @@ var PHONE = isPhone();
       '<div class="rb-r"><label>單元省思 Unit Reflection<span>' + (when ? esc(when) + ' 更新' : '還沒寫') + '</span></label>' +
       '<textarea id="rbTx" placeholder="整體效果如何？哪裡卡住？下次再教要怎麼調整？"' + (isArchived() ? ' readonly' : '') + '>' + esc(txt) + '</textarea>' +
       '<div class="hint">清空再儲存，就是把這則省思刪掉。</div>' +
-      '<div class="acts"><button class="btn ghost" id="mCancel">關閉</button>' + (isArchived() ? '' : '<button class="btn" id="mOk">💾 儲存省思</button>') + '</div></div></div>');
+      '<div class="acts">' + (isArchived() ? '' : '<button class="btn ghost" id="rbInfo" style="margin-right:auto">📘 單元資訊</button>') +
+      '<button class="btn ghost" id="mCancel">關閉</button>' + (isArchived() ? '' : '<button class="btn" id="mOk">💾 儲存省思</button>') + '</div></div></div>');
+    /* 單元資訊＝原版的「編輯單元」整張表（課程與札記收在同一處，他 11-03）。⚠️ 省思打到一半先存起來，免得換表就不見 */
+    if ($('rbInfo')) $('rbInfo').onclick = function () {
+      var draft = $('rbTx').value;
+      if (draft.trim() !== String(u.reflect || '').trim()) { u.__draft = draft; }
+      editUnit(u.id);
+    };
+    if (u.__draft != null) { $('rbTx').value = u.__draft; delete u.__draft; }
     if (window.loadThumbs) loadThumbs();
     $('mCancel').onclick = closeModal;
     if ($('mOk')) $('mOk').onclick = function () {
@@ -9687,6 +9706,39 @@ var PHONE = isPhone();
       call('apiSaveReflect', u.id, v).then(function (d) { closeModal(); refresh(d, v ? '省思已儲存' : '省思已清空'); })
         .catch(function (e) { if ($('mOk')) $('mOk').disabled = false; fail(e); });
     };
+  }
+
+  /* 編輯單元的表（工作室版）：圖示、代表色、挑一個圖示 不顯示（值照樣帶著送出，不會被洗掉） */
+  var _editUnit = window.editUnit;
+  window.editUnit = function (id) {
+    var r = _editUnit.apply(this, arguments);
+    if (document.body.classList.contains('studio')) {
+      var ic = $('uIc'), row = ic && ic.closest('.row'); if (row) row.style.display = 'none';
+      var pk = $('uIcPick'), f = pk && pk.closest('.field'); if (f) f.style.display = 'none';
+      var hd = document.querySelector('#maskBody .modal > h3'); if (hd) hd.textContent = id ? '單元資訊' : '新增單元';
+      Array.prototype.forEach.call(document.querySelectorAll('#maskBody .cov-act .hint'), function (h) { h.textContent = h.textContent.replace('沒放就顯示上面挑的圖示。', '沒放就顯示原本的圖示。'); });
+    }
+    return r;
+  };
+  /* 步步的地圖上：單元卡不放「編輯」（改到想想的書架），只留「封面」上傳／更換 */
+  function coverBtns(p) {
+    Array.prototype.forEach.call(p.querySelectorAll('[data-eu]'), function (b) {
+      var id = b.dataset.eu, u = unitOf(id); if (!u) return;
+      var c = el('button', 'btn ghost sm no-print stu-cov', u.coverId ? '📷 換封面' : '📷 上傳封面'); c.type = 'button';
+      c.addEventListener('click', function () {
+        if (isArchived()) return toast('這個學期已封存，只能查看。', true);
+        var inp = $('filePick'); inp.value = ''; inp.multiple = false;
+        inp.onchange = function () {
+          var f = (inp.files || [])[0]; inp.multiple = true; if (!f) return;
+          toast('上傳封面中…');
+          shrink(f, 1000, 0.85).then(function (b64) { return call('apiSaveUnitCover', id, b64, 'image/jpeg'); })
+            .then(function (d) { refresh(d, '封面已更新'); }).catch(fail);
+        };
+        inp.click();
+      });
+      b.after(c); b.style.display = 'none';
+    });
+    var add = p.querySelector('#uAdd'); if (add) add.style.display = 'none';
   }
 
   /* ── 工具箱：系統設定＝打開的工具箱，一格一格的抽屜（每格上面一片彩色標籤）
