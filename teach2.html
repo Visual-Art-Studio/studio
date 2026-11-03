@@ -3671,17 +3671,17 @@ body.stu-phone .nav a:not(.on) .ic img{filter:grayscale(.35) opacity(.9) !import
 .stu-st .items .it span, .stu-st .items .it b, .stu-back span{white-space:nowrap}
 /* 單元卡下面那排小圓點（他 11-03：縮小也要看得懂）：小尺寸不用細節多的黏土圖，改回「月相」的意思——
    一顆黏土小圓餅，填了 ¼／½／¾／滿＋勾，顏色＝原本的狀態色（不動）。大按鈕（快速記錄、進度檢核）照用黏土圖。 */
-.unit .dot .stm{--p:25%; --c:#8d8a76; width:1.6em; height:1.6em; border-radius:50%;
+.stm{--p:25%; --c:#8d8a76; width:1.6em; height:1.6em; border-radius:50%;
   background:radial-gradient(circle at 34% 28%, rgba(255,255,255,.6), rgba(255,255,255,0) 42%),
              conic-gradient(var(--c) 0 var(--p), #f6efdf var(--p) 100%) !important;
   box-shadow:inset 0 0 0 2px var(--c), inset 0 -2px 0 rgba(0,0,0,.14), 0 1px 1.5px rgba(110,80,40,.3)}
-.unit .dot .stm-half{--p:50%; --c:#d9a017}
-.unit .dot .stm-almost{--p:75%; --c:#2e8a58}
-.unit .dot .stm-done{--p:100%; --c:#d6336c; position:relative}
-.unit .dot .stm-done::after{content:''; position:absolute; inset:22% 20% 24% 22%;
+.stm-half{--p:50%; --c:#d9a017}
+.stm-almost{--p:75%; --c:#2e8a58}
+.stm-done{--p:100%; --c:#d6336c; position:relative}
+.stm-done::after{content:''; position:absolute; inset:22% 20% 24% 22%;
   background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 12.5l5 5L20 6.5' fill='none' stroke='%23fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
 /* 圓點本身的底框拿掉，只留圓餅（不要兩圈） */
-.unit .dot:has(.stm){background:none !important; border:0 !important; box-shadow:none !important}
+.dot:has(.stm){background:none !important; border:0 !important; box-shadow:none !important}
 @media (max-width:1300px){
   .stu-st .who b{font-size:30px !important}
   .stu-st .who span{font-size:17px !important}
@@ -3719,6 +3719,10 @@ body.stu-phone .ps-who img{width:100% !important; margin:0 !important; height:10
 /* 標題再拉寬（他 11-03：左邊到課表「週三」的「週」字）。字標略微橫向拉一點，上移讓下緣不壓到掛紙板 */
 .stu-sign{left:30.5% !important; width:39% !important; aspect-ratio:2170/660 !important; top:-2.4% !important}
 .stu-sign::after{background-size:100% 100% !important}
+/* 電腦版站上的頭像：重畫的大頭照（av_*），不再裁全身圖 */
+.stu-st .crew .head img{width:100% !important; height:100% !important; margin:0 !important; object-fit:cover; object-position:50% 35%}
+/* 大按鈕裡的圓餅大一點 */
+.qk-st .dot .stm, .picks .dot .stm, .lg-i .dot .stm{width:2em !important; height:2em !important}
 
 </style>
 </head>
@@ -9403,7 +9407,7 @@ var PHONE = isPhone();
         return '<button class="it' + (it[0] === curPg() ? ' on' : '') + '" data-go2="' + it[0] + '"><img src="' + im(it[1]) + '" alt=""><span><b>' + it[3] + '</b>' + it[2] + '</span></button>';
       }).join('') + '</div>' +
       '<div class="crew">' + Object.keys(ST).filter(function (x) { return x !== key && x !== 'tool'; }).map(function (x) {
-        return '<button data-mate="' + x + '" title="' + ST[x].name + '・' + ST[x].role + '"><span class="head"><img src="' + im(ST[x].front) + '" alt=""></span><span>' + ST[x].name + '</span></button>';
+        return '<button data-mate="' + x + '" title="' + ST[x].name + '・' + ST[x].role + '"><span class="head"><img src="' + im('av_' + x) + '" alt=""></span><span>' + ST[x].name + '</span></button>';
       }).join('') + '</div>' +
       /* 週次：一本小掛曆（跟工作室牆上那本同一張圖） */
       '<button class="cal2" data-go2="sched" title="週次"><img src="' + im('wallcal') + '" alt=""><span class="pg"><small>' + esc(termLabel()) + '</small><b>第 ' + esc(S.wk.week) + ' 週</b><small>' + esc(md(S.wk.monday)) + ' – ' + esc(md(S.wk.friday)) + '</small></span></button>';
