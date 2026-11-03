@@ -3647,6 +3647,20 @@ body.stu-phone .stu-motto{position:relative; z-index:1}
 .stu-today .tcard{flex:1 1 0 !important; max-height:96px; min-height:0}
 /* 手機導覽的新圖示（黏土：黑板／夾板／地圖），不是頭像了：不裁圓、不墊底 */
 body.stu-phone .nav .ic img.stu-nh{object-fit:contain !important; object-position:50% 50% !important; border-radius:0 !important; background:none !important; box-shadow:none !important}
+/* 標題：拿掉木框，字標直接印在牆上、放大（他 11-03）。圖是透明底的 title_free（2170×725，上下各留一點透明） */
+.stu-sign{left:33.5% !important; top:-1.2% !important; width:33% !important; aspect-ratio:2170/725 !important; border:0 !important; border-image:none !important;
+  background:url(studio/title_free.webp) center/contain no-repeat !important; filter:drop-shadow(3px 5px 6px rgba(110,80,40,.18)) !important}
+/* 標題後面墊一圈牆色的柔光，把背景圖裡被壓到的彩旗淡掉，字標才讀得清楚 */
+.stu-sign{background:url(studio/title_free.webp) center/contain no-repeat, radial-gradient(ellipse 52% 50% at 50% 52%, rgba(253,224,178,.97) 58%, rgba(253,224,178,0) 100%) !important}
+.stu-sign{background:url(studio/title_free.webp) center/contain no-repeat !important}
+.stu-sign::before{content:''; position:absolute; left:-9%; right:-9%; top:-6%; bottom:-14%; z-index:-1; pointer-events:none;
+  background:radial-gradient(ellipse 50% 50% at 50% 50%, rgba(253,222,174,1) 62%, rgba(253,222,174,0) 100%)}
+/* ⚠️ 元素自己的背景會畫在 z-index:-1 的 ::before 下面 → 字標改放 ::after，柔光放 ::before */
+.stu-sign{background:none !important}
+.stu-sign::after{content:''; position:absolute; inset:0; background:url(studio/title_free.webp) center/contain no-repeat}
+.stu-sign::before{left:-16% !important; right:-16% !important; top:-10% !important; bottom:-16% !important;
+  background:radial-gradient(ellipse 50% 50% at 50% 50%, rgba(253,222,174,1) 74%, rgba(253,222,174,0) 100%) !important}
+body.stu-phone .nav a:not(.on) .ic img{filter:grayscale(.35) opacity(.9) !important}
 
 </style>
 </head>
@@ -9536,7 +9550,7 @@ var PHONE = isPhone();
       var p = a.dataset.p;
       ic.dataset.stu = 1;
       /* 他 11-03：不要門、不要角色本人 → 黑板（總覽）、夾板＋相機（點點的快速記錄）、地圖＋旗子（步步的教學進度） */
-      ic.innerHTML = '<img class="stu-nh" src="' + im('ci/nav_' + (p === 'quick' || p === 'prog' ? p : 'home')) + '" alt="">';
+      ic.innerHTML = '<img class="stu-nh" src="' + im('ci/nav_' + (p === 'quick' ? 'quick' : p === 'prog' ? 'prog2' : 'home')) + '" alt="">';
     });
     if (window.fitNav) fitNav();
   }
@@ -9555,7 +9569,7 @@ var PHONE = isPhone();
     ['記錄不是交差，是為了看見孩子的成長。', 'Records help you see them grow.'],
     ['你已經做得很好了，給自己一點掌聲。', 'You are doing great.']
   ];
-  var MOTTO = ['不是教孩子畫出老師的答案，', '而是幫助孩子找到自己的答案。'];   /* 課程理念.md 最核心的第一句 */
+  var MOTTO = ['不是教孩子畫出老師的想法，', '而是幫助他們找到自己的答案！'];   /* 他 11-03 定的字（依 課程理念.md 最核心的第一句） */
   function phoneFoot() {
     var f = document.querySelector('footer.foot'); if (!f || f.querySelector('.stu-motto')) return;
     f.insertBefore(el('div', 'stu-motto', esc(MOTTO[0]) + '<br>' + esc(MOTTO[1])), f.firstChild);
