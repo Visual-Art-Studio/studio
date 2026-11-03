@@ -9624,7 +9624,9 @@ var PHONE = isPhone();
       }
     }
     /* 左右平衡（他 11-03）：左頁＝要記的（單元／日期、狀態、缺席、札記）；右頁＝作品照片（一班二十五張左右，會長）；快速操作（儲存／複製上週）放左頁最下面，兩頁才差不多高 */
-    put(L, filt); put(L, khead); put(L, stat); put(L, abs); put(L, note); put(L, quick);
+    put(L, filt); put(L, khead); put(L, stat); put(L, abs); put(L, note);
+    if (quick) quick.style.display = 'none';   /* 快速操作整欄不放（他 11-03：電腦版不需要；儲存用下面那條紅色的儲存列） */
+    put(L, quick);
     put(R, pho);
     pages.appendChild(L); pages.appendChild(R); book.appendChild(pages); book.appendChild(tabs);
     var pal = el('img', 'pal'); pal.src = im('dd_act'); pal.alt = ''; book.appendChild(pal);
