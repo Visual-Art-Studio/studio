@@ -3637,6 +3637,14 @@ body.stu-phone .foot::before{content:''; position:absolute; left:0; right:0; bot
   background:url(studio/foot_studio.webp) center bottom / auto 100% no-repeat;
   -webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,0) 0,#000 45%); mask-image:linear-gradient(180deg,rgba(0,0,0,0) 0,#000 45%)}
 body.stu-phone .stu-motto{position:relative; z-index:1}
+/* 掛紙板（他 11-03）：節次下面不寫時間、單元名稱整個寫出來、不放「看紀錄」、各列平均鋪滿整張紙 */
+.stu-today .tcard .h .t{display:none !important}
+.stu-today .tcard .m .a{white-space:normal !important; overflow:visible !important; text-overflow:clip !important; line-height:1.25}
+.stu-today .tcard .stu-hide{display:none !important}
+.stu-today .tcard.stu-tap{cursor:pointer}
+.stu-today .tcard.stu-tap:hover{background:rgba(238,244,236,.7); border-radius:8px}
+.stu-today .today-grid{flex:1 1 auto !important; display:flex; flex-direction:column}
+.stu-today .tcard{flex:1 1 0 !important; max-height:96px; min-height:0}
 
 </style>
 </head>
@@ -9231,6 +9239,13 @@ var PHONE = isPhone();
         });
         lostRow.remove();
       }
+      /* 「看紀錄」不顯示（他 11-03：點那一列就看得到完整的）——按鈕留著，整列點下去＝按它 */
+      Array.prototype.forEach.call(todayCard.querySelectorAll('.tcard:not(.lost)'), function (tc) {
+        var bt = tc.querySelector('[data-todo]'); if (!bt) return;
+        if (/看紀錄/.test(bt.textContent)) bt.classList.add('stu-hide');
+        tc.classList.add('stu-tap');
+        tc.addEventListener('click', function (e) { if (!e.target.closest('button, a')) bt.click(); });
+      });
     }
     setLine(line);
     fitRoom();
@@ -9278,7 +9293,7 @@ var PHONE = isPhone();
       /* 表格本身拉到軟木板的高度：多出來的高度平均分給每一節 */
       if (tb && k) { var extra = c.clientHeight / k - w.offsetHeight; if (extra > 4) tb.style.height = (tb.offsetHeight + extra - 2) + 'px'; }
     }
-    var f = document.querySelector('.stu-fcv'); if (f) fitBox(f, document.getElementById('stuFcIn'), 380);
+    var f = document.querySelector('.stu-fcv'); if (f) fitBox(f, document.getElementById('stuFcIn'), 300);
     fitLine();
   }
   addEventListener('resize', function () { if (document.body.classList.contains('stu-home')) fitRoom(); });
