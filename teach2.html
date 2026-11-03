@@ -3766,6 +3766,17 @@ body.studio .stu-frame #shBody{grid-template-columns:repeat(3, minmax(0, 1fr)) !
 .stu-box .dpanel > .drawer2.on{display:block}
 .stu-box .dpanel > .drawer2 > .dtag{display:none}
 .stu-box .dpanel > .drawer2{padding:12px}
+/* 記錄本右頁的照片：一排五張（二十五張＝五排），跟左頁差不多高 */
+body.studio .stu-book .pg-r .photos{grid-template-columns:repeat(5, minmax(0, 1fr)) !important; gap:8px !important}
+body.studio .stu-book .pg-r .photos .ph{min-height:0 !important}
+body.studio .stu-book .pg-r .photos .ph.add{aspect-ratio:1/1; height:auto !important}
+body.studio .stu-book .pg-r .photos .ph.add span{font-size:22px}
+@media (max-width:1300px){
+  body.studio .stu-kbar .row{flex-wrap:wrap !important}
+  body.studio .stu-kbar .field:has(#kUnit){flex:1 1 100% !important}
+  body.studio .stu-kbar select, body.studio .stu-kbar input{font-size:17px !important; padding:8px 12px !important}
+  body.studio .stu-book .pg-r .photos .ph.add{font-size:11px}
+}
 
 </style>
 </head>
@@ -9513,8 +9524,9 @@ var PHONE = isPhone();
         if (en) en.classList.add('k-goal-en');
       }
     }
-    put(L, filt); put(L, khead); put(L, stat);
-    put(R, abs); put(R, note); put(R, pho); put(R, quick);
+    /* 左右平衡（他 11-03）：左頁＝要記的（單元／日期、狀態、缺席、札記）；右頁＝作品照片（一班二十五張左右，會長）；快速操作（儲存／複製上週）放左頁最下面，兩頁才差不多高 */
+    put(L, filt); put(L, khead); put(L, stat); put(L, abs); put(L, note); put(L, quick);
+    put(R, pho);
     pages.appendChild(L); pages.appendChild(R); book.appendChild(pages); book.appendChild(tabs);
     var pal = el('img', 'pal'); pal.src = im('dd_act'); pal.alt = ''; book.appendChild(pal);
     var rest = Array.prototype.slice.call(p.children).filter(function (n) { return !n.classList.contains('hero'); });
