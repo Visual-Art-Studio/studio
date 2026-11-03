@@ -3723,6 +3723,32 @@ body.stu-phone .ps-who img{width:100% !important; margin:0 !important; height:10
 .stu-st .crew .head img{width:100% !important; height:100% !important; margin:0 !important; object-fit:cover; object-position:50% 35%}
 /* 大按鈕裡的圓餅大一點 */
 .qk-st .dot .stm, .picks .dot .stm, .lg-i .dot .stm{width:2em !important; height:2em !important}
+/* ══ 點點的記錄本：左頁上半部精簡（他 11-03） ══ */
+body.studio .stu-hide{display:none !important}
+body.studio .stu-kbar{padding:0 0 10px !important; margin:0 0 6px !important; border:0 !important; background:none !important; box-shadow:none !important}
+body.studio .stu-kbar .row{flex-wrap:nowrap !important; gap:10px !important; align-items:center}
+body.studio .stu-kbar .field{margin:0 !important; min-width:0}
+body.studio .stu-kbar .field label{display:none}
+body.studio .stu-kbar .field:has(#kUnit){flex:1 1 auto !important}
+body.studio .stu-kbar .field:has(#kDate){flex:0 0 auto !important}
+body.studio .stu-kbar .field:has(#kPer){flex:0 0 auto !important; max-width:none !important}
+body.studio .stu-kbar select, body.studio .stu-kbar input{font-size:20px !important; font-weight:800; padding:10px 16px !important; border-radius:16px !important}
+body.studio .stu-kbar #kUnit{color:var(--grn)}
+body.studio .stu-kbar #kDate{font-size:17px !important; font-weight:700}
+body.studio .stu-khead{display:block !important; margin:0 0 12px !important}
+body.studio .stu-khead .cls-plate{display:none !important}
+body.studio .stu-khead > .card{padding:10px 14px !important; display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; background:rgba(238,244,236,.55) !important; border:0 !important; box-shadow:none !important; border-radius:14px !important}
+body.studio .stu-khead > .card > h3, body.studio .stu-khead > .card > div:nth-child(2){display:none !important}
+body.studio .stu-khead .k-goal{flex:1 1 0; min-width:0; font-size:15.5px; line-height:1.55; color:var(--ink2);
+  display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden}
+body.studio .stu-khead .k-goal::before{content:'🎯 '}
+body.studio .stu-khead .k-goal-en{display:none; flex-basis:100%; order:3}
+body.studio .stu-khead .k-more{flex:0 0 auto; border:0; background:none; color:#a0712f; font:inherit; font-size:14px; font-weight:700; cursor:pointer; padding:0}
+body.studio .stu-khead > .card.open .k-goal{-webkit-line-clamp:unset; display:block; flex-basis:100%}
+body.studio .stu-khead > .card.open .k-goal-en{display:block}
+body.studio .stu-khead > .card.open .k-more{order:4}
+/* 班級成果頁（圖圖的作品框）：一排三班，九班剛好三排滿版（他 11-03） */
+body.studio .stu-frame #shBody{grid-template-columns:repeat(3, minmax(0, 1fr)) !important; gap:14px !important}
 
 </style>
 </head>
@@ -9447,6 +9473,29 @@ var PHONE = isPhone();
     var tabs = el('div', 'tabs', sortedClasses().map(function (c) {
       return '<button class="c-' + colorOf(c.code) + (String(c.code) === cur ? ' on' : '') + '" data-cls="' + esc(c.code) + '" title="' + esc(c.code) + ' 班">' + esc(c.code) + '</button>';
     }).join(''));
+    /* 左頁上半部精簡（他 11-03 同意的排法）：
+       班級＝右邊書籤（年級、班級下拉與 201 大牌子收起來，元素還在、事件不動）；
+       單元、日期（連堂時加第幾節）＝標題列上的黏土鈕；粗體單元標題拿掉；教學目標只留一行，「看完整」才攤開中英文 */
+    if (filt) {
+      filt.classList.add('stu-kbar');
+      ['kGrade', 'kCls'].forEach(function (id) { var f = filt.querySelector('#' + id); f = f && f.closest('.field'); if (f) f.classList.add('stu-hide'); });
+      var hn = filt.querySelector(':scope > .hint'); if (hn) hn.classList.add('stu-hide');
+    }
+    if (khead) {
+      khead.classList.add('stu-khead');
+      var gc = khead.querySelector('.card:not(.cls-plate)');
+      if (gc && gc.querySelector('h3')) {
+        var kids = Array.prototype.slice.call(gc.children);   /* h3、「教學目標」、中文、英文 */
+        var zh = kids[2], en = kids[3];
+        if (zh) {
+          zh.classList.add('k-goal');
+          var tg = el('button', 'k-more', '看完整 ▸'); tg.type = 'button';
+          tg.addEventListener('click', function () { var o = gc.classList.toggle('open'); tg.textContent = o ? '收起 ▴' : '看完整 ▸'; });
+          gc.appendChild(tg);
+        }
+        if (en) en.classList.add('k-goal-en');
+      }
+    }
     put(L, filt); put(L, khead); put(L, stat);
     put(R, abs); put(R, note); put(R, pho); put(R, quick);
     pages.appendChild(L); pages.appendChild(R); book.appendChild(pages); book.appendChild(tabs);
