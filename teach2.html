@@ -3608,7 +3608,9 @@ body.stu-phone .nav a:not(.on) .ic img{filter:grayscale(.6) opacity(.85)}
 @media print{ body.stu-phone .stu-ps{display:none} }
 /* 頁尾：原本的水彩條＋彩色鉛筆換成「四位在工作室」（他 11-03）。高度照原本（量到 192px），上緣照原本的遮罩刷淡 */
 body.stu-phone .foot{height:192px; padding:0; background:url(studio/foot_studio.webp) center bottom / auto 100% no-repeat, linear-gradient(180deg,rgba(248,232,208,0),#f8e8d0)}
-body.stu-phone .foot > *{display:none}
+body.stu-phone .foot > *:not(.stu-motto){display:none}
+body.stu-phone .foot{background-size:auto 80%, auto !important; -webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,0) 0,#000 14px); mask-image:linear-gradient(180deg,rgba(0,0,0,0) 0,#000 14px)}
+body.stu-phone .stu-motto{padding:16px 12px 0; text-align:center; font-size:15px; line-height:1.55; font-weight:700; color:#a8562f; letter-spacing:.5px}
 
 /* 掛紙板上少掉的那幾節：同一排的格式、淡一點，看得出今天這節不上 */
 .stu-today .tcard.lost{opacity:.72}
@@ -3627,6 +3629,14 @@ body.stu-phone .foot > *{display:none}
 .stu-week .tt th .wd{display:block !important; font-size:19px !important; font-weight:800; color:var(--ink); opacity:1 !important; margin:0 !important}
 .stu-week .tt th .dt{display:inline !important; font-size:13px !important; font-weight:600; color:var(--ink2); opacity:1 !important; margin:0 4px 0 0 !important}
 .stu-week .tt th span:not(.wd):not(.dt){display:inline !important; font-size:11px !important}
+/* 手機首頁只留黑板（他 11-03） */
+body.stu-phone .ps-home{padding:0; background:none; box-shadow:none}
+/* 頁尾圖自己刷淡上緣（圖的牆色跟頁面底色接不起來會看到一條線） */
+body.stu-phone .foot{position:relative; background:none !important}
+body.stu-phone .foot::before{content:''; position:absolute; left:0; right:0; bottom:0; height:80%;
+  background:url(studio/foot_studio.webp) center bottom / auto 100% no-repeat;
+  -webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,0) 0,#000 45%); mask-image:linear-gradient(180deg,rgba(0,0,0,0) 0,#000 45%)}
+body.stu-phone .stu-motto{position:relative; z-index:1}
 
 </style>
 </head>
@@ -9494,21 +9504,35 @@ var PHONE = isPhone();
     });
     if (window.fitNav) fitNav();
   }
+  /* 手機黑板：寫給老師自己的打氣話（依 課程理念.md 的語氣：重過程、願意再試、把空間留給孩子） */
+  var PBB = [
+    ['今天也辛苦了，你陪孩子走的每一步都算數。', 'Every step counts.'],
+    ['慢一點沒關係，孩子正在找自己的答案。', 'They are finding their own way.'],
+    ['一堂課不完美也沒關係，願意再試一次就很好。', 'Try again is for teachers too.'],
+    ['你留給孩子的空間，他們都感受得到。', 'The room you give matters.'],
+    ['今天只要記下一個孩子的小發現就好。', 'Notice one small thing today.'],
+    ['卡住的地方，就是下一次最好的起點。', 'Stuck is a place to start.'],
+    ['你不只是在教畫畫，是在守護孩子的想像力。', 'You keep the wonder alive.'],
+    ['深呼吸，今天也是充滿可能的一天。', 'Today is full of possibilities.'],
+    ['孩子的笑聲，就是這堂課最好的回饋。', 'Their joy is the best feedback.'],
+    ['每一句「我想試試看」，都是你種下的。', 'You planted every "Let me try."'],
+    ['記錄不是交差，是為了看見孩子的成長。', 'Records help you see them grow.'],
+    ['你已經做得很好了，給自己一點掌聲。', 'You are doing great.']
+  ];
+  var MOTTO = ['不是教孩子畫出老師的答案，', '而是幫助孩子找到自己的答案。'];   /* 課程理念.md 最核心的第一句 */
+  function phoneFoot() {
+    var f = document.querySelector('footer.foot'); if (!f || f.querySelector('.stu-motto')) return;
+    f.insertBefore(el('div', 'stu-motto', esc(MOTTO[0]) + '<br>' + esc(MOTTO[1])), f.firstChild);
+  }
   function phoneScene(v) {
+    phoneFoot();
     var k = stats(), p = PAGE, sc = el('div', 'stu-ps no-print');
     if (p === 'home') {
-      var line = pickLine();
-      /* ⚠️ 手機只有點點、步步兩位（圖圖、想想管的頁面手機上沒有）；另外兩格用工作室裡的物件：掛鐘＝今天幾節、獎盃＝完成幾個單元 */
-      var who = [['dd', '待記 ' + k.pending + ' 班', 'quick'], ['bb', k.started + ' 個單元進行中', 'prog'],
-                 ['wallclock', '今天 ' + k.today + ' 節', 'quick', '掛鐘'], ['st_trophy', '完成 ' + k.done + ' / ' + k.units + ' 單元', 'prog', '獎盃']];
+      var line = PBB[Math.floor(Math.random() * PBB.length)];
+      /* 他 11-03：教學總覽只留黑板（打氣的話）；角色只在快速記錄／教學進度兩頁 */
       sc.className += ' ps-home';
       sc.innerHTML =
-        '<div class="ps-chalk" id="stuChalk" title="點一下換一句"><div class="hi">' + esc(greetEn()) + ' ' + esc(myName()) + '!</div><div class="ln" id="stuLine"></div></div>' +
-        '<div class="ps-crew">' + who.map(function (w) {
-          var obj = !ST[w[0]];
-          return '<button class="ps-m m-' + w[0] + (obj ? ' obj' : '') + '" data-pgo="' + w[2] + '"><img src="' + (obj ? im('m_' + w[0]) : pim(w[0])) + '" alt="">' +
-            '<span class="pl"><b>' + (obj ? w[3] : ST[w[0]].name) + '</b>' + esc(w[1]) + '</span></button>';
-        }).join('') + '</div>';
+        '<div class="ps-chalk" id="stuChalk" title="點一下換一句"><div class="hi">' + esc(greetEn()) + ' ' + esc(myName()) + '!</div><div class="ln" id="stuLine"></div></div>';
       v.insertBefore(sc, v.firstChild);
       setLine(line);
       /* 卡片換成牆上的物件：今天要做的＝掛紙板、本週課表＝軟木板 */
@@ -9554,7 +9578,9 @@ var PHONE = isPhone();
     if (document.body.classList.contains('stu-phone')) {   /* 手機的場景：角色＝換頁，黑板＝換一句 */
       var pg = e.target.closest('[data-pgo]'); if (pg) { e.preventDefault(); return go(pg.dataset.pgo); }
       var hp = e.target.closest('[data-hop]'); if (hp) { hp.classList.remove('hop'); void hp.offsetWidth; hp.classList.add('hop'); return; }
-      if (e.target.closest('#stuChalk')) return setLine(pickLine(true));
+      if (e.target.closest('#stuChalk')) { var cur = (document.getElementById('stuLine') || {}).textContent || '', x;
+        do { x = PBB[Math.floor(Math.random() * PBB.length)]; } while (cur.indexOf(x[0]) === 0 && PBB.length > 1);
+        return setLine(x); }
       return;
     }
     if (!document.body.classList.contains('studio')) return;
