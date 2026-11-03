@@ -3714,6 +3714,11 @@ body.stu-phone .nav a:not(.on) .ic img{filter:grayscale(.35) opacity(.9) !import
   .stu-st .items .it img{height:44px !important}
   .stu-st .items .it{padding:6px 8px !important}
 }
+/* 手機兩站的頭像：重畫的大頭照（av_dd／av_bb），不再裁全身圖 */
+body.stu-phone .ps-who img{width:100% !important; margin:0 !important; height:100%; object-fit:cover; object-position:50% 30%}
+/* 標題再拉寬（他 11-03：左邊到課表「週三」的「週」字）。字標略微橫向拉一點，上移讓下緣不壓到掛紙板 */
+.stu-sign{left:30.5% !important; width:39% !important; aspect-ratio:2170/660 !important; top:-2.4% !important}
+.stu-sign::after{background-size:100% 100% !important}
 
 </style>
 </head>
@@ -9654,7 +9659,7 @@ var PHONE = isPhone();
         say = '已完成 <b>' + k.done + '</b> / ' + k.units + ' 個單元，<b>' + k.started + '</b> 個進行中。<br>每一格是一班走到哪裡。';
       }
       sc.className += ' ps-st ps-' + m;
-      sc.innerHTML = '<span class="ps-who"><img src="' + pim(m) + '" alt=""></span><div class="ps-say"><b class="nm">' + ST[m].name + '・' + ST[m].role + '</b><span>' + say + '</span></div>';
+      sc.innerHTML = '<span class="ps-who"><img src="' + im('av_' + m) + '" alt=""></span><div class="ps-say"><b class="nm">' + ST[m].name + '・' + ST[m].role + '</b><span>' + say + '</span></div>';
       v.insertBefore(sc, v.firstChild);
       v.classList.add('ps-' + p);
     }
