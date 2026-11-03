@@ -3870,6 +3870,11 @@ body.studio #nWk{max-width:none !important; min-width:170px}
   .pick{padding-left:10px !important; padding-right:8px !important}
   .pick .h .dot .stm{width:1.7em !important; height:1.7em !important}
 }
+/* 狀態對照（教學進度地圖右邊、他 11-03 圈的那一欄）：中文＋縮小的英文同一行，說明在下一行；四顆都一樣 */
+.lg-i .tx{display:grid !important; grid-template-columns:auto minmax(0,1fr); align-items:baseline; column-gap:7px; row-gap:1px}
+.lg-i .tx .a{white-space:nowrap}
+.lg-i .tx .hint{white-space:nowrap; font-size:11px !important; overflow:hidden; text-overflow:ellipsis; letter-spacing:-.1px}
+.lg-i .tx .b{grid-column:1 / -1}
 
 </style>
 </head>
