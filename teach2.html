@@ -3275,36 +3275,36 @@ body.studio .stu-st{margin-top:50px}
 /* ══ 黏土按鈕（2026-11-03 他說「所有的按鈕也重新規畫」）══
    全站同一套：圓潤、有一點厚度（下緣一道深一階的邊＝黏土的厚度）、上緣一道亮光；按下去往下壓。
    顏色照原版的語意：一般＝鼠尾草深綠、ghost＝奶油白、pink＝珊瑚紅（刪除／危險）、purple＝磚紅（複製上週）、green＝綠 */
-body.studio .btn{
+body.stu-skin .btn{
   border-radius:999px !important; border:0 !important; font-weight:700;
   background:linear-gradient(#5f8f78, #4a7a64) !important; color:#fff !important;
   box-shadow:inset 0 2px 0 rgba(255,255,255,.35), inset 0 -2px 0 rgba(0,0,0,.08), 0 4px 0 #36604d, 0 7px 12px rgba(60,80,60,.22) !important;
   -webkit-backdrop-filter:none !important; backdrop-filter:none !important;
   transition:transform .08s, box-shadow .08s, filter .15s; text-shadow:0 1px 0 rgba(0,0,0,.12)}
-body.studio .btn:hover{filter:brightness(1.05)}
-body.studio .btn:active{transform:translateY(3px) !important;
+body.stu-skin .btn:hover{filter:brightness(1.05)}
+body.stu-skin .btn:active{transform:translateY(3px) !important;
   box-shadow:inset 0 2px 0 rgba(255,255,255,.3), 0 1px 0 #36604d, 0 3px 6px rgba(60,80,60,.2) !important}
-body.studio .btn.ghost{background:linear-gradient(#fffdf6, #f6ecd8) !important; color:var(--ink) !important; text-shadow:none;
+body.stu-skin .btn.ghost{background:linear-gradient(#fffdf6, #f6ecd8) !important; color:var(--ink) !important; text-shadow:none;
   box-shadow:inset 0 2px 0 #fff, inset 0 -2px 0 rgba(0,0,0,.04), 0 4px 0 #ddcfb2, 0 7px 12px rgba(110,80,40,.14) !important}
-body.studio .btn.ghost:active{box-shadow:inset 0 2px 0 #fff, 0 1px 0 #ddcfb2, 0 3px 6px rgba(110,80,40,.12) !important}
-body.studio .btn.green{background:linear-gradient(#6fa27f, #538a66) !important; box-shadow:inset 0 2px 0 rgba(255,255,255,.35), 0 4px 0 #3d6c4e, 0 7px 12px rgba(60,80,60,.22) !important}
-body.studio .btn.pink{background:linear-gradient(#ec8f80, #d9705f) !important; box-shadow:inset 0 2px 0 rgba(255,255,255,.35), 0 4px 0 #b4554a, 0 7px 12px rgba(150,70,50,.22) !important}
-body.studio .btn.purple{background:linear-gradient(#e59a6f, #cf7a4c) !important; box-shadow:inset 0 2px 0 rgba(255,255,255,.35), 0 4px 0 #a85d35, 0 7px 12px rgba(150,80,40,.22) !important}
-body.studio .btn:disabled{filter:grayscale(.6) opacity(.6) !important; transform:none !important}
-body.studio .btn.sm{padding:6px 15px !important}
-body.studio .btn.lg{border-radius:20px !important}
+body.stu-skin .btn.ghost:active{box-shadow:inset 0 2px 0 #fff, 0 1px 0 #ddcfb2, 0 3px 6px rgba(110,80,40,.12) !important}
+body.stu-skin .btn.green{background:linear-gradient(#6fa27f, #538a66) !important; box-shadow:inset 0 2px 0 rgba(255,255,255,.35), 0 4px 0 #3d6c4e, 0 7px 12px rgba(60,80,60,.22) !important}
+body.stu-skin .btn.pink{background:linear-gradient(#ec8f80, #d9705f) !important; box-shadow:inset 0 2px 0 rgba(255,255,255,.35), 0 4px 0 #b4554a, 0 7px 12px rgba(150,70,50,.22) !important}
+body.stu-skin .btn.purple{background:linear-gradient(#e59a6f, #cf7a4c) !important; box-shadow:inset 0 2px 0 rgba(255,255,255,.35), 0 4px 0 #a85d35, 0 7px 12px rgba(150,80,40,.22) !important}
+body.stu-skin .btn:disabled{filter:grayscale(.6) opacity(.6) !important; transform:none !important}
+body.stu-skin .btn.sm{padding:6px 15px !important}
+body.stu-skin .btn.lg{border-radius:20px !important}
 /* 輸入框、下拉：像壓進黏土裡的凹槽 */
-body.studio select, body.studio input[type=text], body.studio input[type=date], body.studio input[type=number], body.studio input:not([type]), body.studio textarea{
+body.stu-skin select, body.stu-skin input[type=text], body.stu-skin input[type=date], body.stu-skin input[type=number], body.stu-skin input:not([type]), body.stu-skin textarea{
   border-radius:14px !important; border:1.5px solid #e2d6bc !important; background:#fffdf8 !important;
   box-shadow:inset 0 2px 4px rgba(110,80,40,.1) !important}
-body.studio select:focus, body.studio input:focus, body.studio textarea:focus{border-color:#7fa58f !important; outline:3px solid rgba(127,165,143,.25)}
+body.stu-skin select:focus, body.stu-skin input:focus, body.stu-skin textarea:focus{border-color:#7fa58f !important; outline:3px solid rgba(127,165,143,.25)}
 /* 進度狀態的四個選項：黏土小卡，選到的那張是浮起來的 */
-body.studio .k-st, body.studio .st-card, body.studio [data-st-pick]{border-radius:16px !important}
+body.stu-skin .k-st, body.stu-skin .st-card, body.stu-skin [data-st-pick]{border-radius:16px !important}
 /* 進度狀態四個選項：黏土小卡；選到的浮起來、沒選到的稍淡 */
-body.studio .picks .pick{border-radius:18px !important; border:0 !important; background:linear-gradient(#fffdf6, #f7eedc) !important;
+body.stu-skin .picks .pick{border-radius:18px !important; border:0 !important; background:linear-gradient(#fffdf6, #f7eedc) !important;
   box-shadow:inset 0 2px 0 #fff, 0 4px 0 #e3d6ba, 0 7px 12px rgba(110,80,40,.12) !important; transition:transform .1s}
-body.studio .picks .pick:active{transform:translateY(3px)}
-body.studio .picks .pick.on{background:linear-gradient(#f3fbf5, #e2f1e6) !important; box-shadow:inset 0 2px 0 #fff, 0 0 0 3px #7fa58f, 0 4px 0 #b9d3c2, 0 9px 16px rgba(60,90,70,.2) !important; transform:translateY(-2px)}
+body.stu-skin .picks .pick:active{transform:translateY(3px)}
+body.stu-skin .picks .pick.on{background:linear-gradient(#f3fbf5, #e2f1e6) !important; box-shadow:inset 0 2px 0 #fff, 0 0 0 3px #7fa58f, 0 4px 0 #b9d3c2, 0 9px 16px rgba(60,90,70,.2) !important; transform:translateY(-2px)}
 /* 掛紙板：每一節平均分掉紙的高度（不要上半滿、下半空） */
 .stu-fcin{display:flex; flex-direction:column}
 .stu-fcin > .stu-today{flex:1 1 auto; display:flex; flex-direction:column}
@@ -3362,33 +3362,33 @@ body.studio .picks .pick.on{background:linear-gradient(#f3fbf5, #e2f1e6) !import
 .stu-mate.m-dd .fig img.fr{left:0; width:100%}
 
 /* ══ 頁面裡的小圖示：原版蠟筆 .ci-* 換成同一套黏土圖示（藍圖/codex_studio/ci）══ */
-body.studio .ci-absent{background-image:url(studio/ci/absent.webp) !important}
-body.studio .ci-almost{background-image:url(studio/ci/almost.webp) !important}
-body.studio .ci-beach{background-image:url(studio/ci/beach.webp) !important}
-body.studio .ci-chair{background-image:url(studio/ci/chair.webp) !important}
-body.studio .ci-check{background-image:url(studio/ci/check.webp) !important}
-body.studio .ci-done{background-image:url(studio/ci/done.webp) !important}
-body.studio .ci-home{background-image:url(studio/ci/home.webp) !important}
-body.studio .ci-inprog{background-image:url(studio/ci/inprog.webp) !important}
-body.studio .ci-lock{background-image:url(studio/ci/lock.webp) !important}
-body.studio .ci-mail{background-image:url(studio/ci/mail.webp) !important}
-body.studio .ci-notes{background-image:url(studio/ci/notes.webp) !important}
-body.studio .ci-palette{background-image:url(studio/ci/palette.webp) !important}
-body.studio .ci-pending{background-image:url(studio/ci/pending.webp) !important}
-body.studio .ci-pin{background-image:url(studio/ci/pin.webp) !important}
-body.studio .ci-prog{background-image:url(studio/ci/prog.webp) !important}
-body.studio .ci-quick{background-image:url(studio/ci/quick.webp) !important}
-body.studio .ci-res{background-image:url(studio/ci/res.webp) !important}
-body.studio .ci-sched{background-image:url(studio/ci/sched.webp) !important}
-body.studio .ci-set{background-image:url(studio/ci/set.webp) !important}
-body.studio .ci-sprout{background-image:url(studio/ci/sprout.webp) !important}
-body.studio .ci-swap{background-image:url(studio/ci/swap.webp) !important}
-body.studio .ci-target{background-image:url(studio/ci/target.webp) !important}
-body.studio .ci-teacher{background-image:url(studio/ci/teacher.webp) !important}
-body.studio .ci-today{background-image:url(studio/ci/today.webp) !important}
-body.studio .ci-units{background-image:url(studio/ci/units.webp) !important}
-body.studio .ci-works{background-image:url(studio/ci/works.webp) !important}
-body.studio .ci-wrench{background-image:url(studio/ci/wrench.webp) !important}
+body.stu-skin .ci-absent{background-image:url(studio/ci/absent.webp) !important}
+body.stu-skin .ci-almost{background-image:url(studio/ci/almost.webp) !important}
+body.stu-skin .ci-beach{background-image:url(studio/ci/beach.webp) !important}
+body.stu-skin .ci-chair{background-image:url(studio/ci/chair.webp) !important}
+body.stu-skin .ci-check{background-image:url(studio/ci/check.webp) !important}
+body.stu-skin .ci-done{background-image:url(studio/ci/done.webp) !important}
+body.stu-skin .ci-home{background-image:url(studio/ci/home.webp) !important}
+body.stu-skin .ci-inprog{background-image:url(studio/ci/inprog.webp) !important}
+body.stu-skin .ci-lock{background-image:url(studio/ci/lock.webp) !important}
+body.stu-skin .ci-mail{background-image:url(studio/ci/mail.webp) !important}
+body.stu-skin .ci-notes{background-image:url(studio/ci/notes.webp) !important}
+body.stu-skin .ci-palette{background-image:url(studio/ci/palette.webp) !important}
+body.stu-skin .ci-pending{background-image:url(studio/ci/pending.webp) !important}
+body.stu-skin .ci-pin{background-image:url(studio/ci/pin.webp) !important}
+body.stu-skin .ci-prog{background-image:url(studio/ci/prog.webp) !important}
+body.stu-skin .ci-quick{background-image:url(studio/ci/quick.webp) !important}
+body.stu-skin .ci-res{background-image:url(studio/ci/res.webp) !important}
+body.stu-skin .ci-sched{background-image:url(studio/ci/sched.webp) !important}
+body.stu-skin .ci-set{background-image:url(studio/ci/set.webp) !important}
+body.stu-skin .ci-sprout{background-image:url(studio/ci/sprout.webp) !important}
+body.stu-skin .ci-swap{background-image:url(studio/ci/swap.webp) !important}
+body.stu-skin .ci-target{background-image:url(studio/ci/target.webp) !important}
+body.stu-skin .ci-teacher{background-image:url(studio/ci/teacher.webp) !important}
+body.stu-skin .ci-today{background-image:url(studio/ci/today.webp) !important}
+body.stu-skin .ci-units{background-image:url(studio/ci/units.webp) !important}
+body.stu-skin .ci-works{background-image:url(studio/ci/works.webp) !important}
+body.stu-skin .ci-wrench{background-image:url(studio/ci/wrench.webp) !important}
 /* 進度狀態的記號（stMark）：黏土四顆 */
 .stm{display:inline-block; width:1.5em; height:1.5em; vertical-align:middle; background:center/contain no-repeat}
 /* 課表：日期／星期、節次的字放大（左欄只剩「第 N 節」） */
@@ -9350,7 +9350,7 @@ var PHONE = isPhone();
   /* ── 進度狀態的記號：原版是線條 SVG（ico('mkJust')…），工作室版換成黏土的四顆 ── */
   var _stMark = window.stMark;
   window.stMark = function (k) {
-    if (isPhone() || !/^(just|half|almost|done)$/.test(k)) return _stMark(k);
+    if (!/^(just|half|almost|done)$/.test(k)) return _stMark(k);   /* 手機也換（他 11-03：手機功能照原版、版面可以更新） */
     return '<i class="stm" aria-hidden="true" style="background-image:url(' + IMG + 'ci/st_' + k + '.webp)"></i>';
   };
 
@@ -9362,6 +9362,7 @@ var PHONE = isPhone();
   window.render = function () {
     _render.apply(this, arguments);
     var on = !isPhone(), b = document.body;
+    b.classList.add('stu-skin');   /* 外觀（黏土按鈕、圖示）手機電腦都套；場景只在電腦（studio） */
     b.classList.toggle('studio', on);
     b.classList.remove('stu-home');
     if (!on) return;
