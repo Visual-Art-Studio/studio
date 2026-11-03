@@ -9674,9 +9674,11 @@ var PHONE = isPhone();
           bk.addEventListener('click', function () { openRefl(r, u); });
           shelf.appendChild(bk);
         });
-        if (!isArchived()) {   /* 新增單元也搬來這裡（原本在步步的地圖上） */
-          var nb = el('button', 'rf-book add', '<span class="cv">＋</span><b>新增單元</b><small>Add Unit</small>'); nb.type = 'button';
-          nb.addEventListener('click', function () { editUnit(null); }); shelf.appendChild(nb);
+        /* 新增單元也搬來這裡（原本在步步的地圖上）：放在右上角「補一筆札記」旁邊（他 11-03） */
+        var nAdd = refl.querySelector('#nAdd');
+        if (nAdd && !isArchived()) {
+          var nb = el('button', 'btn ghost sm no-print', '＋ 新增單元'); nb.type = 'button';
+          nb.addEventListener('click', function () { editUnit(null); }); nAdd.before(nb);
         }
         box.style.display = 'none'; box.after(shelf);
         if (window.loadThumbs) loadThumbs();
