@@ -3874,6 +3874,51 @@ body.studio #nWk{max-width:none !important; min-width:170px}
 @media (max-width:1300px){ .picks .pick .e{font-size:11px !important; letter-spacing:-.2px} .picks .pick{column-gap:6px; padding-left:10px !important; padding-right:8px !important} }
 .stu-book h3 .stu-copy{margin-left:10px; font-size:13px !important; padding:4px 12px !important; flex:0 0 auto}
 
+
+/* ══ 登入（管理通行碼）與等待：工作室門口（2026-11-04，studio.js 的 bootScene）══
+   後面一層工作室（招牌＋四位夥伴站在地板上），#boot 變成墨綠黑板。手機電腦都套。 */
+#stuGate{display:none}
+body.stu-boot #stuGate{display:block;position:fixed;inset:0;z-index:0;background:#f6ead6 url(studio/studio_bg2.webp) center bottom/cover no-repeat;pointer-events:none}
+#stuGate .gt-title{position:absolute;left:50%;top:2vh;width:min(560px,82vw);aspect-ratio:2170/725;transform:translateX(-50%);
+  background:url(studio/title_free.webp) center/contain no-repeat;filter:drop-shadow(3px 5px 6px rgba(110,80,40,.18))}
+#stuGate .gt-m{position:absolute;bottom:3vh;width:150px;height:230px;background:center bottom/contain no-repeat;filter:drop-shadow(0 8px 6px rgba(90,60,30,.2))}
+#stuGate .gt-m.dd{left:calc(50% - 520px);background-image:url(studio/dd_front.webp)}
+#stuGate .gt-m.bb{left:calc(50% - 380px);background-image:url(studio/bb_front.webp)}
+#stuGate .gt-m.tt{left:calc(50% + 230px);background-image:url(studio/tt_front.webp)}
+#stuGate .gt-m.xx{left:calc(50% + 370px);background-image:url(studio/xx_front.webp)}
+body.stu-wait #stuGate .gt-m{animation:gthop 1.3s ease-in-out infinite}
+body.stu-wait #stuGate .gt-m.bb{animation-delay:.18s} body.stu-wait #stuGate .gt-m.tt{animation-delay:.36s} body.stu-wait #stuGate .gt-m.xx{animation-delay:.54s}
+@keyframes gthop{0%,60%,100%{transform:translateY(0)}25%{transform:translateY(-18px)}40%{transform:translateY(0) scaleY(.96)}}
+
+body.stu-boot #boot{position:relative;z-index:1;width:min(480px,calc(100% - 24px));margin:calc(2vh + min(560px,82vw) * .334 + 26px) auto 24px;
+  border-style:solid;border-color:transparent;border-width:26px;border-image:url(studio/chalkboard_c.webp) 75 65 61 66 fill / 26px 24px 23px 24px stretch;
+  padding:16px 24px 20px;color:#f4f1e6;text-align:center;font-size:16px;filter:drop-shadow(5px 10px 14px rgba(60,50,30,.28))}
+body.stu-boot #boot .lock{max-width:none;margin:0;padding:0;background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+body.stu-boot #boot .lock .big{font-size:0;width:56px;height:56px;margin:0 auto;background:url(studio/ci/lock.webp) center/contain no-repeat}
+body.stu-boot #boot .lock h2{color:#fff;font-family:"LXGW WenKai TC","Noto Sans TC",sans-serif;font-size:22px}
+body.stu-boot #boot .lock p{color:#d6e4da;text-align:center}
+body.stu-boot #boot .lock p b{color:#f6d77a}
+body.stu-boot #boot .lock input{background:#fffdf6;color:#22332d;border:0;border-radius:14px}
+body.stu-boot #boot .lock .btn{background:linear-gradient(#f8dc85,#ecbd50) !important;color:#4a3a1a !important;text-shadow:none !important;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.5),0 4px 0 #b88a2a,0 8px 12px rgba(0,0,0,.2) !important}
+body.stu-boot #boot .lock .err{color:#ffc2b5}
+.gt-wait{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0}
+.gt-wait b{font-family:"LXGW WenKai TC","Noto Sans TC",sans-serif;font-size:26px;color:#fff;letter-spacing:.04em}
+.gt-wait span{color:#d6e4da}
+.gt-wait small{color:#a9c3b3;font-size:12px;letter-spacing:.12em}
+.gt-bar{display:block;width:80%;height:10px;margin:14px auto 4px;border-radius:6px;background:rgba(255,255,255,.16);overflow:hidden}
+.gt-bar i{display:block;width:35%;height:100%;border-radius:6px;background:linear-gradient(90deg,#f6d77a,#ef8a78);animation:gtbar 1.4s ease-in-out infinite}
+@keyframes gtbar{0%{transform:translateX(-110%)}100%{transform:translateX(300%)}}
+@media (prefers-reduced-motion:reduce){body.stu-wait #stuGate .gt-m{animation:none}.gt-bar i{animation-duration:3s}}
+@media (max-width:760px){
+  #stuGate .gt-m{width:78px;height:110px;bottom:2.5vh}
+  #stuGate .gt-m.dd{left:calc(50% - 168px);background-image:url(studio/m_dd_front.webp)}
+  #stuGate .gt-m.bb{left:calc(50% - 82px);background-image:url(studio/m_bb_front.webp)}
+  #stuGate .gt-m.tt{left:calc(50% + 4px);background-image:url(studio/m_tt_front.webp)}
+  #stuGate .gt-m.xx{left:calc(50% + 90px);background-image:url(studio/m_xx_front.webp)}
+  body.stu-boot #boot{padding:12px 14px 16px;border-width:20px;border-image-width:20px}
+}
+
 </style>
 </head>
 <body>
@@ -10055,6 +10100,31 @@ var PHONE = isPhone();
     /* 掛紙板本身（不是上面的按鈕）＝進點點的記錄本 */
     if (e.target.closest('#stuFc') && !e.target.closest('button, a')) return go('check');
   }, true);
+  /* ── 登入（管理通行碼）與等待：工作室門口（2026-11-04）──
+     原版這兩個畫面都寫在 #boot：開頁時 class=loading「載入中…」、askPass() 換成 .lock 表單、boot() 成功就 display:none。
+     #boot 看得到的時候，後面鋪一層工作室（#stuGate：招牌＋四位夥伴站在地板上），#boot 本身變成墨綠黑板。
+     等待時黑板換成「工作室開門中…」＋會跑的進度條，夥伴輪流跳（他：「讓人明確知道在等待」）。
+     ⚠️ 載入失敗時原版也是 class=loading，但裡面是錯誤訊息——只有內容真的是「載入中」才換，錯誤照原樣留在黑板上。 */
+  (function bootScene() {
+    var bt = document.getElementById('boot');
+    if (!bt) return;
+    var g = document.createElement('div');
+    g.id = 'stuGate'; g.setAttribute('aria-hidden', 'true');
+    g.innerHTML = '<div class="gt-title"></div><i class="gt-m dd"></i><i class="gt-m bb"></i><i class="gt-m tt"></i><i class="gt-m xx"></i>';
+    document.body.insertBefore(g, document.body.firstChild);
+    function sync() {
+      var on = bt.style.display !== 'none', b = document.body;
+      b.classList.toggle('stu-boot', on);
+      if (on) b.classList.add('stu-skin');
+      var wait = on && bt.classList.contains('loading') && /^\s*載入中/.test(bt.textContent || '') && !bt.querySelector('.gt-wait');
+      if (wait) bt.innerHTML = '<div class="gt-wait"><b>工作室開門中…</b><span>夥伴們正在把今天的資料搬上桌</span>' +
+                               '<i class="gt-bar"><i></i></i><small>Loading…</small></div>';
+      b.classList.toggle('stu-wait', on && !!bt.querySelector('.gt-wait'));
+    }
+    sync();
+    new MutationObserver(sync).observe(bt, { attributes: true, attributeFilter: ['style', 'class'], childList: true });
+  })();
+
   /* 已經畫過一次的話（腳本比 boot 晚到），補畫 */
   if (window.S) window.render();
 })();
