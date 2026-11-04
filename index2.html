@@ -1,0 +1,1975 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<script>window.API_URL = 'https://script.google.com/macros/s/AKfycbzunczvLmwGH4FlpCmmKWrik15DcxBav4WnnDdyQ3FjrzlZkV3BYyd9QRMWfdz9JutOmw/exec';
+if (!/[?&]s=/.test(location.search) && /[?&]admin=/.test(location.search)) location.replace('teach2.html' + location.search + location.hash);</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- ⚠️ 這是家長在 LINE 裡點開的第一眼（iOS 會把它顯示在最上面那條）。
+     進去之後 show() 會改成「小小藝術家 · 203 班」，先確認是不是自己孩子的班。 -->
+<title>小小藝術家 Small Artists</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;600&family=LXGW+WenKai+TC:wght@400;700&display=swap" rel="stylesheet">
+<!-- 抬頭插圖（2026-10-24）：八隻蠟筆怪獸舉著自己的畫＋左邊散落的蠟筆、小畫、彩虹雲（藍圖/codex_hero/show_w2.png）。
+     ⚠️ 成果頁不再 include Art.html——那裡面只有這一頁用不到的老師端插圖，家長的手機白白多載一大包。 -->
+<style>:root{--art-show:none}</style>
+<style>
+/* 家長看的頁面。大多數人會用手機開，所以先照手機排，再往上放大。 */
+:root{
+  /* ── 紙與墨（2026-09-17 美術改版）──────────────────────────
+     跟老師端（Index.html）同一組顏色：暖白圖畫紙 ＋ 龍埔綠。
+     ⚠️ 底下十三個班級色（.c-* / .k-*）跟老師端是同一份，改一邊要改兩邊——
+        這一輪兩邊都沒有動。 */
+  /* --muted 原本 #636e67：半透明的卡片疊在底色上只剩 4.2～4.5（2026-10-05 健檢），改深一階 */
+  --ink:#22332d; --ink2:#44574f; --muted:#56605a;
+  --line:#e6dcc7; --line2:#f1eadb; --bg:#faf7ec;
+  --grn:#285a4a; --grn-d:#1c463a; --pink:#a8492f;
+  --shadow:0 1px 2px rgba(88,72,44,.06), 0 6px 18px rgba(88,72,44,.07);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  font-size:16px; line-height:1.75; color:var(--ink); background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{margin:0; line-height:1.35}
+button,input{font-family:inherit; font-size:16px; color:var(--ink)}
+
+.wrap{max-width:1280px; margin:0 auto; padding:16px 16px 60px}
+/* ⚠️ 1080 → 1280（2026-10-05 他要的：八個單元的頁籤被切掉，兩旁明明還有位置）。 */
+
+.hero{
+  border-radius:18px; padding:22px 22px 20px; margin-bottom:16px; min-height:150px;
+  border:1px solid var(--line); box-shadow:var(--shadow); position:relative; overflow:hidden;
+  background:
+    radial-gradient(500px 220px at 4% 14%, #e6f0dd 0%, rgba(230,240,221,0) 60%),
+    radial-gradient(460px 200px at 24% 104%, #fbf0d3 0%, rgba(251,240,211,0) 62%),
+    linear-gradient(103deg,#fffdf8 0%, #fffcf3 50%, #fdf6e8 100%);
+}
+/* 抬頭插圖：從文字結束的地方（左 46%）排到右邊，填到下面那條班級資訊列（.idl）上方為止。
+   圖比這一塊寬（3:1），高度填滿、靠右，左邊多出來的背景元素（蠟筆、小畫、彩虹雲）被裁掉並淡出。
+   ⚠️ bottom:76px＝.idl 的高度（一行，各寬度量過都是 75～76）。.idl 改高度要跟著改，不然怪獸的腳會被蓋住。
+   ⚠️ 1120 以下這一塊變窄，高度填滿會把左邊兩隻怪獸裁掉 → 改成整張等比例放進去（2026-10-24 量的）。 */
+.hero .art{
+  position:absolute; left:46%; right:0; top:0; bottom:76px; z-index:0;
+  background-image:var(--art-show, none);
+  background-size:auto 100%; background-position:right 10px bottom; background-repeat:no-repeat;
+  -webkit-mask-image:linear-gradient(to right, transparent 0%, #000 14%);
+          mask-image:linear-gradient(to right, transparent 0%, #000 14%);
+  pointer-events:none;
+}
+@media (max-width:1120px){ .hero .art{background-size:contain} }
+.hero h1,.hero .sub,.hero .who,.hero .idl,.hero .kick,.hero .lead{position:relative; z-index:1}
+.hero .kick{
+  font-size:13px; font-weight:700; letter-spacing:.09em; color:#2c6b48;   /* 以前 #3f7a57＝4.45 */
+}
+.hero h1{font-family:"Caveat",cursive; font-size:38px; color:var(--grn); margin-top:2px}
+/* ⚠️ Caveat 要排在楷體前面：Caveat 沒有中文字，中文會自己掉到楷體，
+   英文則維持跟前半句同一枝筆。 */
+/* ⚠️ 中文五個字不要被拆開：390 寬時會折成「小小藝術」＋單獨一個「家」（2026-10-05 健檢） */
+.hero h1 .zh{white-space:nowrap; 
+  font-family:"Caveat","LXGW WenKai TC","Noto Sans TC",sans-serif;
+  font-size:.86em; color:var(--grn-d);
+}
+.hero .sub{margin-top:4px; font-size:18px; font-weight:700; color:var(--pink)}
+.hero .who{margin-top:8px; font-size:15px; color:var(--ink2)}
+/* 一段「我們在做什麼」的話。家長第一次打開時，這段比任何統計都重要，
+   所以排成引文的樣子：明體、行距拉開、左邊一條淡淡的線。
+   ⚠️ 中文用 Noto Serif TC（跟全站的黑體區隔開），英文那句用 Caveat 手寫體，
+   跟橫幅插圖上的字同一種調性。 */
+/* ⚠️ `text-wrap:balance` 不能省。這段是可以在系統設定裡改的，長度不固定；
+   沒有 balance 的話常常斷成「長長一行 ＋ 一行只有五個字」，後面空一大塊
+   （2026-09-15 他截圖回報）。balance 會把每一行拉成差不多長。 */
+.hero .lead{
+  margin-top:14px; max-width:min(100%, 760px);
+  padding-left:15px; border-left:3px solid rgba(40,90,74,.30);
+  font-family:"Noto Serif TC","Songti TC",serif;
+  font-size:17px; line-height:2.05; color:#4a564e; letter-spacing:.01em;
+  text-wrap:balance;   /* ⚠️ 不要再加 text-wrap:pretty——後寫的會贏，就不平均了 */
+}
+.hero .lead b{color:#2b6a4f}
+.hero .lead em{
+  display:block; margin-top:6px; font-style:normal;
+  font-family:"Caveat",cursive; font-size:24px; line-height:1.35;
+  color:#2f6a55; font-weight:700; letter-spacing:.01em;
+}
+
+/* ⚠️ 班級的身分只寫一次。以前橫幅寫一次學年度＋老師，下面那張卡又寫一次，
+   還多一個「學習成果」的標題和一顆班級牌——手機上光是抬頭就佔掉一個畫面
+   （2026-09-15 他圈的）。現在收成橫幅底下的一條白色橫帶。
+   ⚠️ 做成「橫帶」而不是「橫幅裡的一列」是有原因的：插圖是絕對定位、跟著橫幅的高度
+   長大的，橫幅一變高插圖就變寬、把字壓在底下。白橫帶疊在插圖上面，兩邊都不用讓。 */
+.hero{padding-bottom:0}
+.hero .idl{
+  display:flex; align-items:center; gap:13px; flex-wrap:wrap;
+  margin:16px -22px 0; padding:12px 22px 13px;
+  background:rgba(255,253,246,.80); border-top:1px solid rgba(88,72,44,.10);
+  border-radius:0 0 17px 17px;
+}
+.hero .code{
+  flex:0 0 auto; min-width:76px; padding:8px 14px; border-radius:15px; text-align:center;
+  background:#fffdf6; box-shadow:0 1px 3px rgba(88,72,44,.16);
+}
+.hero .code b{display:block; font-size:30px; font-weight:700; line-height:1.1}
+.hero .idt{min-width:0}
+.hero .idt b{display:block; font-size:17px; line-height:1.4}
+.hero .idt span{display:block; font-size:14px; color:var(--ink2); line-height:1.5}
+.hero .idt .n{color:var(--muted)}
+/* ⚠️ 插圖是絕對定位、右邊對齊的。桌機上要替文字留一塊安全區，
+   不然「在這裡，我們不急著畫得像…」那段會壓在插圖上（2026-09-15 量到的）。 */
+@media (min-width:761px){
+  /* ⚠️ 換成小怪獸那張之後插圖不再淡進文字底下，安全區要再讓一點
+     （2026-09-19 量的）。 */
+  .hero h1,.hero .sub,.hero .who,.hero .kick{max-width:46%}
+  .hero .lead{max-width:48%}
+}
+/* ⚠️ 手機上橫幅本來吃掉大半個第一屏，作品要滑很久才看得到
+   （2026-09-15 他截圖回報，原則是「以學生作品為主」）。
+   整組字級往下收一階，留白也收緊——量過少了 150px 左右。 */
+/* ⚠️ 手機上橫幅還是太高——家長要看的是下面的作品（2026-09-15 他第二次回報）。
+   kicker 整行收掉（純裝飾），其餘字級與留白再往下一階。量過：310 → 約 225。 */
+@media (max-width:760px){
+  .hero .art{display:none}
+  .hero{padding:14px 15px 0; min-height:0}
+  .hero .kick{display:none}
+  /* ⚠️ 字級用 clamp() 跟著螢幕寬度走，不要寫死 px：這兩行要「撐滿整格」，
+     但 5.4 吋和 6.9 吋的手機差了快 100px，寫死一個值不是留一條邊就是撐爆換行
+     （2026-09-15 他圈的「放大讓它佔滿整格」）。
+     量過（393px 的機子、橫幅內側 329px）：
+     這一行是「Caveat 的 Small Artists ＋ 5 個中文字」，總寬約 8.7 個字高；
+     8.9vw ＝ 35px ＝ 305px，佔掉 93%，右邊只剩一點點。
+     ⚠️ 不要再往上加。中文那截是 .86em，多 1px 整行就多 8.7px，
+        一超過就從英文和中文中間斷成兩行。
+     下面那句 motto 是 16 個全形字 ＝ 16em，5vw 時剛好放得下（314 < 329）。 */
+  .hero h1{font-size:clamp(28px, 8.9vw, 38px); line-height:1.22}
+  .hero .sub{font-size:clamp(16px, 5vw, 21px); margin-top:3px; line-height:1.45}
+  .hero .who{font-size:14.5px; margin-top:5px}
+  /* ⚠️ 手機上要把 balance 關掉。螢幕本來就窄，balance 會把每一行都縮短，
+     看起來像右邊留了一條邊（2026-09-15 他圈的「讓它滿版一點」）。
+     桌機才需要 balance——那裡一行放得下整句，斷行才會難看。 */
+  /* ⚠️ 手機上左邊那條綠槓拿掉（2026-09-15 他劃掉的）。
+     桌機留著是為了讓這段看起來像引文；手機一行只有十幾個字，
+     那條線加上內縮等於整段再少 15px，反而更擠。 */
+  .hero .lead{
+    margin-top:9px; padding-left:0; border-left:0; font-size:16px; line-height:1.85;
+    text-wrap:wrap;   /* ⚠️ 是 wrap 不是 normal——
+       text-wrap 沒有 normal 這個值，寫錯整條會被丟掉、balance 繼續生效，而且不報錯 */
+  }
+  .hero .lead em{font-size:19px; margin-top:3px}
+  .hero .idl{margin:10px -16px 0; padding:9px 16px 10px; gap:10px}
+  .hero .code{min-width:60px; padding:5px 11px}
+  .hero .code b{font-size:24px}
+  .hero .idt .n{font-size:13.5px}
+}
+
+.card{
+  background:#fffdf6; border:1px solid var(--line); border-radius:15px 13px 16px 12px;
+  box-shadow:var(--shadow); padding:18px; margin-bottom:16px;
+}
+
+/* 班級與單元的十三色，跟管理頁面同一套（對比都在 5:1 以上）。
+   這裡重複寫一份，是為了 Art.html 沒貼時這一頁也還是正常的。
+   ⚠️ **改 Index.html 的 .c-* 時這裡要一起改**，不然同一個班在老師端和家長端
+   會是兩個顏色（2026-09-15 調過 orange／blue／indigo／purple／violet／brown／gray）。 */
+.c-pink  {background:#fde7ef; color:#b22c62}
+.c-coral {background:#fdeae3; color:#af3f29}
+.c-orange{background:#fcefd8; color:#8f5406}
+.c-yellow{background:#fbf3d4; color:#7f6200}
+.c-lime  {background:#eff7da; color:#4a7011}
+.c-green {background:#e2f6ea; color:#1d7348}
+.c-teal  {background:#ddf2f7; color:#0e6d80}
+.c-blue  {background:#e3f0fd; color:#1a64bf}
+.c-indigo{background:#dde1f9; color:#3a4aa8}
+.c-purple{background:#e7dcfa; color:#6335c0}
+.c-violet{background:#fadff2; color:#a0308f}
+.c-brown {background:#efe3d1; color:#74512f}
+.c-gray  {background:#e4eaf0; color:#4f5a65}
+
+/* 只要文字顏色、不要底色。⚠️ 班級牌坐在橫幅的暖色漸層上，
+   班級色要是剛好也是暖色（yellow／brown／coral）就糊在一起了——
+   跟管理頁面同一條規則：白底＋深色字。 */
+.k-pink  {color:#b22c62} .k-coral {color:#af3f29} .k-orange{color:#8f5406}
+.k-yellow{color:#7f6200} .k-lime  {color:#4a7011} .k-green {color:#1d7348}
+.k-teal  {color:#0e6d80} .k-blue  {color:#1a64bf} .k-indigo{color:#3a4aa8}
+.k-purple{color:#6335c0} .k-violet{color:#a0308f} .k-brown {color:#74512f}
+.k-gray  {color:#4f5a65}
+
+/* ── 進入畫面 ─────────────────────────────────────────── */
+.gate{max-width:440px; margin:0 auto; text-align:center}
+.gate .big{font-size:52px; line-height:1}
+.gate h2{font-size:21px; margin:10px 0 4px}
+.gate p{color:var(--ink2); margin:0 0 18px}
+.gate input{
+  width:100%; padding:14px 16px; font-size:22px; font-weight:700; text-align:center;
+  letter-spacing:3px; border:2px solid #ddd2ba; border-radius:12px; outline:0;
+}
+.gate input:focus{border-color:var(--grn); box-shadow:0 0 0 3px rgba(40,90,74,.16)}
+.gate button{
+  width:100%; margin-top:12px; padding:15px; font-size:18px; font-weight:700;
+  color:#fff; background:var(--grn); border:0; border-radius:12px; cursor:pointer;
+}
+.gate button:disabled{opacity:.55; cursor:default}
+.gate .err{margin-top:12px; color:#a02a3c; font-weight:700; min-height:28px}
+.gate .teach{
+  display:block; margin-top:16px; padding:14px; border-radius:12px;
+  background:#e7efe3; color:var(--grn-d); font-weight:700; text-decoration:none;
+}
+.gate .hint{margin-top:14px; font-size:14px; color:var(--muted); line-height:1.7}
+
+/* ── 班級抬頭 ─────────────────────────────────────────── */
+.head{display:flex; align-items:center; gap:16px; flex-wrap:wrap}
+.head .code{
+  width:92px; height:92px; flex:0 0 92px; border-radius:18px;
+  display:grid; place-content:center; text-align:center;
+}
+.head .code b{display:block; font-size:34px; line-height:1.1}
+.head .code span{font-size:13px}
+.head .t b{font-size:21px}
+.head .t div{font-size:15px; color:var(--ink2)}
+
+/* ── 單元與照片 ───────────────────────────────────────── */
+.unit{margin-bottom:20px}
+/* ⚠️ 單元名的**中文在上面那排頁籤上已經有了**，這裡只留英文（2026-09-15 他說的）。
+   圖示方塊也拿掉——只有一個 emoji 的話沒有任何資訊，白白佔一塊；
+   真的上傳過封面照片才留著。 */
+.unit .uh{
+  display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:9px;
+}
+.unit .ic{
+  width:44px; height:44px; flex:0 0 44px; border-radius:12px; overflow:hidden;
+  align-self:center;
+}
+.unit .ic img{width:100%; height:100%; object-fit:cover; display:block}
+.unit .un{min-width:0; flex:1 1 auto}
+.unit .un .e{font-size:17px; font-weight:700; color:var(--ink2); line-height:1.4}
+/* 幾件作品、什麼時候拍的——家長想知道「有沒有新的」。收成一行小字。 */
+.unit .cnt{flex:0 0 auto; font-size:13.5px; color:var(--muted); white-space:nowrap}
+.unit .cnt b{color:var(--ink2); font-size:15px}
+/* 關鍵字自己佔一整列，不要跟名字擠 */
+.unit .uh .tagrow{flex:1 1 100%; margin-top:2px}
+/* 一句白話的介紹（descZh）。教學目標（goalZh）是寫給老師的，收成底下的引文，
+   字小一點、左邊一條線，不要跟作品搶。 */
+.unit .d{font-size:15.5px; color:var(--ink2); margin:0 0 6px; font-weight:500}
+.unit .d em{display:block; font-style:normal; font-size:14px; color:var(--muted); font-weight:400}
+.unit .goal{
+  margin:0 0 13px; padding:2px 0 2px 11px; border-left:3px solid var(--line);
+  font-size:14px; color:var(--muted); line-height:1.75;
+}
+
+.grid{display:grid; gap:10px; grid-template-columns:repeat(2,1fr)}
+@media (min-width:620px){ .grid{grid-template-columns:repeat(3,1fr); gap:12px} }
+@media (min-width:900px){ .grid{grid-template-columns:repeat(4,1fr)} }
+.sec-t{
+  display:flex; align-items:baseline; gap:8px; margin:0 2px 10px;
+  font-size:15px; font-weight:700; color:var(--ink2);
+}
+.sec-t em{font-style:normal; font-weight:500; color:var(--muted); font-size:14px}
+/* ⚠️ 直式（3:4）。他的照片是手機直拍、小朋友站著拿作品——臉在上、作品在下，
+   橫的 4:3 會把臉或作品切掉一半，家長就認不出哪個是自己的孩子
+   （2026-09-15 他講的理由）。 */
+/* 每一張作品都像裱起來掛在牆上：白色卡紙 ＋ 外面一條暖線 ＋ 一點點影子。
+   ⚠️ 白框是 border（不是 padding）——全站 box-sizing:border-box，
+      3:4 仍然是整格的比例，格線不會被撐開。 */
+.ph{
+  position:relative; aspect-ratio:3/4; border-radius:12px; overflow:hidden;
+  background:#f4efe1; border:5px solid #fffdf6; cursor:zoom-in;
+  box-shadow:0 0 0 1px var(--line), 0 3px 10px rgba(88,72,44,.13);
+}
+.ph img{width:100%; height:100%; object-fit:cover; display:block}
+/* 名牌：貼在照片左下角的白色小標籤（2026-10-24，本來是壓在底部的深灰色帶，跟暖白的紙不搭） */
+.ph .cap{
+  position:absolute; left:8px; bottom:8px; max-width:calc(100% - 16px); padding:3px 10px 4px;
+  background:#fffdf6; color:#2a3a33; font-size:13px; font-weight:600;
+  border-radius:8px 10px 9px 7px; box-shadow:0 1px 0 rgba(88,72,44,.18), 0 3px 8px rgba(88,72,44,.18);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+/* ── 我們的藝術旅程 ───────────────────────────────────────
+   跟管理頁上面那排資料夾側標同一種做法：一排頁籤，選到的那一張跟下面的卡片
+   連成一體。六個單元本來排成兩排大卡片，佔掉大半個畫面（2026-09-15 他圈的）。
+   ⚠️ 已經有作品的才點得下去；還沒開始的壓成灰的，讓家長知道接下來會做什麼。 */
+.jrn{
+  display:flex; gap:6px; overflow-x:auto; padding:0 2px;
+  -webkit-overflow-scrolling:touch; margin-bottom:-1px;
+}
+.jrn .step{
+  /* 跟管理頁的側標一樣：平分整列，內容放不下才往外撐、整排變成可以橫捲 */
+  flex:1 1 0; min-width:max-content; cursor:pointer; font:inherit; text-align:left;
+  padding:9px 15px 10px; border:1px solid #d9cdb0; border-bottom:0;
+  border-radius:14px 12px 0 0; background:#e4d9be; color:#615949; line-height:1.35;
+  /* ⚠️ 成果頁**維持暖色的牛皮紙**（2026-10-05 他決定的：老師端換灰藍，成果頁不跟）。
+     字從 #6e6553 加深到 #615949：原本只有 4.1，這支 4.9。 */
+}
+.jrn .step .num{display:block; font-size:12px; font-weight:700; letter-spacing:.07em}
+/* ⚠️ 以前 11.5px 再打 .85 折＝4.15（2026-10-05 健檢）。「還沒開始」的頁籤整張已經 opacity:.62，
+   那是刻意壓下去的，不受這一條影響。 */
+.jrn .step .num .u{display:inline-block; margin-right:.6em}
+/* ⚠️ 間距寫在前面那段的 margin-right，不要寫成這裡的 margin-left：
+   掉到第二行時 margin-left 會變成一格縮排，跟上面那行對不齊（1024 量到的）。 */
+.jrn .step .soon-t{display:inline-block; letter-spacing:.04em}
+/* ⚠️ 桌機／平板：八張頁籤一定要一排放得下（2026-10-05 他圈的：第八張被切掉）。
+   本來每張 min-width:max-content，「UNIT 03　還沒開始」那一行就把每張撐到 210 上下，
+   八張 1700，外框只有 1048。改成平分、允許縮：「還沒開始」放不下就自己掉到下一行，
+   單元名稱也可以折成兩行——但不會再有一張被藏到右邊捲不到的地方。
+   700 以下維持原本的可以橫捲：那裡一排放不下八張，硬塞的話 621 寬時每張只剩 68px、
+   一個單元名折成四行、頁籤 145px 高（量過）。 */
+/* 700 以下可以橫捲：兩邊淡出，看得出還能往旁邊滑，被切到的半個字也不會像壞掉（2026-10-24）。
+   左右各留 18px，捲到最前面／最後面時第一張、最後一張是完整的。 */
+@media screen and (max-width:699px){
+  .jrn{padding:0 18px;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 18px,#000 calc(100% - 18px),transparent 100%);
+            mask-image:linear-gradient(90deg,transparent 0,#000 18px,#000 calc(100% - 18px),transparent 100%)}
+}
+@media (min-width:700px){
+  .jrn{overflow-x:visible}
+  .jrn .step{min-width:0; padding:9px 11px 10px}
+  .jrn .step b{overflow-wrap:anywhere}
+}
+.jrn .step b{display:block; font-size:15.5px; font-weight:700}
+/* ⚠️ 只有「有游標」的裝置才給 hover。觸控螢幕點過的那一顆會一直停在
+   hover 的樣子，看起來像還被按著（2026-09-18 平板健檢，兩個網站一起改）。 */
+@media (hover:hover){ .jrn .step:hover{background:#efe5d0; color:var(--ink2)} }
+.jrn .step.soon{opacity:.62; cursor:default}
+@media (hover:hover){ .jrn .step.soon:hover{background:#e4d9be; color:#615949} }
+/* 選到的那一張：白的、跟下面那張卡連成一體（多墊 1px 蓋掉卡片上緣的線） */
+.jrn .step.on{
+  background:#fffdf6; color:var(--ink); border-color:var(--line);
+  z-index:1; padding-bottom:11px; box-shadow:0 -2px 6px rgba(88,72,44,.07);
+}
+.jrn .step.on .num{color:var(--grn)}
+/* 頁籤下面接的那張單元卡，上緣的圓角要收掉才連得起來 */
+.unit.tabbed{border-top-left-radius:4px; border-top-right-radius:14px; margin-top:0}
+
+/* ── 單元：手機上的閱讀順序 ───────────────────────────────
+   單元名 → 關鍵字 → 「這個單元在學什麼」→ 作品 → 課堂觀察 → 回家聊聊。
+   ⚠️ 2026-09-17 把說明那一條從「作品後面」搬到「關鍵字下面」（他挑的 B2）：
+      那一條的身分是單元的抬頭，不是屬於作品的；本來卡在最後一張照片和
+      課堂觀察中間，變成浮在兩塊之間的一顆小按鈕。
+      它收起來只有一行（約 40px），作品還是關鍵字之後第一個看到的東西——
+      「手機以學生作品為主」那條原則沒有讓步。
+   ⚠️ 只用 flex 的 order 重排，**DOM 順序沒有動**（桌機那一版靠的就是原本的順序）。 */
+.unit{display:flex; flex-direction:column}
+.unit>.uh{order:1}
+.unit>.fold{order:2}
+.unit>.tnote{order:4}
+.unit>.gallery-wrap{order:3}
+.unit>.home{order:5}
+@media (min-width:621px){
+  .unit>.tnote{order:3}
+  .unit>.gallery-wrap{order:4}
+}
+
+/* 關鍵字小標（從中文說明拆出來的） */
+/* 單元的關鍵字。⚠️ 字級用 clamp() 跟著螢幕走——手機從 5.5 吋到 6.9 吋差很多，
+   寫死一個 px 在小手機上會太擠、在大手機上又太小（2026-09-15 他要求的）。
+   底色是淺藍（對比 6.04，過得了 5:1 那條線）。 */
+.tagrow{display:flex; flex-wrap:wrap; gap:7px; margin-top:9px}
+.tagrow .tag{
+  padding:6px 13px; border-radius:999px;
+  background:#e6f0f2; color:#1d5c6b;
+  font-size:clamp(14px, 3.8vw, 16px); font-weight:700; line-height:1.5;
+}
+
+/* 說明區：手機收起來（他說手機以學生作品為主） */
+.fold{margin:0 0 4px}
+.fold>summary{
+  list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px;
+  padding:8px 14px; border-radius:999px; border:1px solid var(--line);
+  background:#fffdf6; font-size:14.5px; font-weight:700; color:var(--grn-d);
+  margin-bottom:12px;
+}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary::after{content:'▾'}
+.fold[open]>summary::after{content:'▴'}
+@media (min-width:621px){ .fold>summary{display:none} }
+
+/* ⚠️ 左右不是各一半。左邊那張是一整段文字＋四個步驟方塊，右邊只有四行短句——
+   對切的話左邊擠成四行、右邊右側空一大塊，兩邊都不好看（2026-09-15 他圈的）。
+   1.45 : 1 是量出來的：右邊最長那句「表達力：把腦中的想法變成畫面，也說得出自己的故事」
+   剛好還放得下一行，左邊的段落也從四行收成三行，兩張卡的高度就接近了。 */
+.u-grid{display:grid; grid-template-columns:1.45fr 1fr; gap:14px}
+@media (max-width:820px){ .u-grid{grid-template-columns:1fr} }
+/* 三張說明卡：四角的圓角各差一點，底色是調色盤上的天藍／葉綠／杏橘。 */
+.u-card{border-radius:17px 14px 18px 13px; border:1px solid var(--line);
+        padding:16px 17px; background:#fffdf6}
+.u-card.b{background:#ecf3f4; border-color:#d7e5e6}
+.u-card.g{background:#eef4e8; border-color:#dae7cf}
+.u-card.p{background:#fbf1e9; border-color:#f0dbcb}
+.u-card h3{font-size:16.5px; margin-bottom:7px}
+.u-card h3{display:flex; align-items:baseline; flex-wrap:wrap; gap:6px}
+.u-card h3 .en2{font-size:13.5px; color:var(--muted); font-weight:500; white-space:nowrap}
+.u-card p{margin:0; color:#54605a; font-size:15px; line-height:1.85}
+
+/* 四個步驟：看一看 → 想一想 → 變一變 → 畫出來
+   ⚠️ 本來是四個各自獨立的方塊、中英文上下兩行，整塊 66px 高；
+   左邊這張卡就比右邊那張粉紅卡高出七十幾像素，底下空一截（2026-09-15 他圈的）。
+   現在收成**一條**虛線帶、中英文同一行、中間用箭頭串起來——
+   高度只剩一半，而且「步驟」的順序感反而更清楚。
+   ⚠️ 每一格要 nowrap，不然「變一變」會被拆成「變一／變」（踩過）。 */
+.proc{
+  display:flex; flex-wrap:wrap; align-items:baseline; justify-content:center;
+  gap:3px 9px; margin-top:12px; padding:8px 12px;
+  border:1px dashed #d6c9ac; border-radius:12px; background:#fffdf6;
+  font-size:14.5px; font-weight:700; line-height:1.6;
+}
+.proc .s{display:inline-flex; align-items:baseline; gap:5px; white-space:nowrap}
+.proc .s small{font-size:12px; font-weight:600; color:#5d6359; letter-spacing:.04em}   /* 以前 11px #767c70＝4.2 */
+.proc .ar{color:#c2b79c; font-weight:700}
+
+/* 課堂裡的英文句子 */
+.phr{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px}
+@media (max-width:820px){ .phr{grid-template-columns:1fr} }
+.phr div{padding:10px 12px; border-radius:12px; background:#fffdf6; border:1px solid #e6dcc7; font-size:14.5px}
+.phr div b{display:block; color:#1d5c6b; font-size:15px}
+
+/* 這堂課練習的能力 */
+.skl{margin:0; font-size:15px; line-height:1.9; color:#54605a}
+.skl b{color:var(--ink)}
+
+/* 老師的課堂觀察（寫給家長的，跟管理端的「單元省思」不是同一份）。
+   ⚠️ 本來是左邊一條綠槓，他覺得不好看——改成整塊淡綠底、四角都圓，
+   跟底下黃色的「回家聊聊」同一種做法（2026-09-15）。 */
+.tnote{
+  padding:16px 18px; background:#eef4e8; border:1px solid #dae7cf;
+  border-radius:17px 14px 18px 13px; margin:16px 0 4px;
+}
+/* ⚠️ 英文那截要 nowrap。不然在手機上會從 Teacher's / Note 中間斷開，
+   看起來像排版壞掉（他截圖回報）。放不下就整截掉到下一行，那樣是整齊的。 */
+.tnote h3{display:flex; align-items:baseline; flex-wrap:wrap; gap:7px; font-size:16.5px; margin-bottom:7px}
+.tnote h3 .en2{font-size:13.5px; color:var(--muted); font-weight:500; white-space:nowrap}
+.tnote p{margin:0 0 8px; color:#515c54; font-size:15px; line-height:1.9}
+.tnote .q{margin-top:10px; font-size:17.5px; font-weight:700; color:#2b6a4f; line-height:1.7}
+
+/* 作品區的抬頭 */
+.ghead{display:flex; justify-content:space-between; align-items:flex-end; gap:14px; margin:18px 0 12px}
+.ghead h3{font-size:18.5px; line-height:1.4}
+.ghead p{margin:1px 0 0; color:#6f7a70; font-size:14.5px}
+.ghead .lbl{flex:0 0 auto; font-size:13.5px; color:#767c70; font-weight:700; letter-spacing:.04em}
+
+/* 回家聊聊 */
+.home{
+  margin:16px 0 0; padding:16px 18px; border-radius:17px 14px 18px 13px;
+  background:#fbf3e0; border:1px solid #ecdcae;
+}
+.home h3{font-size:16.5px; margin-bottom:6px}
+.home h3{display:flex; align-items:baseline; flex-wrap:wrap; gap:6px}
+.home h3 .en2{font-size:13.5px; color:var(--muted); font-weight:500; white-space:nowrap}
+.home .q{font-size:17.5px; font-weight:700; color:#8a5a22; margin:2px 0 0; line-height:1.75}
+/* 補充那句接在問題後面，不要自己佔一行——那一行本來只用掉左邊三分之一，
+   右邊整片空著（2026-09-15 他圈的）。放不下才會自己折下去。 */
+.home .q .t{font-size:15px; font-weight:400; color:#6b6047; margin-left:10px}
+
+.foot{text-align:center; color:var(--muted); font-size:14px; padding:22px 10px 0}
+.foot .q{font-family:"Caveat",cursive; font-size:24px; color:#a8562f}
+.foot .fb{display:block; color:var(--grn-d); font-size:17px; font-weight:700; margin-bottom:3px}
+.foot .priv{margin-top:14px; font-size:12.5px; color:#8e8877; line-height:1.7}
+.loading{padding:60px 20px; text-align:center; color:var(--muted); font-size:17px}
+/* 老師預覽的提示條（家長永遠看不到）。黏在最上面，捲到哪裡都知道自己在預覽。 */
+.pvbar{
+  position:sticky; top:0; z-index:50;
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:4px 14px;
+  padding:8px 16px; background:#285a4a; color:#fff; font-size:15px; line-height:1.5;
+  text-align:center;
+}
+.pvbar .off{background:#fbf0d3; color:#6b4a0c; border-radius:999px; padding:1px 11px; font-weight:700; font-size:14px}
+@media print{ .pvbar{display:none} }
+
+/* ── 放大看 ───────────────────────────────────────────── */
+.mask{
+  position:fixed; inset:0; background:rgba(28,32,24,.92); z-index:100;
+  display:none; align-items:center; justify-content:center; padding:16px;
+}
+.mask.on{display:flex}
+.mask img{max-width:96vw; max-height:82vh; border-radius:10px; display:block}
+.mask .x{
+  position:fixed; top:14px; right:16px; width:44px; height:44px; border-radius:50%;
+  border:0; background:rgba(255,253,246,.94); font-size:20px; cursor:pointer;
+}
+/* 一張一張翻。家長打開就是要一路看完，關掉再點下一張很煩。
+   左右各一顆大按鈕（手指按得到），手機上也可以直接左右滑。 */
+.mask .nav{
+  position:fixed; top:50%; transform:translateY(-50%);
+  width:52px; height:52px; border-radius:50%; border:0; cursor:pointer;
+  background:rgba(255,253,246,.92); font-size:22px; line-height:1; color:#22332d;
+}
+.mask .nav.prev{left:10px}
+.mask .nav.next{right:10px}
+.mask .nav:disabled{opacity:.25; cursor:default}
+.mask .cap{
+  position:fixed; left:0; right:0; bottom:16px; text-align:center;
+  color:#fff; font-size:15px; text-shadow:0 1px 3px rgba(0,0,0,.7); padding:0 70px;
+}
+.mask .cap .n{display:block; font-size:13px; opacity:.85; margin-top:2px}
+@media (max-width:560px){
+  .mask .nav{width:44px; height:44px; font-size:19px}
+  .mask .nav.prev{left:6px} .mask .nav.next{right:6px}
+  .mask .cap{padding:0 58px}
+}
+
+/* ══ 手機專用的收尾調整 ══════════════════════════════════════
+   ⚠️ **這一段一定要放在整張樣式表的最後面。**
+   它蓋的 .sec-t / .ghead / .jrn 都是後面才定義的，權重一樣時「後寫的贏」——
+   我第一次寫在上面，四條規則全部沒生效，而且不會報錯，只有量高度才看得出來
+   （2026-09-15 踩到）。 */
+@media (max-width:620px){
+  /* 「我們的藝術旅程」這一行收掉：下面那排頁籤本來就看得懂，
+     省下來的高度讓作品早一點出現。 */
+  .sec-t{display:none}
+  .jrn{margin-top:14px}
+  /* 作品區的抬頭本來會折成四行、右邊那顆標籤還擠在旁邊 */
+  .ghead{display:block; margin:14px 0 10px}
+  .ghead h3{font-size:16.5px}
+  .ghead p{font-size:13.5px}
+  .ghead .lbl{display:none}
+  .tnote{padding:14px 15px}
+  .tnote h3,.home h3,.u-card h3{font-size:15.5px}
+  .tnote h3 .en2,.home h3 .en2,.u-card h3 .en2{font-size:12.5px}
+  /* 關鍵字在手機上要撐滿整行：每一顆平分剩下的寬度，
+     但不會被壓到比自己的字還窄（min-width:max-content）。 */
+  .tagrow .tag{flex:1 1 auto; min-width:max-content; text-align:center}
+  /* ⚠️ 課堂觀察那幾段要左右都對齊。手機一行只有十幾個字，
+     靠左排的話常常這一行差一個字、下一行差兩個字，右邊看起來坑坑疤疤
+     （2026-09-15 他圈的兩處，第一段和最後那句粗體都是）。
+     `text-align:justify` 會把每一行撐到右邊對齊（中文是字距平均拉開）；
+     最後一行照舊靠左，不會被拉成一行三個字。
+     ⚠️ 後面那行 `text-justify` 只有舊版 Edge 看得懂，Chrome／Safari 一律忽略——
+        留著是保險，**真正生效的是 text-align**，不要以為刪掉沒差。 */
+  .tnote p,.tnote .q,.home .q .t{text-align:justify; text-justify:inter-ideograph}
+  /* 「這個單元在學什麼」做成**整列寬的展開條**（2026-09-17 他挑的 B2）。
+     ⚠️ 不要維持原來的膠囊：它排在關鍵字下面，長得就像第四顆關鍵字。
+     整列 ＋ 虛線框 ＋ 右邊一個 ▾，一眼就知道那是可以打開的東西。 */
+  .fold>summary{
+    display:flex; width:100%; justify-content:space-between; align-items:center;
+    border-radius:12px 10px 13px 9px; padding:10px 14px; margin-bottom:14px;
+    border:1px dashed #d6c9ac; background:#fffdf6;
+  }
+  /* ⚠️ 「沒有標準答案，聽聽孩子怎麼說就好。」在手機上不要接在問題後面。
+     桌機接著排是為了不讓右邊空一整行；手機一行就這麼點寬，接在後面會把
+     問題的最後一行擠成半行、補充句也被切成兩截（2026-09-15 他圈的）。 */
+  .home .q .t{display:block; margin-left:0; margin-top:7px; line-height:1.8}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   玻璃質感（2026-09-21 美術改版）
+   跟老師端（Index.html）同一套做法：紙不是玻璃，浮在紙上面的東西才是。
+   ⚠️ 變數那一段兩邊是同一份，改一邊要改兩邊。
+   ⚠️ 寫在最後面是刻意的——好幾條靠「寫在後面」才蓋得過原本的規則。
+   ══════════════════════════════════════════════════════════════ */
+
+:root{
+  /* 玻璃的底：暖白，只有六成——底下的紙、頁面色、水彩要透得出來。
+     ⚠️ 不要再調低。低於 .5 之後，淺色頁（教學進度是米黃）上的正文
+        對比會掉到 4.8 以下。 */
+  /* ⚠️ 2026-10-06 跟老師端 10-05 的「清爽版玻璃」同步（他發現兩邊不一樣）：
+     .62 → .80、飽和 1.7 → 1.15。透明度太高時，底下的水彩一塊一塊透上來，
+     字底下的顏色一直在變；玻璃的感覺改由「邊緣」負責，不靠透明。
+     ⚠️ 只有影子和邊緣的**顏色**跟老師端不一樣：老師端是灰藍牛皮紙，用石板藍；
+        成果頁維持暖色底（2026-10-05 他決定的），所以用暖褐——數字就是下面的 --shade／--edge。 */
+  --shade:88,72,44;                       /* 影子：暖褐（老師端是石板藍 44,62,82） */
+  --edge:160,142,104;                     /* 玻璃邊緣收暗的那一段（老師端 96,118,142） */
+  --gl-tint:rgba(255,254,251,.80);
+  --gl-tint-2:rgba(255,254,251,.70);      /* 次要元件（膠囊、欄位）透一點 */
+  --gl-bf:blur(16px) saturate(1.15);
+
+  /* 邊：左上亮 → 中間收掉 → 右下再亮一次。
+     這一條就是「立體」的來源——玻璃的厚度是靠邊緣的反光讀出來的，
+     不是靠陰影。單一顏色的細框做不出來，所以邊框改成漸層。 */
+  /* 跟老師端同一組比例：左上一整段白光 → 很快收掉 → 右下暗一點點（玻璃背光那一面）
+     → 最角落接一點回光。亮與暗之間那個「折」就是立體轉折。 */
+  --gl-rim:linear-gradient(150deg,
+      rgba(255,255,255,1) 0%,
+      rgba(255,255,255,.55) 20%,
+      rgba(255,255,255,.12) 45%,
+      rgba(var(--edge),.22) 72%,
+      rgba(var(--edge),.16) 90%,
+      rgba(255,255,255,.60) 100%);
+
+  /* 內緣：上面一道白光、下面一道回光＝一圈玻璃的唇。
+     ⚠️ inset 的陰影會照著 border-radius 走，所以四角那個「各差一兩像素」的
+        手裁圓角不會被破壞。 */
+  /* 上亮下暗兩條：玻璃的底面是背光的，上亮下暗才讀得出弧度 */
+  --gl-lift:inset 0 1.5px 0 rgba(255,255,255,.95), inset 0 -1px 0 rgba(var(--shade),.07);
+  --gl-ring:inset 0 0 0 1px rgba(255,255,255,.55);
+
+  /* 影子：比現在深一階、也散一階。玻璃要浮起來才看得出是玻璃。
+     色相照舊帶暖褐（白紙上不要浮出一圈冷灰）。 */
+  --gl-drop:0 1px 2px rgba(var(--shade),.07), 0 10px 26px rgba(var(--shade),.09);
+}
+
+/* 瀏覽器不支援 backdrop-filter 時（模糊做不出來），把底調實一點，
+   免得變成「只是比較淡的卡片」。 */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  :root{ --gl-tint:rgba(255,254,251,.93); --gl-tint-2:rgba(255,254,251,.88) }
+}
+
+/* 系統設定成「減少透明度」時一律回到實色（iOS 自己也是這樣做的） */
+@media (prefers-reduced-transparency:reduce){
+  :root{ --gl-tint:#fffdf6; --gl-tint-2:#fffdf6; --gl-bf:none }
+}
+
+/* ⚠️ .u-card 的三個顏色變體（.b 藍／.g 綠／.p 粉）要一起寫進來。
+   它們的權重（0,2,0）比 `.u-card`（0,1,0）高，不列出來的話那兩張小卡
+   會維持原本的淡色底、只有這一張變玻璃，看起來像漏改。
+   （淡綠的「課堂觀察」和淡黃的「回家聊聊」**不在這裡**——那兩塊的底色
+   是它們的身分，另外留著，只換邊框。） */
+.card,
+.u-card,
+.u-card.b,
+.u-card.g,
+.u-card.p{
+  background:
+    linear-gradient(var(--gl-tint), var(--gl-tint)) padding-box,
+    var(--gl-rim) border-box;
+  border:1px solid transparent;
+  box-shadow:var(--gl-lift), var(--gl-drop);
+  -webkit-backdrop-filter:var(--gl-bf);
+          backdrop-filter:var(--gl-bf);
+}
+
+/* ══ 2. 橫幅 ═════════════════════════════════════════════════
+   ⚠️ 橫幅維持不透明。它本身就是一張畫上水彩的紙（左上葉綠、左下麥黃、
+      右邊接到插圖），透明化會把那兩塊暈洗掉、也會跟插圖的水彩紙打架。
+      只給它玻璃的**邊**和**浮起來的影子**。 */
+.hero{
+  border-color:rgba(255,255,255,.58);
+  box-shadow:var(--gl-ring), inset 0 1px 0 rgba(255,255,255,.92), var(--gl-drop);
+}
+
+/* ══ 8. 家長端（成果頁）專屬 ═════════════════════════════════ */
+
+/* 這一頁的底本來是一塊平的 #faf7ec。玻璃底下什麼都沒有的話，
+   透明就只是「比較淡」而已——所以補上兩片壓在 8% 以下的水彩暈，
+   跟老師端資料夾那一面同一組顏色（天藍、赭橘）。
+   ⚠️ 這是玻璃唯一需要動到「底材」的地方。不想動底色的話，把這一條刪掉，
+      其餘規則照樣成立，只是玻璃的層次會弱一階。 */
+/* ⚠️ 選擇器一定要帶 :not(:has(>.app))，只染家長端這一頁。
+   老師端的 body 是資料夾那一面（background:var(--folder)），碰不得。
+   踩過一次：本來寫成「先蓋兩片水彩、再用 :has(>.app) 把老師端改回
+   background-image:var(--folder)」，結果老師端整片牛皮紙變成一塊死的平色——
+   --folder 的最後一項是 #ddd0b3（一個**顏色**），background-image 吃不下，
+   整條宣告就作廢、變回 none，而且不會報錯。
+   ⚠️ 以後要把 --folder 放回去，只能用 background 簡寫，不能用 background-image。 */
+body{
+  /* ⚠️ 底色從 #faf7ec 往下走一階到 #f2ead4（2026-09-21 他要「再暗一些些」）。
+     它不是隨便挑的：#faf7ec（紙）和 #ddd0b3（老師端的牛皮紙資料夾）之間，
+     大約走三分之一——所以兩個網站還是同一面紙，只是家長端這一面收得深一點，
+     半透明的卡片浮在上面才有東西可以襯。
+     ⚠️ 不要再往下走太多。卡片是 rgba(255,253,246,.62)，底一深，卡片的白就跟著
+        被拉暗，正文的對比要重新量過。
+     ⚠️ 2026-10-05 試過換成灰藍 #e6ebef（跟老師端一起），他看過之後決定成果頁
+        **維持暖色**。要再試的話就是換這一個值＋上面 .jrn .step 那幾個（亮度相同，對比不用重量）。 */
+  background-color:#f2ead4;
+  background-image:
+    radial-gradient(900px 520px at 4% 0%, rgba(169,214,223,.26), rgba(169,214,223,0) 62%),
+    radial-gradient(820px 460px at 98% 6%, rgba(243,170,127,.18), rgba(243,170,127,0) 60%);
+  background-attachment:fixed;
+}
+
+/* ⚠️ 底色一暗，**直接坐在底上**（不在卡片裡）的那幾行字對比就跟著掉。
+   量出來的（舊底 #faf7ec → 新底 #f2ead4）：
+     作品區說明 4.17 → 3.73　STUDENT GALLERY 4.01 → 3.58
+     頁尾 4.95 → 4.42　　　　頁尾小字 3.30 → 2.95
+   所以這四個顏色一起往下調一階，讓它們**至少回到原本的比值**，不會因為換底
+   而變得比以前難讀。調完：4.23 / 4.01 / 4.96 / 3.32。
+   ⚠️ 這四行本來就沒有到全站那條 4.8（頁尾小字只有 3.3），這一輪只做到「不變差」，
+      沒有順手改成合格——那是另一個決定，要動的話四個一起重挑。 */
+/* ── 2026-10-05 健檢一起改到全站的 4.8（上面說的「另一個決定」）：
+   4.23 / 4.01 / 4.96 / 3.32 → 4.90 / 4.92 / 4.96 / 4.93 */
+.ghead p{ color:#5d675e }
+
+.ghead .lbl{ color:#60665c }
+
+.foot{ color:#5c6660 }
+
+.foot .priv{ color:#686457 }
+
+/* 橫幅底下那條白橫帶（班級代號那一列） */
+.hero .idl{
+  background:rgba(255,254,251,.80);
+  border-top-color:rgba(255,255,255,.55);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.85);
+  -webkit-backdrop-filter:blur(14px) saturate(1.15);
+          backdrop-filter:blur(14px) saturate(1.15);
+}
+
+.hero .code{
+  background:rgba(255,255,255,.72);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.7),
+             inset 0 1px 0 rgba(255,255,255,.95), 0 2px 6px rgba(88,72,44,.14);
+  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+}
+
+/* 單元頁籤：跟老師端側標同一個做法，上緣的顏色照著圓角轉過去。
+   ⚠️ .jrn .step 原本沒有 position，::before 要先有定位點。 */
+.jrn .step{
+  position:relative;
+  background:
+    linear-gradient(rgba(232,221,196,.55), rgba(220,206,175,.60)) padding-box,
+    linear-gradient(160deg, rgba(255,255,255,.75), rgba(255,255,255,.18) 48%,
+                    rgba(255,255,255,.42)) border-box;
+  border:1px solid transparent; border-bottom:0;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55);
+  -webkit-backdrop-filter:blur(8px) saturate(1.15);
+          backdrop-filter:blur(8px) saturate(1.15);
+}
+
+@media (hover:hover){
+  .jrn .step:hover{
+    background:
+      linear-gradient(rgba(245,237,219,.75), rgba(236,226,202,.75)) padding-box,
+      linear-gradient(160deg, rgba(255,255,255,.9), rgba(255,255,255,.3) 48%,
+                      rgba(255,255,255,.55)) border-box;
+  }
+  .jrn .step.soon:hover{
+    background:
+      linear-gradient(rgba(232,221,196,.55), rgba(220,206,175,.60)) padding-box,
+      linear-gradient(160deg, rgba(255,255,255,.75), rgba(255,255,255,.18) 48%,
+                      rgba(255,255,255,.42)) border-box;
+  }
+}
+
+/* 選到的那一張一樣維持實色（要跟下面那張卡連成一體） */
+.jrn .step.on{
+  background:#fffdf6;
+  border:1px solid rgba(40,90,74,.20); border-bottom:0;
+  box-shadow:0 -3px 10px rgba(88,72,44,.06);
+  -webkit-backdrop-filter:none; backdrop-filter:none;
+}
+
+.jrn .step.on::before{
+  content:''; position:absolute; left:-1px; right:-1px; top:-1px; height:22px;
+  border-radius:inherit; pointer-events:none;
+  /* ⚠️ 跟老師端側標同一組比例，兩邊要一起調（2026-09-21 調淡過一次）。 */
+  background:linear-gradient(180deg,
+      rgba(40,90,74,.50) 0 2px, rgba(40,90,74,.20) 2px,
+      rgba(40,90,74,.07) 42%, rgba(40,90,74,0) 100%);
+}
+
+/* 手機上不顯示單元抬頭那個小方塊（2026-09-21 他圈的）。
+   ⚠️ 它**不是** emoji，是老師上傳的「封面範例」縮圖——只有真的傳過封面才會出現
+      （沒傳就整塊不畫，程式裡已經是這樣了）。離線預覽的假資料剛好塞了一張
+      畫著調色盤的圖，所以看起來像一顆表情符號。
+      桌機照舊留著，收掉的只有手機：手機那一版的原則是「以學生作品為主」，
+      抬頭那一塊 44px 每一個單元都要再滑過一次。
+   ⚠️ 斷點用 620，不是 820——成果頁自己的手機斷點是 620／621（老師端才是 820）。
+   ⚠️ 選擇器要帶 `.unit>.uh>`：老師端也有 .unit，而且 .ic 是全站共用的圖示 class。 */
+@media (max-width:620px){
+  .unit>.uh>.ic{ display:none }
+}
+
+/* 課堂觀察（淡綠）、回家聊聊（淡黃）：底色是它們的身分，留著，
+   只把邊改成玻璃的邊、加上厚度。 */
+.tnote{
+  background:rgba(238,244,232,.82);
+  border-color:rgba(255,255,255,.5);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.55),
+             inset 0 1px 0 rgba(255,255,255,.9), 0 8px 20px rgba(88,72,44,.08);
+  -webkit-backdrop-filter:var(--gl-bf); backdrop-filter:var(--gl-bf);
+}
+
+.home{
+  background:rgba(251,243,224,.82);
+  border-color:rgba(255,255,255,.5);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.55),
+             inset 0 1px 0 rgba(255,255,255,.9), 0 8px 20px rgba(88,72,44,.08);
+  -webkit-backdrop-filter:var(--gl-bf); backdrop-filter:var(--gl-bf);
+}
+
+/* 關鍵字小膠囊 */
+.tagrow .tag{
+  background:rgba(230,240,242,.72);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.6), inset 0 1px 0 rgba(255,255,255,.9);
+  -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+}
+
+/* 「這個單元在學什麼」那顆收合鈕。
+   ⚠️ 選擇器一定要帶 `.unit>`。只寫 `.fold>summary` 的話會咬到**老師端**——
+      系統設定那四張收合卡是 `<details class="card fold">`，class 名字撞在一起。
+      咬到的後果不只是變好看：那顆 summary 本來沒有框，加上 1px 的邊之後
+      每一張卡高了 2px，整頁往下位移（2026-09-21 用版面比對量出來的）。
+      這一層在正本裡不會發生（規則會分別寫進 Index.html 和 Show.html），
+      但預覽是同一支 CSS 疊兩頁，不鎖住的話你看到的就不是上線後的樣子。 */
+.unit>.fold>summary{
+  background:
+    linear-gradient(var(--gl-tint-2), var(--gl-tint-2)) padding-box,
+    var(--gl-rim) border-box;
+  border:1px solid transparent;
+  box-shadow:var(--gl-lift), 0 2px 8px rgba(88,72,44,.07);
+  -webkit-backdrop-filter:blur(10px) saturate(1.15);
+          backdrop-filter:blur(10px) saturate(1.15);
+}
+
+/* 家長輸入確認碼那一關 */
+.gate input{
+  background:rgba(255,255,255,.58);
+  border-color:rgba(190,174,140,.6);
+  box-shadow:inset 0 1px 3px rgba(88,72,44,.12), inset 0 -1px 0 rgba(255,255,255,.8);
+  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+}
+
+.gate input:focus{ background:rgba(255,255,255,.85); border-color:var(--grn) }
+
+.gate button{
+  background:rgba(40,90,74,.92);
+  background-image:linear-gradient(180deg,
+      rgba(255,255,255,.28) 0%, rgba(255,255,255,.07) 46%, rgba(0,0,0,.07) 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.42), inset 0 -1px 0 rgba(0,0,0,.12),
+             0 8px 18px rgba(40,90,74,.22);
+}
+
+.gate button:active{ box-shadow:inset 0 2px 5px rgba(0,0,0,.18); transform:translateY(1px) }
+
+.gate .teach{
+  background:rgba(231,239,227,.70);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.6), inset 0 1px 0 rgba(255,255,255,.9),
+             0 4px 12px rgba(88,72,44,.07);
+  -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+}
+
+/* 照片的白卡紙留著（那是「裱起來掛在牆上」），只把外面那條線換成
+   一圈更淡的暖邊、影子再散一階，跟旁邊的玻璃同一個景深。
+   ⚠️ 選擇器一定要帶 `.gallery-wrap`。老師端也有 `.ph`（進度檢核的照片格），
+      而且 feInner() 還拿 `<span class="ph">` 當**提示字**用——
+      不鎖住的話，空白備註的提示字外面會被描一圈影子，看起來就像已經填好了
+      （正是 2026-09-20 修過的那個「提示字被當成真紀錄」）。 */
+.gallery-wrap .ph{
+  box-shadow:0 0 0 1px rgba(160,142,104,.22), inset 0 1px 0 rgba(255,255,255,.9),
+             0 6px 16px rgba(88,72,44,.14);
+}
+
+@media (max-width:820px), (max-height:520px) and (max-width:1024px){
+  /* ⚠️ 手機上**不做背景模糊**。backdrop-filter 每捲一格就要把元素底下那塊重算一次；
+     一頁十幾張卡同時在算，舊一點的手機捲起來就會頓。家長大多用手機看，
+     這一頁又是一直往下滑的——所以手機只留「不用重算」的那幾件：
+     半透明的底、邊緣那一圈光、收短的影子。玻璃的樣子還在，只是少了那層霧。
+     ⚠️ 這裡用 820（裝置級距），不是成果頁排版用的 620——這一條是效能，不是版面。 */
+  :root{
+    --gl-bf:none;
+    --gl-tint:rgba(255,254,251,.86);      /* 沒有模糊，比桌機（.80）再實一點（跟老師端同一組） */
+    --gl-tint-2:rgba(255,254,251,.76);
+    --gl-drop:0 1px 1px rgba(var(--shade),.08), 0 6px 14px rgba(var(--shade),.09);
+  }
+  .card,
+  .u-card,
+  .jrn .step,
+  .tnote,
+  .home,
+  .tagrow .tag,
+  .unit>.fold>summary,
+  .gate input,
+  /* 2026-10-12 稽核：橫幅底下那條班級橫帶和班號牌漏掉了，手機上還在模糊 */
+  .hero .idl,
+  .hero .code{
+    -webkit-backdrop-filter:none !important;
+            backdrop-filter:none !important;
+  }
+}
+
+/* ══ 列印 ════════════════════════════════════════════════
+   紙上沒有玻璃：一律回到實色、拿掉所有模糊。
+   ⚠️ 量列印的版面要用 717px 的寬度（沒寫 screen 的 max-width 會漏到紙上），
+      所以上面那個 820 的區塊在列印時也會生效。 */
+@media print{
+  *{
+    -webkit-backdrop-filter:none !important;
+            backdrop-filter:none !important;
+  }
+  .card,
+  .u-card,
+  .tnote,
+  .home{
+    background:#fffdf6 !important; border:1px solid var(--line) !important;
+    box-shadow:none !important;
+  }
+}
+</style>
+<style id="show2-css">
+/* ══ 成果頁・工作室版（index2.html，2026-11-04）══════════════════════════
+   同一份 Show.html，外面疊這一層。畫面由 show2.js 的 show() 重畫，元件一律 x- 開頭，
+   不碰原版的 .hero／.card／.ph／.home… —— 原版那些樣式寫得很細，共用名稱一定打架。
+   素材在 web/studio/show/（tools/studio_assets.py 從 藍圖/codex_show/ 轉的，會縮小）
+   ⚠️ 所以 border-image-slice 一律寫百分比；寫像素的話縮過的圖切錯地方。
+   ⚠️ border 簡寫會把 border-image 清掉——要寬度就寫 border-width。
+   版面規則（他 11-04 一路圈出來的）：
+   - 資訊卡不硬拉等高、字不壓在膠帶／圖釘／郵票上
+   - 照片直式 3:4、整張放進去不裁；沒寫說明就不留那一行
+   - 掛畫繩的小框放單元封面，不放作品
+   - 手機：排法照原版（作品在說明前、說明摺起來），上一個／下一個左右一排 */
+
+body.sw{background:#f7efdf}
+body.sw .wrap{max-width:none;padding:0}
+body.sw .hero{display:none}
+
+/* ── 一、展覽牆 ── */
+.x-wall{background:#f7eedd url(studio/show/gallery_wall.webp) center bottom/cover no-repeat;padding:22px clamp(16px,3vw,40px) 5.2vw;position:relative}
+.x-top{display:grid;grid-template-columns:auto 1fr auto;gap:22px;align-items:center;max-width:1440px;margin:0 auto}
+.x-sign{border-style:solid;border-color:transparent;border-width:15px;border-image:url(studio/sign_c.webp) 55 48 46 52 / 15px 13px 13px 14px stretch;
+  background:#fef0d9;background-clip:padding-box;padding:12px 24px;min-width:380px;filter:drop-shadow(4px 8px 10px rgba(110,80,40,.18))}
+.x-sign h1{margin:0;font-family:"LXGW WenKai TC","Noto Serif TC",serif;font-size:38px;line-height:1.2;color:#3f6b58;white-space:nowrap}
+.x-sign h1 em{font-style:normal;font-family:Caveat,cursive;font-size:44px;color:#e0705a;margin-right:8px}
+.x-sub{color:#c8664c;font-weight:700;margin-top:4px}
+.x-who-m{display:none;font-size:13px;color:var(--ink2)}
+.x-lead{border-style:solid;border-color:transparent;border-width:22px;border-image:url(studio/chalkboard_c.webp) 75 65 61 66 fill / 22px 20px 19px 20px stretch;
+  color:#f4f1e6;padding:6px 14px;font-size:15px;line-height:1.7;filter:drop-shadow(4px 8px 10px rgba(110,80,40,.2));text-wrap:balance}
+.x-lead em{display:block;font-style:normal;color:#cfe0d4;font-size:14px}
+.x-lead[hidden]{display:block;visibility:hidden}
+.x-plate{display:flex;gap:12px;align-items:center}
+.x-no{background:url(studio/show/plaque_c.webp) center/100% 100% no-repeat;width:150px;aspect-ratio:1117/511;display:grid;place-items:center;
+  font-size:38px;font-weight:800;color:#5b4527;filter:drop-shadow(3px 6px 6px rgba(110,80,40,.2))}
+.x-no[hidden]{display:none}
+.x-who{background:rgba(255,253,246,.88);border-radius:12px;padding:6px 12px;font-size:14px;color:var(--ink2);line-height:1.5;white-space:pre-line}
+.x-who:empty{display:none}
+
+.x-railwrap{position:relative;margin:26px auto 0;max-width:1440px;display:grid;grid-template-columns:1fr 210px;gap:20px;align-items:end}
+.x-railwrap[hidden]{display:none}
+.x-rope{position:absolute;left:0;right:230px;top:10px;border-top:3px solid #b08b5a;opacity:.85}
+.x-rail{display:grid;grid-template-columns:repeat(8,1fr);gap:14px;padding-top:24px;position:relative}
+.x-fr{position:relative;background:none;border:0;padding:0;text-align:left;font:inherit;color:inherit;cursor:pointer;transition:transform .15s}
+.x-fr .pic{position:relative;aspect-ratio:1;padding:15% 13% 13.8% 13%;background:center/100% 100% no-repeat;filter:drop-shadow(3px 7px 8px rgba(110,80,40,.22))}
+.x-fr .pic::before{content:"";position:absolute;left:50%;top:-24px;height:24px;border-left:2px solid #b08b5a;opacity:.8}
+.x-fr.pf-0 .pic{background-image:url(studio/show/pf_coral_c.webp)}
+.x-fr.pf-1 .pic{background-image:url(studio/show/pf_butter_c.webp)}
+.x-fr.pf-2 .pic{background-image:url(studio/show/pf_mint_c.webp)}
+.x-fr.pf-3 .pic{background-image:url(studio/show/pf_lavender_c.webp)}
+.x-fr.pf-4 .pic{background-image:url(studio/show/pf_sky_c.webp)}
+.x-cv{width:100%;height:100%;display:grid;place-items:center;overflow:hidden;border-radius:3px;background:#fbf6ea;font-size:12px;color:#8a8270}
+.x-cv img{width:100%;height:100%;object-fit:cover;display:block}
+.x-cv .ic{font-size:clamp(22px,3vw,40px);line-height:1}
+.x-fr .u,.x-fr b,.x-fr .n{display:block;background:rgba(255,253,246,.92);padding:0 8px}
+.x-fr .u{margin-top:10px;border-radius:8px 8px 0 0;padding-top:4px;font-size:11px;letter-spacing:.08em;color:var(--muted)}
+.x-fr b{font-size:15px;line-height:1.35}
+.x-fr .n{border-radius:0 0 8px 8px;padding-bottom:4px;font-size:12px;color:var(--muted)}
+.x-fr.on{transform:translateY(-8px) scale(1.04)}
+.x-fr.on .u,.x-fr.on b,.x-fr.on .n{background:#3f6b58;color:#fff}
+.x-fr.on .u::before{content:"▶ ";color:#f6d77a}
+.x-fr.soon{opacity:.55;cursor:default}
+.x-fr.soon .pic{background:none;border:3px dashed #c9bda4;border-radius:10px;padding:10%;filter:none}
+.x-fr.soon .pic::before{top:-27px}
+.x-new{position:absolute;top:-18px;left:50%;margin-left:-58px;width:116px;aspect-ratio:1093/259;z-index:2;display:grid;place-items:center;
+  background:url(studio/show/ribbon_c.webp) center/100% 100% no-repeat;color:#fff;font-size:12px;font-weight:700;line-height:1;transform:rotate(-4deg);text-shadow:0 1px 0 rgba(0,0,0,.15)}
+
+/* 圖圖踩在地板上：牆的 padding-bottom 5.2vw 裡，地板線約在下面 3.6vw，整欄往下伸 4vw；名牌在頭上 */
+.x-tutu{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;margin-bottom:-4vw;position:relative;z-index:1}
+.x-tutu .fig{width:100%;min-height:190px;background:url(studio/tt_act2.webp) center bottom/contain no-repeat;position:relative}
+.x-tutu .fig::after{content:"";position:absolute;left:18%;right:18%;bottom:-6px;height:16px;border-radius:50%;background:radial-gradient(closest-side,rgba(90,60,30,.32),rgba(90,60,30,0));z-index:-1}
+.x-tag{border-radius:14px;background:#fffdf6;box-shadow:0 4px 0 #d9c9a6,0 8px 14px rgba(110,80,40,.14);padding:6px 10px;font-size:14px;line-height:1.5;text-align:center;width:100%;margin-bottom:8px}
+.x-tag b{font-size:16px}
+.x-mtutu{display:none}
+
+/* ── 二、展覽區 ── */
+.x-room{padding:28px clamp(16px,3vw,40px) 40px;max-width:1440px;margin:0 auto}
+.x-uh{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.x-uh .k{font-size:13px;letter-spacing:.1em;color:var(--muted)}
+.x-uh h2{margin:0;font-family:"LXGW WenKai TC","Noto Sans TC",sans-serif;font-size:30px;line-height:1.3;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:10px}
+.x-uh h2 small{font-size:18px;color:var(--muted);font-weight:500;white-space:nowrap}   /* 中文名整塊不拆 */
+.x-uh .cnt{font-size:15px;color:var(--ink2)}
+.x-chips{display:flex;gap:6px;flex-wrap:wrap}
+.x-chips span{font-size:13px;background:#fffdf6;border-radius:20px;padding:0 10px;box-shadow:0 2px 0 #e0d2b3}
+
+details.x-fold>summary{display:none}
+/* 第一排：學什麼｜老師的信（等高）；第二排：練習的能力橫跨、四項一排 */
+.x-cards{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:stretch}
+.x-cards>*{grid-column:1;grid-row:1}
+.x-cards>.x-note{grid-column:2;grid-row:1}
+.x-cards>.x-skc{grid-column:1/-1;grid-row:2}
+.x-cards.solo{grid-template-columns:1fr}
+.x-cards.solo>*{grid-column:1;grid-row:auto}
+.x-card{filter:drop-shadow(4px 8px 10px rgba(110,80,40,.16))}
+.x-card h3{margin:0 0 6px;font-size:18px}
+.x-card h3 .en{display:block;font-size:12px;letter-spacing:.06em;color:var(--muted);font-weight:500}
+.x-card p{margin:0 0 8px}
+.x-learn{border-style:solid;border-color:transparent;border-width:22px;border-image:url(studio/show/placard_c.webp) 9.6% 6.5% 10.2% 5.8% fill / 22px 23px 24px 21px stretch;padding:26px 24px 18px}
+.x-proc{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.x-proc div{background:#fff6e3;box-shadow:0 2px 0 #e6d3ad;border-radius:8px;text-align:center;font-size:14px;padding:6px 2px;line-height:1.3}
+.x-proc i{display:block;font-style:normal;font-size:10px;letter-spacing:.06em;color:var(--muted)}
+/* 小卡：圖釘只在左上角、薄荷底紙只在右下，九宮格拉寬不變形；版面只讓 18px，圖釘那角靠 padding-left */
+.x-skc{border-style:solid;border-color:transparent;border-width:18px;border-image:url(studio/show/card_c.webp) 21.4% 4.5% 7.1% 14.2% fill / 54px 18px 18px 57px stretch;padding:6px 22px 10px 40px}
+.x-skl{display:grid;grid-template-columns:repeat(4,1fr);gap:10px 18px;margin-top:6px}
+.x-skl b{display:block;color:#3f6b58;font-size:16px}
+.x-skl span{display:block;font-size:14px;color:var(--ink2);line-height:1.55}
+/* 信紙：膠帶是獨立一張、固定大小貼在正上方，紙本身沒有膠帶 */
+.x-note{position:relative;border-style:solid;border-color:transparent;border-width:44px 7px 7px;border-image:url(studio/show/letter_plain.webp) 14.3% 2.4% 1.8% 2.4% / 44px 7px 7px 7px stretch;
+  padding:0 22px 18px;background:#fffaf0;background-clip:padding-box}
+.x-note::before{content:"";position:absolute;left:50%;top:-56px;width:150px;margin-left:-75px;aspect-ratio:370/128;background:url(studio/show/tape.webp) center/100% 100% no-repeat}
+.x-note .q{margin-top:10px;padding-left:12px;border-left:4px solid #c8664c;font-weight:700;color:var(--ink2)}
+
+.x-gwall{margin-top:30px;padding:22px 24px 26px}
+.x-gh{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:16px}
+.x-gh h3{margin:0;font-family:"LXGW WenKai TC","Noto Sans TC",sans-serif;font-size:22px}
+.x-gh p{margin:0;color:var(--muted)}
+.x-gh .lbl{font-size:12px;letter-spacing:.12em;color:var(--muted)}
+.x-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:34px 18px;padding-top:10px}
+.x-ph{position:relative;border-radius:4px;background:#fffdf7;padding:10px;cursor:zoom-in;box-shadow:0 1px 0 #eadfc8,0 8px 16px rgba(110,80,40,.16)}
+.x-ph:nth-child(odd){transform:rotate(-1deg)}
+.x-ph:nth-child(3n){transform:rotate(1.2deg)}
+.x-ph::before{content:"";position:absolute;left:50%;top:-26px;margin-left:-10px;width:20px;height:64px;background:url(studio/show/peg_c.webp) center/100% 100% no-repeat;filter:drop-shadow(1px 3px 2px rgba(0,0,0,.18));z-index:1}
+/* 他都拍直的：3:4、整張放進去不裁 */
+.x-ph img{width:100%;aspect-ratio:3/4;object-fit:contain;display:block;background:#efe8da}
+.x-ph .cap{font-size:13px;color:var(--ink2);text-align:center;padding-top:4px;line-height:1.4}
+
+/* 最下面：明信片｜上一個｜下一個（三格等高）；看舊單元時「回到最新」在下面一排 */
+.x-end{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:22px;margin-top:30px;align-items:stretch}
+.x-end:has(.x-latest)>.x-home{grid-row:span 2}
+.x-end.no-home{grid-template-columns:1fr 1fr}
+.x-nav{display:contents}
+.x-nav button{font:inherit;color:inherit;border:0;border-radius:16px;background:#fffdf6;box-shadow:0 5px 0 #d9c9a6,0 10px 16px rgba(110,80,40,.14);cursor:pointer}
+.x-nav button:active{transform:translateY(3px);box-shadow:0 2px 0 #d9c9a6}
+.x-latest{grid-column:2/4;grid-row:2;text-align:center;padding:8px 12px;line-height:1.35;background:#3f6b58 !important;color:#fff !important;box-shadow:0 5px 0 #2b4d3f,0 10px 16px rgba(40,60,50,.2) !important}
+.x-end.no-home .x-latest{grid-column:1/-1}
+.x-latest small{display:block;font-size:12px;color:#dfe9e3}
+.x-go{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:12px}
+.x-go .cv{display:block;width:42%;max-width:92px;padding:17px 15px 16px;background:center/100% 100% no-repeat url(studio/show/pf_sky_c.webp);filter:drop-shadow(2px 4px 4px rgba(110,80,40,.18))}
+.x-go.nx .cv{background-image:url(studio/show/pf_butter_c.webp)}
+.x-go .cv .x-cv{aspect-ratio:1;height:auto}
+.x-go .tx{display:flex;flex-direction:column;line-height:1.35}
+.x-go .d{font-size:16px;font-weight:700}
+.x-go small{font-size:12px;color:var(--muted)}
+.x-go[disabled]{cursor:default;box-shadow:none !important;background:rgba(255,253,246,.5) !important;opacity:.55}
+.x-go[disabled] .cv{background:none;border:3px dashed #d4c9b2;border-radius:10px;aspect-ratio:1}
+.x-end.no-home .x-go{flex-direction:row;gap:18px}
+.x-end.no-home .x-go.nx{flex-direction:row-reverse;text-align:right}
+.x-end.no-home .x-go .cv{width:96px}
+
+.x-home{border-style:solid;border-color:transparent;border-width:14px 12px 12px;border-image:url(studio/show/postcard_c.webp) 23.9% 41.4% 4.8% 3% fill / 62px 170px 12px 12px stretch;
+  padding:2px 18px 14px;filter:drop-shadow(4px 8px 10px rgba(110,80,40,.16))}
+.x-home::before{content:"";float:right;width:190px;height:58px}   /* 郵票那一角讓出來，字繞過去 */
+.x-home h3{margin:6px 0 6px;font-family:"LXGW WenKai TC","Noto Sans TC",sans-serif;font-size:18px;font-weight:700;color:#3f6b58}
+.x-home h3 .en{display:block;font-size:12px;letter-spacing:.06em;color:var(--muted);font-weight:500}
+.x-home .q{font-family:"LXGW WenKai TC","Noto Sans TC",sans-serif;font-weight:500;color:#3a4741;font-size:19px;line-height:1.6}
+.x-home .t{display:block;font-family:"LXGW WenKai TC","Noto Sans TC",sans-serif;font-weight:400;font-size:15px;color:#6b706a;margin-top:6px;line-height:1.6}
+
+/* ── 頁尾：字在上、四位夥伴的圖在下（桌機三張接成一條撐滿寬，手機只用中間那張） ── */
+body.sw .foot{background:#f7eedd;color:var(--ink2);font-size:15px;position:relative;padding:22px 16px 236px;margin:0}
+body.sw .foot::before,body.sw .foot::after{content:"";position:absolute;bottom:0;height:228px;pointer-events:none}
+body.sw .foot::before{left:0;right:0;
+  background:url(studio/show/foot_left.webp) calc(50% - 644px) bottom/auto 100% no-repeat,url(studio/show/foot_right.webp) calc(50% + 644px) bottom/auto 100% no-repeat;
+  -webkit-mask-image:linear-gradient(to bottom,transparent,#000 24%);mask-image:linear-gradient(to bottom,transparent,#000 24%)}
+body.sw .foot::after{left:50%;width:684px;margin-left:-342px;background:url(studio/foot_studio.webp) center/100% 100% no-repeat;
+  -webkit-mask-image:linear-gradient(to bottom,transparent,#000 24%),linear-gradient(to right,transparent,#000 7%,#000 93%,transparent);-webkit-mask-composite:source-in;
+  mask-image:linear-gradient(to bottom,transparent,#000 24%),linear-gradient(to right,transparent,#000 7%,#000 93%,transparent);mask-composite:intersect}
+body.sw .foot .priv{margin-top:2px;font-size:13px}
+body.sw #footTip:empty{display:none}
+
+/* ── 入口（輸入班號、連結無效…）：展牌＋圖圖探頭 ── */
+body.sw #body>.card.gate{max-width:440px;margin:28px auto;background:none !important;box-shadow:none !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;
+  border-style:solid !important;border-color:transparent !important;border-width:24px !important;border-image:url(studio/show/placard_c.webp) 9.6% 6.5% 10.2% 5.8% fill / 24px 25px 26px 23px stretch !important;
+  border-radius:0 !important;filter:drop-shadow(5px 10px 14px rgba(110,80,40,.2));padding:14px 22px 18px}
+body.sw .gate .big{font-size:0;height:110px;background:url(studio/tt_front.webp) center/contain no-repeat}
+body.sw .gate button{border-radius:16px;background:#3f6b58;box-shadow:0 5px 0 #2b4d3f}
+body.sw .loading{padding:60px 20px}
+
+@media print{
+  body.sw .foot::before,body.sw .foot::after{display:none}
+  body.sw .foot{padding-bottom:20px}
+}
+
+/* ══ 手機 ══ */
+@media (max-width:620px){
+  .x-wall{padding:14px 16px 28px;background-size:auto 100%}
+  .x-top{grid-template-columns:auto 1fr;gap:10px}
+  .x-sign{min-width:0;padding:6px 14px;grid-column:1/-1}
+  .x-sign h1{font-size:24px}.x-sign h1 em{font-size:30px;margin-right:6px}
+  .x-who-m{display:block}
+  .x-lead{display:none !important}
+  .x-no{width:112px;font-size:28px}
+  body.sw-in .x-plate .x-who{display:none}
+  .x-mtutu{display:flex;align-items:center;gap:8px}
+  .x-mtutu .fig{width:52px;height:52px;flex:0 0 52px;border-radius:50%;background:#fffdf6 url(studio/m_tt_front.webp) center 20%/120% no-repeat}
+  .x-mtutu .x-tag{white-space:nowrap;margin:0;font-size:13px;width:auto}.x-mtutu .x-tag b{font-size:15px}
+  .x-railwrap{grid-template-columns:1fr;margin-top:14px}
+  .x-rope{right:0}
+  .x-rail{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding:24px 4px 10px;gap:10px}
+  .x-fr{flex:0 0 31%;scroll-snap-align:center}
+  .x-fr .pic::before{display:none}
+  .x-tutu{display:none}
+  .x-room{padding-top:18px}
+  .x-uh h2{font-size:22px}
+  .x-body{display:flex;flex-direction:column}
+  .x-body .x-gwall{order:-1;margin-top:0;margin-bottom:18px;padding:14px}
+  details.x-fold>summary{display:block;list-style:none;cursor:pointer;padding:10px 14px;font-weight:700;margin-bottom:12px;background:#fffdf6;border-radius:12px;box-shadow:0 3px 0 #e0d2b3}
+  .x-cards{grid-template-columns:1fr;gap:14px}
+  .x-cards>*,.x-cards>.x-note,.x-cards>.x-skc{grid-column:1;grid-row:auto}
+  .x-skc{border-image-width:44px 14px 14px 46px;padding:4px 10px 8px 30px}
+  .x-skl{grid-template-columns:1fr;gap:6px}
+  .x-skl div{display:flex;gap:8px;align-items:baseline}.x-skl b{flex:0 0 auto}
+  .x-grid{grid-template-columns:repeat(2,1fr);gap:26px 10px}
+  .x-ph::before{width:14px;height:46px;top:-20px;margin-left:-7px}
+  .x-gh .lbl{display:none}
+  .x-gh h3{font-size:19px}
+  .x-end,.x-end.no-home{grid-template-columns:1fr 1fr;gap:12px}
+  .x-end>.x-home{grid-column:1/-1;grid-row:auto !important}
+  .x-latest,.x-end.no-home .x-latest{grid-column:1/-1;grid-row:auto;order:-1}
+  .x-go,.x-end.no-home .x-go{flex-direction:row;justify-content:flex-start;text-align:left;padding:10px;gap:8px}
+  .x-go.nx,.x-end.no-home .x-go.nx{flex-direction:row-reverse;text-align:right}
+  .x-go .cv,.x-end.no-home .x-go .cv{width:44px;flex:0 0 44px;padding:6px 5px 5px}
+  .x-go .tx{flex:1;min-width:0}
+  .x-go .d{font-size:14px}
+  .x-home{border-width:12px 10px 10px;border-image-width:46px 120px 10px 10px;padding:4px 10px 10px 8px}
+  .x-home::before{width:128px;height:46px}
+  .x-home .q{font-size:17px}.x-home .t{font-size:14px}
+  /* 頁尾：手機只留兩行（長按存圖＋一句提醒），圖只用中間那張、裁兩邊 */
+  body.sw .foot{padding:14px 16px 0}
+  body.sw .foot .q,body.sw #footLead{display:none}
+  body.sw .foot::before{display:none}
+  body.sw .foot::after{position:static;display:block;width:auto;height:150px;margin:6px -16px 0;background-size:cover;background-position:center bottom;
+    -webkit-mask-image:linear-gradient(to bottom,transparent,#000 22%);mask-image:linear-gradient(to bottom,transparent,#000 22%)}
+}
+@media (min-width:621px){ details.x-fold{display:contents} }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="kick">BILINGUAL VISUAL ARTS · 藝術學習紀錄</div>
+    <h1>Small Artists <span class="zh">小小藝術家</span></h1>
+    <div class="sub" id="heroSub">孩子的作品，值得被看見</div>
+    <div class="who" id="heroWho"></div>
+    <div class="lead" id="heroLead" hidden></div>
+    <div class="idl" id="heroId" hidden></div>
+    <div class="art" aria-hidden="true"></div>
+  </div>
+  <div id="body"><div class="loading">載入中…</div></div>
+  <div class="foot">
+    <div class="q">Small Artists, Big Ideas.</div>
+    <div id="footLead"></div>
+    <div id="footTip">這個頁面只給這一班的家長，請勿轉傳到其他群組。</div>
+    <div class="priv">※ 照片僅供班級家長留存，請勿張貼到公開網路。</div>
+  </div>
+</div>
+
+<div class="mask" id="mask">
+  <button class="x" id="maskX" aria-label="關閉">✕</button>
+  <button class="nav prev" id="maskPrev" aria-label="上一張">‹</button>
+  <img id="maskImg" alt="學生作品">
+  <button class="nav next" id="maskNext" aria-label="下一張">›</button>
+  <div class="cap" id="maskCap"></div>
+</div>
+
+<script>
+var KEY = '';
+var ANSWER = '';
+/* 老師預覽（?s=…&pv=1）時的管理金鑰。有值的話，抓照片的那幾支要接在最後一個參數，
+   後端才會放行「還沒開放」的班（見 Code.gs 的 showGate_）。家長端永遠是空字串。 */
+var PV_AUTH = '';
+var BASE = 'https://visual-art-studio.github.io/studio/';
+var DATA = null;
+var HAS_GAS = !!window.API_URL || (typeof google !== 'undefined' && google.script && google.script.run);
+/* 網站自己的網址（GitHub Pages）：window.API_URL 是 Apps Script 的 /exec，用 fetch 叫 doPost。
+   不帶 Content-Type（瀏覽器當 text/plain，Apps Script 不會先問 CORS）、不帶登入資料。 */
+function postApi(fn, args) {
+  return fetch(window.API_URL, { method: 'POST', body: JSON.stringify({ fn: fn, a: args }), credentials: 'omit' })
+    .catch(function () { throw new Error('連不上網路，請等一下再試一次'); })
+    .then(function (r) { return r.json(); })
+    .then(function (o) { if (o.err !== undefined) throw new Error(o.err); return o.r; });
+}
+
+function call(fn) {
+  var args = Array.prototype.slice.call(arguments, 1);
+  if (PV_AUTH && /^apiShow(Preview|Thumbs?|Full)$/.test(fn)) args.push(PV_AUTH);
+  if (!HAS_GAS) {
+    return window.__MOCK__ ? window.__MOCK__(fn, args)
+                           : Promise.reject(new Error('沒有連到後端'));
+  }
+  if (window.API_URL) return postApi(fn, args);
+  return new Promise(function (ok, no) {
+    google.script.run.withSuccessHandler(ok).withFailureHandler(no)[fn].apply(null, args);
+  });
+}
+function esc(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function $(id) { return document.getElementById(id); }
+
+/* 網頁被包在 iframe 裡，location.search 拿不到真正的網址參數，
+   要跟 Apps Script 要 */
+function readKey() {
+  return new Promise(function (ok) {
+    if (window.API_URL || !HAS_GAS || !google.script.url) {
+      var m = location.search.match(/[?&]s=([^&]+)/);
+      return ok({ s: m ? decodeURIComponent(m[1]) : '', pv: /[?&]pv=1/.test(location.search) });
+    }
+    google.script.url.getLocation(function (l) {
+      var q = (l && l.parameter) || {};
+      ok({ s: q.s || '', pv: q.pv === '1' });
+    });
+  });
+}
+
+function start() {
+  readKey().then(function (q) {
+    KEY = q.s;
+    if (!KEY) return noKey();
+    if (q.pv && savedAdmin()) return preview();
+    return call('apiShowProbe', KEY).then(gate);
+  }).catch(function (e) {
+    $('body').innerHTML = '<div class="card gate"><div class="big">😵</div>' +
+      '<h2>載入失敗</h2><p>' + esc(e && e.message || e) + '</p></div>';
+  });
+}
+
+/* 這台裝置用過管理網址的話，記著金鑰，老師就不用每次翻書籤。
+   沒用過的人（家長）看不到這個按鈕。 */
+function savedAdmin() {
+  try { return localStorage.getItem('tpAdmin') || ''; } catch (e) { return ''; }
+}
+
+/* ── 老師預覽 ────────────────────────────────────────────────
+ *  管理端「班級成果頁」那一顆「預覽」開的就是這裡（?s=金鑰&pv=1）。
+ *  不問確認碼、還沒開放的班也看得到；畫出來的東西跟家長看到的一模一樣，
+ *  只有最上面多一條「老師預覽」的提示。
+ *  ⚠️ 不是老師（這台沒有管理金鑰、或通行碼過期）就靜靜地退回家長的流程，
+ *     不要秀「沒有權限」——家長手上的連結要是被加了 pv=1，看起來也要一切正常。 */
+function adminTok() {
+  /* 「只記到關掉分頁」的通行證放在 sessionStorage，新分頁讀不到，
+     所以管理端按「預覽」時會先把它放進 tpPvTok 交棒（一分鐘內有效、讀完就刪）。 */
+  var t = '';
+  try {
+    t = sessionStorage.getItem('tpAdminTok') || localStorage.getItem('tpAdminTok') || '';
+    var hand = JSON.parse(localStorage.getItem('tpPvTok') || 'null');
+    localStorage.removeItem('tpPvTok');
+    if (!t && hand && hand.tok && Date.now() - hand.at < 60000) t = hand.tok;
+  } catch (e) { /* 讀不到就當作沒有 */ }
+  return t;
+}
+function preview() {
+  PV_AUTH = savedAdmin() + '|' + adminTok();
+  $('body').innerHTML = '<div class="loading">載入中…</div>';
+  function asParent() {
+    PV_AUTH = '';
+    return call('apiShowProbe', KEY).then(gate);
+  }
+  /* ⚠️ 用 then 的第二個參數接失敗，不要在最後掛 catch：
+     那樣 show() 自己出錯也會被吞掉、悄悄變成家長畫面，問題就看不到了。 */
+  return call('apiShowPreview', KEY).then(function (d) {
+    if (!d || !d.ok) return asParent();
+    ANSWER = d.answer;
+    show(d);
+    var bar = document.createElement('div');
+    bar.className = 'pvbar';
+    bar.innerHTML = '<b>👀 老師預覽</b>　家長看到的就是這個樣子' +
+      (d.open ? '' : '<span class="off">這一班還沒開放，家長現在還打不開</span>');
+    document.body.insertBefore(bar, document.body.firstChild);
+    document.title = '預覽 · ' + document.title;
+  }, asParent);
+}
+
+/* ── 記住這支手機答對過的班號 ───────────────────────────────
+ *  家長是從 LINE 的連結點進來的，一個學期會點很多次，
+ *  每次都要重打一次班號很煩（2026-09-15 他要的）。
+ *  ⚠️ 只存在**這支手機**上，不會送到別人那裡，也不會放進網址。
+ *  ⚠️ 老師換了通行碼或換了網址，存的那個就會失效——那時候照舊跳出來問，
+ *     而且要把存的清掉，不然家長會卡在「一直進不去又不知道為什麼」。
+ *  ⚠️ 無痕模式／關掉網站資料的手機會直接丟例外，所以每一支都包 try。 */
+function savedAns(k) {
+  try { return localStorage.getItem('tpShow:' + k) || ''; } catch (e) { return ''; }
+}
+function keepAns(k, v) {
+  try { localStorage.setItem('tpShow:' + k, v); } catch (e) { /* 存不了就每次問 */ }
+}
+function dropAns(k) {
+  try { localStorage.removeItem('tpShow:' + k); } catch (e) {}
+}
+
+function noKey() {
+  var k = savedAdmin();
+  $('body').innerHTML =
+    '<div class="card gate"><div class="big">🔗</div>' +
+    '<h2>請用老師給的連結進入</h2>' +
+    '<p>這個頁面要從老師發給你們班的專屬連結打開。</p>' +
+    /* ⚠️ 金鑰不要先寫進 href——按下去的那一刻才接上去（2026-10-12 稽核） */
+    (k && BASE
+      ? '<a class="teach" id="teach" href="' + esc(BASE) + '" target="_top">我是老師，進入管理頁面</a>'
+      : '<div class="hint">如果你是老師本人，請用管理專用網址開啟' +
+        '（在 Apps Script 編輯器執行「顯示管理網址()」可以取得）。</div>') +
+    '</div>';
+  if ($('teach')) $('teach').onclick = function () {
+    this.href = BASE + '?admin=' + encodeURIComponent(savedAdmin());
+  };
+}
+
+function gate(r) {
+  if (!r || r.state === 'bad') {
+    $('body').innerHTML = '<div class="card gate"><div class="big">🔍</div>' +
+      '<h2>這個連結無效</h2><p>可能已經換過網址了，請跟老師確認。</p></div>';
+    return;
+  }
+  if (r.state === 'closed') {
+    $('body').innerHTML = '<div class="card gate"><div class="big">🕐</div>' +
+      '<h2>還沒開放</h2><p>老師還在整理這一班的作品，請稍後再來。</p></div>';
+    return;
+  }
+  $('heroWho').textContent = r.title + '　' + r.teacher;
+  $('heroId').hidden = true;
+
+  /* 這支手機上次進得去的話就直接進去，不要再問一次 */
+  var keep = savedAns(KEY);
+  if (keep) {
+    $('body').innerHTML = '<div class="loading">載入中…</div>';
+    return call('apiShowEnter', KEY, keep).then(function (d) {
+      if (d && d.ok) { ANSWER = keep; DATA = d; return show(d); }
+      /* ⚠️ 被鎖住（有人在亂猜，見 Code.gs 的 SHOW_FAILS）不是通行碼改了——
+         記住的那組不要丟，過 15 分鐘再點進來就會自己進去（2026-10-12） */
+      if (d && d.locked) {
+        askGate(r);
+        if ($('err')) $('err').textContent = d.msg;
+        if ($('ans')) $('ans').value = keep;
+        return;
+      }
+      dropAns(KEY);          /* 通行碼改過了，照舊問一次 */
+      askGate(r);
+    /* ⚠️ 連不上（網路斷一下、伺服器忙）不是通行碼錯——不要把手機記住的那組丟掉，
+       也不要假裝什麼事都沒發生（2026-10-06 健檢）。照樣讓家長輸入，但把原因寫出來。 */
+    }).catch(function (e) {
+      askGate(r);
+      if ($('err')) $('err').textContent = '剛剛沒連上，請再按一次「進入」。（' +
+        ((e && e.message) || e) + '）';
+      if ($('ans')) $('ans').value = keep;
+    });
+  }
+  askGate(r);
+}
+
+/* 問班級號碼／通行碼的那一畫面 */
+function askGate(r) {
+  var label = r.custom ? '老師給的通行碼' : '你們班的班級號碼';
+  $('body').innerHTML =
+    '<div class="card gate"><div class="big">🎨</div>' +
+    '<h2>請輸入' + esc(label) + '</h2>' +
+    '<p>確認一下這是你們班的連結。</p>' +
+    '<input id="ans" type="text" inputmode="' + (r.custom ? 'text' : 'numeric') +
+      '" autocomplete="off" placeholder="' + (r.custom ? '通行碼' : '例如 204') + '">' +
+    '<button id="go">進入 Enter</button>' +
+    '<div class="err" id="err"></div>' +
+    '<div class="hint">輸入不對的話，代表老師可能把別班的連結傳錯群組了，' +
+    '跟老師說一聲就好。</div></div>';
+
+  $('ans').focus();
+  $('ans').onkeydown = function (e) { if (e.key === 'Enter') $('go').click(); };
+  $('go').onclick = function () {
+    var v = $('ans').value.trim();
+    if (!v) return;
+    $('go').disabled = true;
+    $('err').textContent = '';
+    call('apiShowEnter', KEY, v).then(function (d) {
+      $('go').disabled = false;
+      if (!d || !d.ok) {
+        $('err').textContent = (d && d.msg) || '進不去，請跟老師確認。';
+        return;
+      }
+      ANSWER = v;
+      DATA = d;
+      keepAns(KEY, v);       /* 下次從 LINE 點進來就不用再打一次 */
+      show(d);
+    }).catch(function (e) {
+      $('go').disabled = false;
+      $('err').textContent = (e && e.message) || String(e);
+    });
+  };
+}
+
+/* 09/15 這種寫法。家長看日期不需要年。 */
+function md(ymd) {
+  var t = String(ymd || '').slice(5, 10);
+  return t ? t.replace('-', '/') : '';
+}
+
+/* 「一行一組、用 | 分隔」的小清單：`What do you see?|你看到了什麼？` */
+function pairs(txt) {
+  return String(txt || '').split(/\n+/).map(function (line) {
+    var i = line.indexOf('|');
+    return i < 0 ? [line.trim(), ''] : [line.slice(0, i).trim(), line.slice(i + 1).trim()];
+  }).filter(function (x) { return x[0]; });
+}
+
+/* 四個步驟：`看一看|LOOK` 一行一個 */
+function steps(txt) {
+  var ss = pairs(txt);
+  if (!ss.length) return '';
+  return '<div class="proc">' + ss.map(function (x, i) {
+    return (i ? '<span class="ar">→</span>' : '') +
+      '<span class="s">' + esc(x[0]) +
+      (x[1] ? '<small>' + esc(x[1]) + '</small>' : '') + '</span>';
+  }).join('') + '</div>';
+}
+
+/* 「楊明鑫老師 Teacher Chris」→「Teacher Chris」，沒有英文就用原字串 */
+function teacherShort(t) {
+  var m = String(t || '').match(/(Teacher\s+\S+)/i);
+  return m ? m[1] : (String(t || '').trim() || '老師');
+}
+
+/* 說明區在手機上收起來、桌機攤開。⚠️ details 沒辦法用 CSS 強制展開，
+   所以用 JS 設 open；家長在手機上自己打開過就不要再幫他關（touched）。 */
+function syncFold() {
+  var wide = window.innerWidth > 620;
+  Array.prototype.forEach.call(document.querySelectorAll('details.fold'), function (dd) {
+    if (wide) dd.open = true;
+    else if (!dd.dataset.touched) dd.open = false;
+  });
+}
+window.addEventListener('resize', syncFold);
+
+function show(d) {
+  DATA = d;
+  /* ⭐ 第一屏的縮圖是跟著 apiShowEnter 那一包一起送來的（見 Code.gs 的 seed）。
+     先塞進 CACHE，下面 loadThumbs() 就會直接 img.src=，
+     照片跟版面同時出現，不用再等一趟 google.script.run。 */
+  if (d.thumbs) {
+    for (var sk in d.thumbs) { if (d.thumbs[sk] && !CACHE[sk]) CACHE[sk] = d.thumbs[sk]; }
+  }
+  /* 預設打開**最近更新**的那個單元——家長開進來最想看的是新的那一批。
+     ⚠️ 不要用「最後一個」：單元是照 ord 排的，最後一個不一定是最新拍的。 */
+  var live = (d.units || []).slice().sort(function (a, b) {
+    return String(a.updated || '').localeCompare(String(b.updated || ''));
+  }).map(function (u) { return u.ord; });
+  if (live.indexOf(TAB) < 0) TAB = live.length ? live[live.length - 1] : 0;
+  /* 分頁標題也帶上班級——家長在 LINE 裡點開，最上面那條就能確認沒傳錯班 */
+  document.title = '小小藝術家 · ' + d.cls + ' 班';
+
+  $('heroSub').textContent = d.motto || '孩子的作品，值得被看見';
+  $('heroWho').textContent = d.term + '　' + d.teacher;
+
+  if (d.quoteZh || d.quoteEn) {
+    $('heroLead').hidden = false;
+    $('heroLead').innerHTML = (d.quoteZh ? esc(d.quoteZh) : '') +
+      (d.quoteEn ? '<em>' + esc(d.quoteEn) + '</em>' : '');
+  }
+  $('footLead').textContent = d.foot || '';
+
+  /* ⚠️ 身分只寫一次：班級牌、年級、老師、學期、統計，全部在橫幅這一列。
+     以前下面還有一張「學習成果」卡把同樣的東西再寫一遍。 */
+  $('heroId').hidden = false;
+  $('heroId').innerHTML =
+    /* ⚠️ 年級只寫一次：班級牌上只放號碼，年級在右邊那一行講。 */
+    '<div class="code k-' + esc(d.color) + '"><b>' + esc(d.cls) + '</b></div>' +
+    /* ⚠️ 這一列只留「班級牌 ＋ 統計」。
+       學年度和老師在上面那一行（.who）寫過了；年級和班號左邊那塊牌子就是了，
+       再寫一次「二年級 203 班」是多的（2026-09-15 他劃掉的）。 */
+    '<div class="idt"><span class="n">' + d.total + ' 件作品 · ' +
+      d.units.length + ' 個單元' +
+      (d.updated ? ' · 更新到 ' + esc(md(d.updated)) : '') + '</span></div>';
+
+  ALL = [];
+  var h = '';
+
+  if (!d.units.length) {
+    h += '<div class="card gate"><div class="big">📷</div><h2>還沒有照片</h2>' +
+         '<p>老師還在拍，過幾天再來看看。</p></div>';
+  }
+
+  /* ── 我們的藝術旅程 ──────────────────────────────────────
+     做成一排頁籤（跟管理頁上面那排一樣）：整個學期的單元都列出來，
+     已經有作品的點得下去、切換到那一個單元；還沒開始的壓成灰的。
+     ⚠️ 一次只顯示一個單元——六個單元的照片全部攤開，一頁會長到捲不完。 */
+  if ((d.trip || []).length) {
+    h += '<div class="sec-t">我們的藝術旅程 <em>Our Art Journey</em></div>' +
+      '<div class="jrn">' + d.trip.map(function (t, i) {
+        return '<button class="step ' + (t.done ? '' : 'soon') +
+          (t.ord === TAB ? ' on' : '') + '"' +
+          (t.done ? ' data-tab="' + t.ord + '"' : ' disabled') + '>' +
+          /* 「還沒開始」自己一個 span：放不下時整段掉到下一行，
+             不會把整張頁籤撐寬（見 .jrn .step .soon-t）。 */
+          '<span class="num"><span class="u">UNIT ' + ('0' + (i + 1)).slice(-2) + '</span>' +
+            (t.done ? '' : '<span class="soon-t">還沒開始</span>') + '</span>' +
+          '<b>' + esc(t.nameZh || t.nameEn) + '</b></button>';
+      }).join('') + '</div>';
+  }
+
+  d.units.filter(function (u) { return u.ord === TAB; }).forEach(function (u) {
+    /* 關鍵字：中文說明本來就是「觀察形狀・發揮想像・用畫面說故事」這種寫法，
+       拆開就是現成的小標，不用他再多打一次。 */
+    var tags = String(u.descZh || '').split(/[・·、|]+/)
+      .map(function (x) { return x.trim(); }).filter(Boolean);
+
+    h += '<div class="card unit tabbed" id="u' + u.ord + '">';
+
+    /* 抬頭。⚠️ 中文名不要再寫一次——上面那排頁籤就是中文名（2026-09-15 他說的）。
+       圖示方塊也只有在「真的上傳過封面照片」時才留；單純一個 emoji 沒有資訊量。 */
+    h += '<div class="uh">' +
+      (u.coverId ? '<div class="ic"><img alt="" data-file="' + esc(u.coverId) +
+                   '" data-thumb=""></div>' : '') +
+      '<div class="un"><span class="e">' + esc(u.nameEn || u.nameZh) + '</span></div>' +
+      '<div class="cnt"><b>' + u.photos.length + ' 件</b>' +
+        (u.updated ? ' · ' + esc(md(u.updated)) : '') + '</div>' +
+      (tags.length ? '<div class="tagrow">' + tags.map(function (t) {
+        return '<span class="tag">' + esc(t) + '</span>'; }).join('') + '</div>' : '') +
+      '</div>';
+
+    /* 說明區。手機收起來、桌機攤開（syncFold 負責）。 */
+    var cards = '';
+    /* ⚠️ 沒打就不要出現。本來沒填會退回「教學目標」——那是寫給老師看的句子，
+       出現在家長頁上很突兀（2026-09-15 他回報）。 */
+    if (u.learnZh) {
+      cards += '<div class="u-card b"><h3>今天，我們在學什麼？<span class="en2">What Are We Learning?</span></h3>' +
+        '<p>' + esc(u.learnZh) + '</p>' + steps(u.steps) + '</div>';
+    }
+    /* ⚠️ 「孩子怎麼學？」和「課堂裡，我們這樣說」**不在成果頁呈現**
+       （2026-09-15 他畫叉的兩塊）。欄位還是留著、管理端照樣填得到，
+       那兩段是課程資訊，不是要給家長讀的。家長端只留兩塊：
+       「今天我們在學什麼」和「這堂課練習的，不只是畫畫」。 */
+    var sk = pairs(u.skills);
+    if (sk.length) {
+      cards += '<div class="u-card p"><h3>這堂課練習的，不只是畫畫</h3><p class="skl">' +
+        sk.map(function (x) {
+          return '<b>' + esc(x[0]) + '</b>：' + esc(x[1] || ''); }).join('<br>') + '</p></div>';
+    }
+    if (cards) {
+      h += '<details class="fold"><summary>這個單元在學什麼</summary>' +
+           '<div class="u-grid">' + cards + '</div></details>';
+    }
+
+    /* 老師寫給家長的課堂觀察 */
+    if (u.noteZh || u.quoteZh) {
+      h += '<div class="tnote"><h3>' + esc(teacherShort(d.teacher)) +
+        ' 的課堂觀察<span class="en2">Teacher\'s Note</span></h3>' +
+        String(u.noteZh || '').split(/\n+/).filter(Boolean).map(function (p) {
+          return '<p>' + esc(p) + '</p>'; }).join('') +
+        (u.quoteZh ? '<div class="q">' + esc(u.quoteZh) + '</div>' : '') + '</div>';
+    }
+
+    /* 作品。手機上這一塊排在說明前面（見 .unit 的 order）。 */
+    h += '<div class="gallery-wrap"><div class="ghead">' +
+      /* ⚠️ 這一句每個單元各寫各的（2026-10-05 他說的：「每個單元的作品呈現都不同」）。
+         本來八個單元都寫死「每個孩子，看見的都不一樣」——那句只對得上「從形狀到故事」。
+         沒填就只寫「學生作品」，不要退回那句寫死的，不然又變成每個單元都一樣。 */
+      '<div><h3>' + esc(u.galZh || '學生作品') + '</h3>' +
+        (u.galEn ? '<p>' + esc(u.galEn) + '</p>' : '') + '</div>' +
+      '<div class="lbl">STUDENT GALLERY</div></div>' +
+      '<div class="grid">' +
+      u.photos.map(function (p) {
+        var i = ALL.length;
+        ALL.push({ fileId: p.fileId, cap: p.cap, unit: u.nameZh });
+        return '<div class="ph" data-i="' + i + '">' +
+          '<img alt="' + esc(p.cap || '學生作品') + '" data-file="' + esc(p.fileId) +
+          '" data-thumb="' + esc(p.thumbId) + '">' +
+          (p.cap ? '<div class="cap">' + esc(p.cap) + '</div>' : '') + '</div>';
+      }).join('') + '</div></div>';
+
+    /* 回家聊聊 */
+    if (u.homeQ) {
+      h += '<div class="home"><h3>回家聊聊藝術<span class="en2">Talk About Art at Home</span></h3>' +
+        '<div class="q">💬 ' + esc(u.homeQ) +
+        (u.homeTip ? '<span class="t">' + esc(u.homeTip) + '</span>' : '') + '</div></div>';
+    }
+
+    h += '</div>';
+  });
+
+  $('body').innerHTML = h;
+  if (ALL.length) {
+    /* ⚠️ 這兩句是他定的文案（2026-09-15，長按存圖已經在他的手機上實測可行）。
+       第一句整句粗體＝這是「可以動手做的事」；第二句是提醒，維持原樣。 */
+    $('footTip').innerHTML = '<b>長按照片就能儲存小小藝術家們的作品喔！</b><br>' +
+      '這個頁面只給這一班的家長，請勿轉傳到其他群組。';
+  }
+
+  /* 頁籤：換單元就重畫。⚠️ 重畫之後要捲回頁籤那一排，
+     不然在手機上按了會停在原來的捲動位置，看起來像沒反應。 */
+  Array.prototype.forEach.call(document.querySelectorAll('.jrn [data-tab]'), function (b) {
+    b.onclick = function () {
+      if (Number(b.dataset.tab) === TAB) return;
+      TAB = Number(b.dataset.tab);
+      show(DATA);
+      var j = document.querySelector('.jrn');
+      if (j) j.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('details.fold'), function (dd) {
+    dd.addEventListener('toggle', function () { dd.dataset.touched = '1'; });
+  });
+  /* ⚠️ 頁籤那一排在手機上是橫捲的。選到的那一張如果在畫面外（單元一多就會），
+     看起來就像「按了沒反應」——把它捲進來。
+     用 scrollLeft 自己算，不要用 scrollIntoView：那個會連整頁一起捲。 */
+  (function centerTab() {
+    var j = document.querySelector('.jrn');
+    var on = j && j.querySelector('.step.on');
+    if (!j || !on) return;
+    var want = on.offsetLeft - (j.clientWidth - on.offsetWidth) / 2;
+    j.scrollLeft = Math.max(0, want);
+  })();
+  syncFold();
+  loadThumbs();
+}
+
+var CACHE = {};
+var ALL = [];        /* 所有照片照畫面上的順序，放大時可以一張一張翻 */
+var TAB = 0;         /* 現在看的是哪一個單元（旅程那一排的頁籤） */
+var AT  = -1;        /* 現在翻到第幾張 */
+
+
+/* ── 縮圖：捲到才抓 ─────────────────────────────────────────
+ *  ⚠️ 以前是一進頁面就把「畫面上所有」的縮圖排隊抓完。一個單元二十五張，
+ *     等於一開頁就要搬兩三 MB 的 base64 —— 家長第一眼看到的其實只有四到六張
+ *     （2026-09-15 他回報照片顯示得慢）。
+ *     現在只抓「快要捲到」的（提前 600px），其餘等捲到再抓。
+ *  ⚠️ 每次重畫都要先 disconnect：舊的 <img> 已經被 innerHTML 換掉了，
+ *     還留在 observer 裡只會佔記憶體，而且永遠不會觸發。
+ */
+var TH_Q = [], TH_T = null, TH_OB = null;
+
+function thumbSeen(img) {
+  if (img.dataset.q) return;
+  img.dataset.q = '1';
+  TH_Q.push(img);
+  clearTimeout(TH_T);
+  TH_T = setTimeout(thumbFlush, 40);
+}
+
+function thumbWatch(img) {
+  if (!window.IntersectionObserver) return thumbSeen(img);   /* 舊瀏覽器就照舊全抓 */
+  if (!TH_OB) {
+    TH_OB = new IntersectionObserver(function (es) {
+      for (var i = 0; i < es.length; i++) {
+        if (!es[i].isIntersecting) continue;
+        TH_OB.unobserve(es[i].target);
+        thumbSeen(es[i].target);
+      }
+    }, { rootMargin: '600px 0px' });
+  }
+  TH_OB.observe(img);
+}
+
+/* 縮圖一次抓八張。一張一趟的話，十七張作品就要等十七趟往返 */
+var TH_NET = null;
+
+function loadThumbs() {
+  if (TH_OB) TH_OB.disconnect();
+  TH_Q = [];
+  clearTimeout(TH_NET);
+
+/* ⚠️ 保險絲：三秒後把剩下的也抓一抓。
+   IntersectionObserver 在 LINE／FB 那種內建瀏覽器裡不一定可靠，
+   萬一它不觸發，照片就永遠是空的——寧可晚一點載，也不能不出現。
+   （第一屏還是只抓看得到的，所以「開起來很快」這件事不受影響。） */
+  TH_NET = setTimeout(function () {
+    Array.prototype.forEach.call(document.querySelectorAll('img[data-file]'), function (im) {
+      if (!im.src && !CACHE[im.dataset.file]) thumbSeen(im);
+    });
+  }, 3000);
+
+  var imgs = Array.prototype.slice.call(document.querySelectorAll('img[data-file]'));
+  imgs.forEach(function (img) {
+    var f = img.dataset.file;
+    if (CACHE[f]) { img.src = CACHE[f]; return; }
+    img.dataset.q = '';
+    thumbWatch(img);
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll('.ph'), function (box) {
+    box.onclick = function () { big(Number(box.dataset.i)); };
+  });
+}
+
+function thumbFlush() {
+  while (TH_Q.length) {
+    var batch = TH_Q.splice(0, 8);
+    (function (bt) {
+      var pairs = [], want = {};
+      for (var i = 0; i < bt.length; i++) {
+        var f = bt[i].dataset.file;
+        if (want[f] || CACHE[f]) continue;
+        want[f] = 1;
+        pairs.push([f, bt[i].dataset.thumb || '']);
+      }
+      if (!pairs.length) return apply({});
+      grab(1);
+
+      /* ⚠️ 失敗不要就這樣算了。以前「讀不到就留空」，那幾格就**永遠**是灰方塊，
+         家長也不知道是壞了還是還沒載完（訊號差的地方很常見；2026-09-15 健檢抓到的）。
+         隔一下再試一次，第二次還不行才放棄。 */
+      function grab(tries) {
+        call('apiShowThumbs', KEY, ANSWER, pairs)
+          .then(function (map) { if (map) apply(map); })
+          .catch(function () {
+            if (tries < 2) setTimeout(function () { grab(tries + 1); }, 1500);
+          });
+      }
+
+      function apply(map) {
+        for (var f in map) CACHE[f] = map[f];
+        /* ⚠️ 同一個 fileId 可能出現在好幾個 <img>（例如單元封面），整頁掃一次 */
+        Array.prototype.forEach.call(document.querySelectorAll('img[data-file]'), function (im) {
+          var k = im.dataset.file;
+          if (!im.src && CACHE[k]) im.src = CACHE[k];
+        });
+      }
+    })(batch);
+  }
+}
+
+/* ── 放大看：原圖也要留著 ⭐ ─────────────────────────────────
+ *  ⚠️ 以前每按一次左右箭頭都重新跟後端要一次原圖，同一張看第二次還是要重等
+ *     （2026-09-15 健檢抓到的）。家長打開第一張之後幾乎都是一路按到最後一張。
+ *  ⚠️ 而且要**趁他在看這一張的時候先把下一張拿回來**，按下去才是立刻換。
+ *  ⚠️ 原圖一張三五百 KB，手機記憶體有限——只留最近 FULL_MAX 張，舊的丟掉。 */
+var FULL = {}, FULL_Q = [], FULL_MAX = 10;
+
+function fullPut(id, uri) {
+  if (!uri || FULL[id]) return;
+  FULL[id] = uri;
+  FULL_Q.push(id);
+  while (FULL_Q.length > FULL_MAX) delete FULL[FULL_Q.shift()];
+}
+
+/* 拿第 i 張的原圖（有就直接給、沒有才去要）。then 可以不給——那就是先抓起來放著。 */
+function fullGet(i, then) {
+  var p = ALL[i];
+  if (!p) return;
+  if (FULL[p.fileId]) { if (then) then(FULL[p.fileId]); return; }
+  call('apiShowFull', KEY, ANSWER, p.fileId).then(function (uri) {
+    fullPut(p.fileId, uri);
+    if (then) then(uri);
+  }).catch(function () { /* 拿不到就維持縮圖，至少看得到東西 */ });
+}
+
+function big(i) {
+  if (i < 0 || i >= ALL.length) return;
+  AT = i;
+  var p = ALL[i];
+  $('maskImg').src = FULL[p.fileId] || CACHE[p.fileId] || '';
+  $('maskCap').innerHTML = esc(p.cap || p.unit || '') +
+    '<span class="n">' + (i + 1) + ' / ' + ALL.length + '</span>';
+  $('maskPrev').disabled = (i <= 0);
+  $('maskNext').disabled = (i >= ALL.length - 1);
+  $('mask').className = 'mask on';
+  var want = p.fileId;
+  fullGet(i, function (uri) {
+    if (uri && ALL[AT] && ALL[AT].fileId === want) $('maskImg').src = uri;
+    fullGet(i + 1);          /* 先把下一張抓起來放著 */
+  });
+}
+function closeBig() { $('mask').className = 'mask'; AT = -1; }
+function step(n) { if (AT >= 0) big(AT + n); }
+
+$('maskX').onclick    = closeBig;
+$('maskPrev').onclick = function (e) { e.stopPropagation(); step(-1); };
+$('maskNext').onclick = function (e) { e.stopPropagation(); step(1); };
+$('mask').onclick = function (e) { if (e.target === $('mask')) closeBig(); };
+document.addEventListener('keydown', function (e) {
+  if ($('mask').className.indexOf('on') < 0) return;
+  if (e.key === 'Escape')     closeBig();
+  if (e.key === 'ArrowLeft')  step(-1);
+  if (e.key === 'ArrowRight') step(1);
+});
+
+/* 手機左右滑。⚠️ 要濾掉直向的滑動，不然家長想捲畫面也會被當成翻頁。 */
+(function swipe() {
+  var x0 = 0, y0 = 0, on = false;
+  var m = $('mask');
+  m.addEventListener('touchstart', function (e) {
+    if (e.touches.length !== 1) return;
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; on = true;
+  }, { passive: true });
+  m.addEventListener('touchend', function (e) {
+    if (!on) return; on = false;
+    var t = e.changedTouches[0];
+    var dx = t.clientX - x0, dy = t.clientY - y0;
+    if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
+    step(dx < 0 ? 1 : -1);
+  }, { passive: true });
+})();
+
+start();
+</script>
+<script id="show2-js">
+/* ══ 成果頁・工作室版（index2.html，2026-11-04）══════════════════════════
+   接在 Show.html 原本的程式後面：
+   - 把原版橫幅（.hero）換成展覽牆。原版程式會寫的幾個 id（heroSub／heroWho／heroLead／heroId）照樣留著，
+     入口那一步（gate）寫學期和老師時才寫得進來。
+   - 接手 show(d)：畫面重畫成「掛畫繩八幅畫框＋這個單元的展覽區＋最下面明信片與上一個／下一個」。
+   - 資料、班號、縮圖（loadThumbs：捲到才抓）、放大（big）全部用原版那一套，只改長相。
+   ⚠️ 不要在這裡宣告 var ALL／CACHE／TAB——要用原版那幾個全域變數，宣告了就變成另一份。 */
+(function () {
+  document.body.classList.add('sw');
+
+  var old = document.querySelector('.hero');
+  var wall = document.createElement('section');
+  wall.className = 'x-wall';
+  wall.innerHTML =
+    '<div class="x-top">' +
+      '<div class="x-sign"><h1><em>Small Artists</em>小小藝術家</h1>' +
+        '<div class="x-sub" id="heroSub">孩子的作品，值得被看見</div><div class="x-who-m" id="xWhoM"></div></div>' +
+      '<div class="x-lead" id="heroLead" hidden></div>' +
+      '<div class="x-plate"><div class="x-no" id="xNo" hidden></div><div class="x-who" id="heroWho"></div></div>' +
+      '<div class="x-mtutu" id="xMTutu" hidden></div>' +
+      '<div id="heroId" hidden></div>' +
+    '</div>' +
+    '<div class="x-railwrap" id="xRail" hidden></div>';
+  if (old) {
+    /* gate() 可能已經寫過學期／老師（原版程式先跑），搬過來 */
+    var w0 = old.querySelector('#heroWho');
+    if (w0 && w0.textContent) wall.querySelector('#heroWho').textContent = w0.textContent;
+    old.parentNode.insertBefore(wall, old);
+    old.remove();
+  }
+
+  /* 頁尾：兩句提醒講的是同一件事，併成一句（他 11-04 要精簡）；「長按存圖」進去之後才出現 */
+  var priv = document.querySelector('.foot .priv');
+  if (priv) priv.textContent = '照片僅供本班家長留存，請勿轉傳或張貼到公開網路。';
+  if ($('footTip')) $('footTip').innerHTML = '';
+
+  var PF = 5;
+  var COLOR = { pink:'#f6c9d6', blue:'#c6dcf4', green:'#c9e9d2', yellow:'#f8e3a6', purple:'#ddd0f4', orange:'#f9d6b8', red:'#f4c3c0', teal:'#c4e6e4' };
+
+  function newestOrd(units) {
+    var b = null;
+    units.forEach(function (u) { if (!b || String(u.updated || '') >= String(b.updated || '')) b = u; });
+    return b ? b.ord : 0;
+  }
+  function unitOf(ord) { return (DATA.units || []).filter(function (u) { return u.ord === ord; })[0]; }
+  function tripOf(ord) { return (DATA.trip || []).filter(function (t) { return t.ord === ord; })[0]; }
+
+  /* 小框裡放單元封面（老師上傳的方形圖卡）；沒有封面就放單元圖示＋單元顏色，不拿作品頂 */
+  function cover(ord) {
+    var u = unitOf(ord), t = tripOf(ord) || u || {};
+    if (u && u.coverId) return '<span class="x-cv"><img alt="" data-file="' + esc(u.coverId) + '" data-thumb=""></span>';
+    return '<span class="x-cv" style="background:' + (COLOR[t.color] || '#f3ecdc') + '"><span class="ic">' + esc(t.icon || '🎨') + '</span></span>';
+  }
+
+  window.show = function (d) {
+    DATA = d;
+    if (d.thumbs) { for (var sk in d.thumbs) { if (d.thumbs[sk] && !CACHE[sk]) CACHE[sk] = d.thumbs[sk]; } }
+    document.body.classList.add('sw-in');
+    var units = d.units || [];
+    var NEW = newestOrd(units);
+    if (!unitOf(TAB)) TAB = NEW;
+    document.title = '小小藝術家 · ' + d.cls + ' 班';
+
+    /* ── 牆上 ── */
+    $('heroSub').textContent = d.motto || '孩子的作品，值得被看見';
+    $('heroWho').textContent = (d.term || '') + '\n' + (d.teacher || '');
+    $('xWhoM').textContent = (d.term || '') + '　' + (d.teacher || '');
+    $('xNo').hidden = false; $('xNo').textContent = d.cls;
+    if (d.quoteZh || d.quoteEn) {
+      $('heroLead').hidden = false;
+      $('heroLead').innerHTML = esc(d.quoteZh || '') + (d.quoteEn ? '<em>' + esc(d.quoteEn) + '</em>' : '');
+    }
+    /* 總件數只寫一次：圖圖的名牌（桌機站在牆邊、手機是頭像） */
+    var tag = '<div class="x-tag"><b>' + d.total + ' 件作品</b> · ' + units.length + ' 個單元' +
+              (d.updated ? '<br>更新到 ' + esc(md(d.updated)) : '') + '</div>';
+    $('xMTutu').hidden = false;
+    $('xMTutu').innerHTML = '<div class="fig"></div>' + tag;
+
+    var trip = (d.trip && d.trip.length) ? d.trip
+             : units.map(function (u) { return { ord: u.ord, nameZh: u.nameZh, nameEn: u.nameEn, icon: u.icon, color: u.color, done: true }; });
+    var rail = trip.map(function (t, i) {
+      var lab = 'UNIT ' + ('0' + (i + 1)).slice(-2), u = unitOf(t.ord);
+      if (!t.done || !u) {
+        return '<div class="x-fr soon"><div class="pic"><span class="x-cv">還沒開始</span></div>' +
+               '<span class="u">' + lab + '</span><b>' + esc(t.nameZh || t.nameEn) + '</b><span class="n">&nbsp;</span></div>';
+      }
+      return '<button class="x-fr pf-' + (i % PF) + (t.ord === TAB ? ' on' : '') + '" data-tab="' + t.ord + '">' +
+        (t.ord === NEW ? '<span class="x-new">最新 NEW</span>' : '') +
+        '<div class="pic">' + cover(t.ord) + '</div><span class="u">' + lab + '</span><b>' + esc(t.nameZh || t.nameEn) + '</b>' +
+        '<span class="n">' + u.photos.length + ' 件' + (u.updated ? ' · ' + esc(md(u.updated)) : '') + '</span></button>';
+    }).join('');
+    $('xRail').hidden = false;
+    $('xRail').innerHTML = '<div class="x-rope"></div><div class="x-rail">' + rail + '</div>' +
+      '<div class="x-tutu"><div class="fig"></div>' + tag + '</div>';
+    /* 頁尾的「長按存圖」放回去 */
+    $('footLead').textContent = d.foot || '';
+
+    ALL = [];
+    var h = '';
+    if (!units.length) {
+      h = '<div class="card gate"><div class="big">📷</div><h2>還沒有照片</h2><p>老師還在拍，過幾天再來看看。</p></div>';
+      $('body').innerHTML = h;
+      $('footTip').innerHTML = '';
+      return;
+    }
+
+    var u = unitOf(TAB);
+    var idx = trip.map(function (t) { return t.ord; }).indexOf(TAB);
+    var tags = String(u.descZh || '').split(/[・·、|]+/).map(function (x) { return x.trim(); }).filter(Boolean);
+    h += '<section class="x-room"><div class="x-uh">' +
+      '<span class="k">UNIT ' + ('0' + (idx + 1)).slice(-2) + '</span>' +
+      '<h2>' + esc(u.nameEn || u.nameZh) + (u.nameEn && u.nameZh ? '<small>' + esc(u.nameZh) + '</small>' : '') + '</h2>' +
+      '<span class="cnt"><b>' + u.photos.length + ' 件</b>' + (u.updated ? ' · ' + esc(md(u.updated)) : '') + '</span>' +
+      (tags.length ? '<span class="x-chips">' + tags.map(function (t) { return '<span>' + esc(t) + '</span>'; }).join('') + '</span>' : '') +
+      '</div><div class="x-body">';
+
+    /* 說明：原版家長端只留「學什麼」「練習的」兩塊＋老師的觀察（「孩子怎麼學」「課堂裡這樣說」不在成果頁，2026-09-15 他畫叉的） */
+    var learn = '', skc = '', note = '';
+    if (u.learnZh) {
+      var ss = pairs(u.steps);
+      learn = '<div class="x-card x-learn"><h3>今天，我們在學什麼？<span class="en">What Are We Learning?</span></h3><p>' + esc(u.learnZh) + '</p>' +
+        (ss.length ? '<div class="x-proc">' + ss.map(function (x) { return '<div>' + esc(x[0]) + (x[1] ? '<i>' + esc(x[1]) + '</i>' : '') + '</div>'; }).join('') + '</div>' : '') + '</div>';
+    }
+    var sk = pairs(u.skills);
+    if (sk.length) {
+      skc = '<div class="x-card x-skc"><h3>這堂課練習的，不只是畫畫</h3><div class="x-skl">' +
+        sk.map(function (x) { return '<div><b>' + esc(x[0]) + '</b><span>' + esc(x[1] || '') + '</span></div>'; }).join('') + '</div></div>';
+    }
+    if (u.noteZh || u.quoteZh) {
+      note = '<div class="x-card x-note"><h3>' + esc(teacherShort(d.teacher)) + ' 的課堂觀察<span class="en">Teacher\'s Note</span></h3>' +
+        String(u.noteZh || '').split(/\n+/).filter(Boolean).map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('') +
+        (u.quoteZh ? '<div class="q">' + esc(u.quoteZh) + '</div>' : '') + '</div>';
+    }
+    if (learn || skc || note) {
+      /* 三塊都在：學什麼｜信 一排、能力橫跨一排；少了任何一塊就一塊接一塊往下排 */
+      var full = learn && skc && note;
+      h += '<details class="fold x-fold"><summary>這個單元在學什麼 ▾</summary><div class="x-cards' + (full ? '' : ' solo') + '">' +
+           learn + skc + note + '</div></details>';
+    }
+
+    h += '<div class="x-gwall"><div class="x-gh"><div><h3>' + esc(u.galZh || '學生作品') + '</h3>' +
+      (u.galEn ? '<p>' + esc(u.galEn) + '</p>' : '') + '</div><div class="lbl">STUDENT GALLERY</div></div><div class="x-grid">' +
+      u.photos.map(function (p) {
+        var i = ALL.length;
+        ALL.push({ fileId: p.fileId, cap: p.cap, unit: u.nameZh });
+        return '<div class="x-ph" data-i="' + i + '"><img alt="' + esc(p.cap || '學生作品') + '" data-file="' + esc(p.fileId) +
+          '" data-thumb="' + esc(p.thumbId || '') + '">' + (p.cap ? '<div class="cap">' + esc(p.cap) + '</div>' : '') + '</div>';
+      }).join('') + '</div></div></div>';
+
+    /* 上一個／下一個：照旅程順序、只算已開放的 */
+    var done = trip.filter(function (t) { return t.done && unitOf(t.ord); }).map(function (t) { return t.ord; });
+    var at = done.indexOf(TAB), prev = done[at - 1], next = done[at + 1];
+    function nb(ord, nx) {
+      var dir = nx ? '下一個單元 →' : '← 上一個單元';
+      if (ord == null) return '<button class="x-go' + (nx ? ' nx' : '') + '" disabled><span class="cv"></span><span class="tx"><span class="d">' + dir +
+        '</span><small>' + (nx ? '還沒開放' : '這是第一個') + '</small></span></button>';
+      var t = tripOf(ord) || unitOf(ord);
+      return '<button class="x-go' + (nx ? ' nx' : '') + '" data-tab="' + ord + '"><span class="cv">' + cover(ord) + '</span><span class="tx"><span class="d">' + dir +
+        '</span><small>' + esc(t.nameZh || t.nameEn) + '</small></span></button>';
+    }
+    h += '<div class="x-end' + (u.homeQ ? '' : ' no-home') + '">' +
+      (u.homeQ ? '<div class="x-home"><h3>回家聊聊藝術<span class="en">Talk About Art at Home</span></h3><div class="q">' + esc(u.homeQ) +
+        (u.homeTip ? '<span class="t">' + esc(u.homeTip) + '</span>' : '') + '</div></div>' : '') +
+      '<div class="x-nav">' + nb(prev, false) + nb(next, true) +
+        (TAB === NEW ? '' : '<button class="x-latest" data-tab="' + NEW + '">回到最新<small>' + esc((unitOf(NEW) || {}).nameZh || '') + '</small></button>') +
+      '</div></div></section>';
+
+    $('body').innerHTML = h;
+    $('footTip').innerHTML = ALL.length ? '<b>長按照片就能儲存作品喔！</b>' : '';
+
+    /* 換單元：牆上的畫框按了留在原地；最下面的按鈕按了捲回這個單元的開頭 */
+    Array.prototype.forEach.call(document.querySelectorAll('[data-tab]'), function (b) {
+      b.onclick = function () {
+        var n = Number(b.dataset.tab);
+        if (n === TAB) return;
+        TAB = n;
+        var fromEnd = !!b.closest('.x-end');
+        show(DATA);
+        if (fromEnd) { var r = document.querySelector('.x-room'); if (r) r.scrollIntoView({ block: 'start' }); }
+      };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('details.fold'), function (dd) {
+      dd.addEventListener('toggle', function () { dd.dataset.touched = '1'; });
+    });
+    /* 手機：畫框那排是橫捲的，選到的那一幅捲到中間（用 scrollLeft，不要 scrollIntoView——那會連整頁一起捲） */
+    var rl = document.querySelector('.x-rail'), on = rl && rl.querySelector('.x-fr.on');
+    if (rl && on && rl.scrollWidth > rl.clientWidth) rl.scrollLeft = Math.max(0, on.offsetLeft - (rl.clientWidth - on.offsetWidth) / 2);
+    syncFold();
+    loadThumbs();
+    Array.prototype.forEach.call(document.querySelectorAll('.x-ph'), function (box) {
+      box.onclick = function () { big(Number(box.dataset.i)); };
+    });
+  };
+})();
+
+</script>
+</body>
+</html>
