@@ -984,9 +984,12 @@ details.x-fold>summary{display:none}
 .x-proc i{display:block;font-style:normal;font-size:10px;letter-spacing:.06em;color:var(--muted)}
 /* 小卡：圖釘只在左上角、薄荷底紙只在右下，九宮格拉寬不變形；版面只讓 18px，圖釘那角靠 padding-left */
 .x-skc{border-style:solid;border-color:transparent;border-width:18px;border-image:url(studio/show/card_c.webp) 21.4% 4.5% 7.1% 14.2% fill / 54px 18px 18px 57px stretch;padding:6px 22px 10px 40px}
-.x-skl{display:grid;grid-template-columns:repeat(4,1fr);gap:10px 18px;margin-top:6px}
-.x-skl b{display:block;color:#3f6b58;font-size:16px}
-.x-skl span{display:block;font-size:14px;color:var(--ink2);line-height:1.55}
+/* 一長條：名稱是一顆小標籤、說明在下面整段，欄與欄之間一條虛線 */
+.x-skl{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px 0;margin-top:10px}
+.x-skl>div{padding:0 20px;border-left:2px dashed #d9cdb4}
+.x-skl>div:first-child{padding-left:0;border-left:0}
+.x-skl b{display:inline-block;color:#fff;background:#5f9a7f;font-size:15px;letter-spacing:.04em;padding:3px 12px 4px;border-radius:999px;margin-bottom:8px;box-shadow:0 2px 0 #3f6b58}
+.x-skl span{display:block;font-size:15px;color:var(--ink2);line-height:1.65;text-wrap:pretty}
 /* 信紙：膠帶是獨立一張、固定大小貼在正上方，紙本身沒有膠帶 */
 .x-note{position:relative;border-style:solid;border-color:transparent;border-width:44px 7px 7px;border-image:url(studio/show/letter_plain.webp) 14.3% 2.4% 1.8% 2.4% / 44px 7px 7px 7px stretch;
   padding:0 22px 18px;background:#fffaf0;background-clip:padding-box}
@@ -1032,10 +1035,11 @@ details.x-fold>summary{display:none}
 
 .x-home{border-style:solid;border-color:transparent;border-width:14px 12px 12px;border-image:url(studio/show/postcard_c.webp) 23.9% 41.4% 4.8% 3% fill / 62px 170px 12px 12px stretch;
   padding:2px 18px 14px;filter:drop-shadow(4px 8px 10px rgba(110,80,40,.16))}
-.x-home::before{content:"";float:right;width:190px;height:58px}   /* 郵票那一角讓出來，字繞過去 */
+.x-home::before{content:"";float:right;width:190px;height:72px}   /* 郵票那一角只讓給標題；問題從郵票下面開始、整行用滿 */
+.x-home .q,.x-home .t{text-wrap:pretty}
 .x-home h3{margin:6px 0 6px;font-family:"LXGW WenKai TC","Noto Sans TC",sans-serif;font-size:18px;font-weight:700;color:#3f6b58}
 .x-home h3 .en{display:block;font-size:12px;letter-spacing:.06em;color:var(--muted);font-weight:500}
-.x-home .q{font-family:"LXGW WenKai TC","Noto Sans TC",sans-serif;font-weight:500;color:#3a4741;font-size:19px;line-height:1.6}
+.x-home .q{clear:both;font-family:"LXGW WenKai TC","Noto Sans TC",sans-serif;font-weight:500;color:#3a4741;font-size:19px;line-height:1.6}
 .x-home .t{display:block;font-family:"LXGW WenKai TC","Noto Sans TC",sans-serif;font-weight:400;font-size:15px;color:#6b706a;margin-top:6px;line-height:1.6}
 
 /* ── 頁尾：字在上、四位夥伴的圖在下（桌機三張接成一條撐滿寬，手機只用中間那張） ── */
@@ -1122,8 +1126,10 @@ body.sw #body>.loading{padding:18px 22px 22px;color:var(--ink2)}
   .x-cards{grid-template-columns:1fr;gap:14px}
   .x-cards>*,.x-cards>.x-note,.x-cards>.x-skc{grid-column:1;grid-row:auto}
   .x-skc{border-image-width:44px 14px 14px 46px;padding:4px 10px 8px 30px}
-  .x-skl{grid-template-columns:1fr;gap:6px}
-  .x-skl div{display:flex;gap:8px;align-items:baseline}.x-skl b{flex:0 0 auto}
+  .x-skl{grid-template-columns:1fr;gap:0}
+  .x-skl>div,.x-skl>div:first-child{padding:10px 0;border-left:0;border-top:2px dashed #e3d8c2}
+  .x-skl>div:first-child{border-top:0;padding-top:2px}
+  .x-skl b{font-size:14px;margin-bottom:5px}.x-skl span{font-size:14px}
   .x-grid{grid-template-columns:repeat(2,1fr);gap:26px 10px}
   .x-ph::before{width:14px;height:46px;top:-20px;margin-left:-7px}
   .x-gh .lbl{display:none}
@@ -1945,10 +1951,10 @@ start();
       learn = '<div class="x-card x-learn"><h3>今天，我們在學什麼？<span class="en">What Are We Learning?</span></h3><p>' + esc(u.learnZh) + '</p>' +
         (ss.length ? '<div class="x-proc">' + ss.map(function (x) { return '<div>' + esc(x[0]) + (x[1] ? '<i>' + esc(x[1]) + '</i>' : '') + '</div>'; }).join('') + '</div>' : '') + '</div>';
     }
-    var sk = pairs(u.skills);
+    var sk = pairs(String(u.skills || '').replace(/｜/g, '|'));   // 他打的是全形「｜」
     if (sk.length) {
       skc = '<div class="x-card x-skc"><h3>這堂課練習的，不只是畫畫</h3><div class="x-skl">' +
-        sk.map(function (x) { return '<div><b>' + esc(x[0]) + '</b><span>' + esc(x[1] || '') + '</span></div>'; }).join('') + '</div></div>';
+        sk.map(function (x) { return '<div><b>' + esc(x[0]) + '</b>' + (x[1] ? '<span>' + esc(x[1]) + '</span>' : '') + '</div>'; }).join('') + '</div></div>';
     }
     if (u.noteZh || u.quoteZh) {
       note = '<div class="x-card x-note"><h3>' + esc(teacherShort(d.teacher)) + ' 的課堂觀察<span class="en">Teacher\'s Note</span></h3>' +
