@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <script>window.API_URL = 'https://script.google.com/macros/s/AKfycbzunczvLmwGH4FlpCmmKWrik15DcxBav4WnnDdyQ3FjrzlZkV3BYyd9QRMWfdz9JutOmw/exec';
-if (!/[?&]s=/.test(location.search) && /[?&]admin=/.test(location.search)) location.replace('teach2.html' + location.search + location.hash);</script>
+if (!/[?&]s=/.test(location.search) && /[?&]admin=/.test(location.search)) location.replace('teach2.html' + location.search + location.hash);
+(function () { try { if (/[?&]pv=1/.test(location.search)) return; var m = location.search.match(/[?&]s=([^&#]+)/); if (!m) return; var s = decodeURIComponent(m[1]), a = ''; try { a = localStorage.getItem('tpShow:' + s) || ''; } catch (e) {} var fn = a ? 'apiShowEnter' : 'apiShowProbe'; var p = fetch(window.API_URL, { method: 'POST', credentials: 'omit', body: JSON.stringify({ fn: fn, a: a ? [s, a] : [s] }) }).catch(function () { throw new Error('連不上網路，請等一下再試一次'); }).then(function (r) { return r.json(); }).then(function (o) { if (o.err !== undefined) throw new Error(o.err); return o.r; }); p.catch(function () {}); window.__SHOW_PRE__ = { s: s, ans: a, kind: a ? 'enter' : 'probe', p: p }; } catch (e) {} })();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- ⚠️ 這是家長在 LINE 裡點開的第一眼（iOS 會把它顯示在最上面那條）。
      進去之後 show() 會改成「小小藝術家 · 203 班」，先確認是不是自己孩子的班。 -->
@@ -1244,7 +1245,15 @@ function start() {
     KEY = q.s;
     if (!KEY) return noKey();
     if (q.pv && savedAdmin()) return preview();
-    return call('apiShowProbe', KEY).then(gate);
+    /* ⭐ 讀取速度（2026-11-05）：後台每一趟大約 1.8 秒，原本是「問連結 → 再進去」兩趟疊起來。
+       這支手機記得班號的話，直接進去（失敗才回頭問連結）；網頁最上面先送出去的那一趟
+       （tools/make_web.py 的 SHOW_PRE）跟下載網頁同時跑，這裡接手。 */
+    var pre = window.__SHOW_PRE__;
+    window.__SHOW_PRE__ = null;
+    if (pre && pre.s !== KEY) pre = null;
+    var keep = q.pv ? '' : savedAns(KEY);
+    if (keep) return enterSaved(keep, pre && pre.kind === 'enter' && pre.ans === keep ? pre.p : null);
+    return (pre && pre.kind === 'probe' ? pre.p : call('apiShowProbe', KEY)).then(gate);
   }).catch(function (e) {
     $('body').innerHTML = '<div class="card gate"><div class="big">😵</div>' +
       '<h2>載入失敗</h2><p>' + esc(e && e.message || e) + '</p></div>';
@@ -1331,7 +1340,7 @@ function noKey() {
   };
 }
 
-function gate(r) {
+function gate(r, after) {
   if (!r || r.state === 'bad') {
     $('body').innerHTML = '<div class="card gate"><div class="big">🔍</div>' +
       '<h2>這個連結無效</h2><p>可能已經換過網址了，請跟老師確認。</p></div>';
@@ -1345,32 +1354,165 @@ function gate(r) {
   $('heroWho').textContent = r.title + '　' + r.teacher;
   $('heroId').hidden = true;
 
-  /* 這支手機上次進得去的話就直接進去，不要再問一次 */
-  var keep = savedAns(KEY);
-  if (keep) {
+  askGate(r);
+  if (after) after();
+}
+
+/* ⭐ 這支手機上次進得去的話就直接進去，不要再問一次（2026-11-05 起不先問 probe）。
+ *  上次看到的內容（localStorage）＋縮圖（IndexedDB）先擺出來，後台的新資料到了再換上去：
+ *  再次打開幾乎是立刻有畫面。資料一樣就不重畫（不會跳）。
+ *  ⚠️ 失敗的三種情況照舊（2026-10-06／10-12 的規則）：
+ *     被鎖住 → 記住的那組不丟；通行碼改了／班級關了 → 丟掉記住的、回頭問；
+ *     連不上 → 不丟，讓家長再按一次。已經擺出舊畫面的話，連不上／被鎖住就讓它留著。 */
+var TH_HOLD = false;   /* 舊畫面擺著、後台還沒確認班號時，先不去抓縮圖 */
+function enterSaved(keep, p) {
+  ANSWER = keep;
+  var snap = snapGet(KEY), fresh = false, shown = '';
+  if (snap) {
+    thumbsLoad(KEY, snap, function (map) {
+      if (fresh) return;                      /* 新資料先到了，舊的不用擺 */
+      for (var k in map) if (!CACHE[k]) CACHE[k] = map[k];
+      shown = snap;
+      /* ⚠️ 擺舊畫面時不要去抓縮圖：記住的班號萬一已經失效，每一趟都會被後台算成「猜錯一次」
+         （20 次就鎖整條連結，見 Code.gs 的 SHOW_FAILS）。等 apiShowEnter 確認過再抓。 */
+      TH_HOLD = true;
+      show(JSON.parse(snap));
+    });
+  } else {
     $('body').innerHTML = '<div class="loading">載入中…</div>';
-    return call('apiShowEnter', KEY, keep).then(function (d) {
-      if (d && d.ok) { ANSWER = keep; DATA = d; return show(d); }
-      /* ⚠️ 被鎖住（有人在亂猜，見 Code.gs 的 SHOW_FAILS）不是通行碼改了——
-         記住的那組不要丟，過 15 分鐘再點進來就會自己進去（2026-10-12） */
-      if (d && d.locked) {
-        askGate(r);
+  }
+  (p || call('apiShowEnter', KEY, keep)).then(function (d) {
+    fresh = true;
+    if (d && d.ok) {
+      TH_HOLD = false;
+      thumbsKeep(KEY, d.thumbs);
+      var s = snapPut(KEY, d);
+      if (shown && s === shown) {             /* 跟擺出來的一樣：只補縮圖 */
+        for (var sk in d.thumbs || {}) if (d.thumbs[sk] && !CACHE[sk]) CACHE[sk] = d.thumbs[sk];
+        DATA = d;
+        return loadThumbs();
+      }
+      DATA = d;
+      thumbsPrune(KEY, d);
+      return show(d);
+    }
+    if (d && d.locked) {
+      if (shown) return;
+      return backToGate(function () {
         if ($('err')) $('err').textContent = d.msg;
         if ($('ans')) $('ans').value = keep;
-        return;
-      }
-      dropAns(KEY);          /* 通行碼改過了，照舊問一次 */
-      askGate(r);
-    /* ⚠️ 連不上（網路斷一下、伺服器忙）不是通行碼錯——不要把手機記住的那組丟掉，
-       也不要假裝什麼事都沒發生（2026-10-06 健檢）。照樣讓家長輸入，但把原因寫出來。 */
-    }).catch(function (e) {
-      askGate(r);
+      });
+    }
+    dropAns(KEY);                             /* 通行碼改過了／班級關了，照舊問一次 */
+    snapDrop(KEY);
+    backToGate();
+  }).catch(function (e) {
+    fresh = true;
+    if (shown) return;
+    backToGate(function () {
       if ($('err')) $('err').textContent = '剛剛沒連上，請再按一次「進入」。（' +
         ((e && e.message) || e) + '）';
       if ($('ans')) $('ans').value = keep;
     });
-  }
-  askGate(r);
+  });
+}
+
+/* 進不去的時候才回頭問連結（開放了沒、要問班號還是通行碼） */
+function backToGate(after) {
+  ANSWER = '';
+  document.body.classList.remove('sw-in');
+  $('body').innerHTML = '<div class="loading">載入中…</div>';
+  call('apiShowProbe', KEY).then(function (r) { gate(r, after); }).catch(function (e) {
+    $('body').innerHTML = '<div class="card gate"><div class="big">😵</div>' +
+      '<h2>載入失敗</h2><p>' + esc(e && e.message || e) + '</p></div>';
+  });
+}
+
+/* ── 上次看到的內容，存在這支手機上 ──────────────────────────
+ *  文字資料（不含縮圖，幾十 KB）放 localStorage；縮圖放 IndexedDB（一張幾十 KB，一班可能上百張）。
+ *  ⚠️ 只存照片（p 開頭的代號）：照片換掉就是新代號，舊的不會拿錯；
+ *     單元封面（u 開頭）老師可能換圖但代號不變，所以不存，每次重抓。
+ *  ⚠️ 無痕模式／關掉網站資料會丟例外或打不開——每一步都包起來，壞了就當作沒有。 */
+function snapStr(d) {
+  var o = {};
+  for (var k in d) if (k !== 'thumbs') o[k] = d[k];
+  return JSON.stringify(o);
+}
+function snapGet(k) {
+  try { return localStorage.getItem('tpShowD:' + k) || ''; } catch (e) { return ''; }
+}
+function snapPut(k, d) {
+  var s = snapStr(d);
+  try { localStorage.setItem('tpShowD:' + k, s); } catch (e) {}
+  return s;
+}
+function snapDrop(k) {
+  try { localStorage.removeItem('tpShowD:' + k); } catch (e) {}
+  thumbsDb(function (db) {
+    var r = IDBKeyRange.bound(k + '|', k + '|\uffff');
+    db.transaction('th', 'readwrite').objectStore('th').delete(r);
+  });
+}
+
+var TH_DB = null;
+function thumbsDb(fn) {
+  if (TH_DB === false) return fn(null);
+  if (TH_DB) return fn(TH_DB);
+  try {
+    var rq = indexedDB.open('tpShowThumbs', 1);
+    rq.onupgradeneeded = function () { rq.result.createObjectStore('th'); };
+    rq.onsuccess = function () { TH_DB = rq.result; fn(TH_DB); };
+    rq.onerror = rq.onblocked = function () { TH_DB = false; fn(null); };
+  } catch (e) { TH_DB = false; fn(null); }
+}
+/* 把這一班存過的縮圖讀回來（最多等 1.5 秒，等不到就先畫、縮圖照常去抓） */
+function thumbsLoad(k, snap, then) {
+  var done = false, out = {};
+  function fin() { if (!done) { done = true; then(out); } }
+  setTimeout(fin, 1500);
+  thumbsDb(function (db) {
+    if (!db) return fin();
+    try {
+      var tx = db.transaction('th', 'readonly');
+      var cur = tx.objectStore('th').openCursor(IDBKeyRange.bound(k + '|', k + '|\uffff'));
+      cur.onsuccess = function () {
+        var c = cur.result;
+        if (!c) return fin();
+        out[String(c.key).slice(k.length + 1)] = c.value;
+        c.continue();
+      };
+      cur.onerror = fin;
+    } catch (e) { fin(); }
+  });
+}
+function thumbsKeep(k, map) {
+  if (!map || !k) return;
+  thumbsDb(function (db) {
+    if (!db) return;
+    try {
+      var st = db.transaction('th', 'readwrite').objectStore('th');
+      for (var r in map) if (/^p/.test(r) && map[r]) st.put(map[r], k + '|' + r);
+    } catch (e) {}
+  });
+}
+/* 老師刪掉的照片，手機上的那份也丟掉（不然會一直佔空間） */
+function thumbsPrune(k, d) {
+  var live = {};
+  (d.units || []).forEach(function (u) { (u.photos || []).forEach(function (p) { live[p.fileId] = 1; }); });
+  thumbsDb(function (db) {
+    if (!db) return;
+    try {
+      var st = db.transaction('th', 'readwrite').objectStore('th');
+      var cur = st.openKeyCursor ? st.openKeyCursor(IDBKeyRange.bound(k + '|', k + '|\uffff')) : null;
+      if (!cur) return;
+      cur.onsuccess = function () {
+        var c = cur.result;
+        if (!c) return;
+        if (!live[String(c.key).slice(k.length + 1)]) st.delete(c.key);
+        c.continue();
+      };
+    } catch (e) {}
+  });
 }
 
 /* 問班級號碼／通行碼的那一畫面 */
@@ -1403,6 +1545,8 @@ function askGate(r) {
       ANSWER = v;
       DATA = d;
       keepAns(KEY, v);       /* 下次從 LINE 點進來就不用再打一次 */
+      snapPut(KEY, d);       /* 下次先擺這一份，見 enterSaved() */
+      thumbsKeep(KEY, d.thumbs);
       show(d);
     }).catch(function (e) {
       $('go').disabled = false;
@@ -1705,6 +1849,7 @@ function loadThumbs() {
 }
 
 function thumbFlush() {
+  if (TH_HOLD) return;      /* 確認過班號後 loadThumbs() 會重排一次，見 enterSaved() */
   while (TH_Q.length) {
     var batch = TH_Q.splice(0, 8);
     (function (bt) {
@@ -1731,6 +1876,7 @@ function thumbFlush() {
 
       function apply(map) {
         for (var f in map) CACHE[f] = map[f];
+        if (!PV_AUTH) thumbsKeep(KEY, map);
         /* ⚠️ 同一個 fileId 可能出現在好幾個 <img>（例如單元封面），整頁掃一次 */
         Array.prototype.forEach.call(document.querySelectorAll('img[data-file]'), function (im) {
           var k = im.dataset.file;
