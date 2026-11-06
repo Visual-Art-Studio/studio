@@ -3920,6 +3920,65 @@ body.stu-boot #boot .lock .err{color:#ffc2b5}
   body.stu-boot #boot{padding:12px 14px 16px;border-width:20px;border-image-width:20px}
 }
 
+/* ══ 平板直拿：直式工作室（2026-11-06）══════════════════════════════
+   16:10 的工作室在 iPad 直拿（768 寬）只剩畫面上面 46%、最小的字 7px、下面一整片空白。
+   直拿時（studio.js 的 TALL_MQ：直向、601–1100 寬）換成 4:5，同一批物件重新擺：
+     上：日曆｜木牌｜掛鐘
+     中：左＝黑板（每日一句）＋畫架（今天要做的，站在地板上）；右＝軟木板（本週課表，拉長）
+     下：地板上四位夥伴＋工具箱；獎勵罐放在背景的矮櫃上
+   背景 studio_bg2（1586×992）：第 0–99 列是掛畫繩、第 100 列以下是窗・地板・矮櫃，中間補同色的牆（#fdd8a3，量過整面一樣）。
+   ⚠️ 字都用 cqw，容器只有原本一半寬，所以字的 cqw 大約是原本的兩倍。 */
+.stu-bgt, .stu-bgb{display:none}
+body.stu-tall .stu-in{aspect-ratio:4/5; width:min(100%, calc((100dvh - 22px) * .8)); background:#fdd8a3 !important}
+body.stu-tall .stu-bgt{display:block; left:0; top:0; width:100%; aspect-ratio:1586/99; background:url(studio/studio_bg2.webp) center top/100% auto no-repeat}
+body.stu-tall .stu-bgb{display:block; left:0; bottom:0; width:100%; aspect-ratio:1586/892; background:url(studio/studio_bg2.webp) center bottom/100% auto no-repeat}
+body.stu-tall .stu-in .tag2{font-size:1.9cqw; border-radius:1.2cqw; padding:.5cqw 1.3cqw; box-shadow:0 .4cqw 1.2cqw rgba(110,80,40,.2)}
+body.stu-tall .stu-in .tag2 b{font-size:2.6cqw}
+
+/* 上：日曆｜木牌｜掛鐘 */
+body.stu-tall .stu-sign{left:18% !important; top:.6% !important; width:64% !important}
+body.stu-tall .stu-cal{left:3%; top:3.2%; width:13%}
+body.stu-tall .stu-cal .pg b{font-size:3.4cqw}
+body.stu-tall .stu-cal .pg span{font-size:1.4cqw}
+body.stu-tall .stu-cal .pg small{font-size:1.45cqw}
+body.stu-tall .stu-clock{left:85%; top:2.6%; width:12%}
+
+/* 中左：黑板＋畫架（畫架腳踩在地板線上，約 87%） */
+body.stu-tall .stu-chalk{left:3%; top:18.6%; width:44%; height:10.8%; border-width:1.8cqw; border-image-width:1.8cqw; padding:.9cqw 1.4cqw}
+body.stu-tall .stu-chalk .hi{font-size:2.3cqw}
+body.stu-tall .stu-chalk .ln{margin-top:.5cqw; padding-top:.5cqw}
+body.stu-tall .stu-fc{left:2%; top:29.4%; width:46%}
+
+/* 中右：軟木板（課表）拉長 */
+body.stu-tall .stu-cork{left:50.5%; top:18.6%; width:46.5%; height:50%; border-width:2.4cqw; border-image-width:2.4cqw}
+
+/* 下：獎勵罐坐在背景的矮櫃上（矮櫃頂在 79.9%），名牌在左邊 */
+body.stu-tall .stu-jar{left:88.5%; top:71.6%; width:8.5%}
+body.stu-tall .stu-jar .tag2{top:-30%; left:auto; right:96%}
+/* 四位夥伴＋工具箱站成一排（腳在 93%，名牌在下面） */
+body.stu-tall .stu-mate .plate{margin-top:-.8cqw; border-radius:1.4cqw; padding:.4cqw 1.3cqw .5cqw; box-shadow:0 .4cqw 1.4cqw rgba(110,80,40,.2)}
+body.stu-tall .stu-mate .plate b{font-size:1.95cqw}
+body.stu-tall .stu-mate .plate span{font-size:1.65cqw}
+body.stu-tall .m-xx{left:1%; bottom:11%; width:18%}
+body.stu-tall .m-bb{left:20.5%; bottom:11%; width:17%}
+body.stu-tall .m-tt{left:39.5%; bottom:11%; width:17%}
+body.stu-tall .m-dd{left:62%; bottom:11%; width:14.5%}
+/* 點點的名牌字最多（待完成・缺席・待補），在這裡換行，不要壓到隔壁 */
+body.stu-tall .m-dd .plate{white-space:normal; width:max-content; max-width:31cqw}
+/* 「⏰ 待補」是名牌裡的連結：手指點得到（至少 40px 高） */
+body.stu-tall .m-dd .plate a{display:inline-block; padding:1.2cqw 1cqw; margin:-.9cqw 0 -.7cqw}
+body.stu-tall .stu-tool{left:85.5%; bottom:10% !important; width:13%}
+body.stu-tall .stu-tool .tag2{top:92%}
+/* 畫架上的小字：畫架紙只有約 270px 寬，整塊縮放後小字會剩 7px → 直拿時先放大；「去處理」撐出手指點得到的範圍 */
+body.stu-tall .stu-today .tcard .f .hint{font-size:13px}
+body.stu-tall .stu-today .tcard .f .btn{font-size:14px; padding:7px 12px}
+body.stu-tall .stu-today .todo-more{font-size:14px}
+body.stu-tall .stu-today .todo-more a{display:inline-block; padding:10px 6px; margin:-10px 0}
+/* 軟木板只有半寬：停課格（中秋節、期中考）的字縮一級，一行寫完 */
+body.stu-tall .stu-week .slot.off .cn{font-size:15px; white-space:nowrap}
+/* 課表裡 11px 的小字（Mon、🏖️ 中秋節、本來是 103、→ 11/06）縮放後只剩 7.7px → 直拿時放大到 13px（縮放後約 9–12px） */
+body.stu-tall .stu-week .tt thead th span:not(.wd):not(.dt), body.stu-tall .stu-week .slot .un{font-size:13px !important}
+
 </style>
 </head>
 <body>
@@ -9451,6 +9510,7 @@ var PHONE = isPhone();
     var room = el('div', 'stu-room'), inn = el('div', 'stu-in'); room.appendChild(inn);
     var line = pickLine();
     inn.innerHTML =
+      '<div class="stu-bgt" aria-hidden="true"></div><div class="stu-bgb" aria-hidden="true"></div>' +   /* 平板直拿用：背景切成「掛畫繩」＋「窗・地板・矮櫃」兩片，中間補牆（見 studio.css 的 stu-tall） */
       '<div class="stu-sign" role="img" aria-label="Chris的雙語視覺藝術工作室 Chris\'s Bilingual Visual Arts Studio"></div>' +
       '<div class="stu-cork stu-prop" data-go2="sched" title="本週課表（點了到課表管理）"><div class="stu-fit" id="stuCork"></div></div>' +
       '<div class="stu-fc stu-prop" id="stuFc" title="今天要做的"><img src="' + im('flipchart') + '" alt=""><div class="stu-fcv"><div class="stu-fcin" id="stuFcIn"></div></div></div>' +
@@ -9560,7 +9620,7 @@ var PHONE = isPhone();
   }
   function fitLine() {
     var e = document.getElementById('stuLine'), r = document.querySelector('.stu-in'); if (!e || !r) return;
-    var f = r.clientWidth * .0105; e.style.fontSize = f + 'px';
+    var f = r.clientWidth * (isTall() ? .021 : .0105); e.style.fontSize = f + 'px';
     while (e.scrollHeight > e.clientHeight + 1 && f > 8) { f -= .5; e.style.fontSize = f + 'px'; }
   }
   /* 掛紙板要排多寬（他 11-03：單元名稱一行寫完，拿「所有單元裡最長的名稱」來量，不是只看今天的）：
@@ -9587,14 +9647,20 @@ var PHONE = isPhone();
     var c = document.getElementById('stuCork'), w = c && c.firstElementChild;
     if (w) {
       var tb = w.querySelector('table.tt'); if (tb) tb.style.height = 'auto';
-      var k = fitBox(c, w, 520);
+      var k = fitBox(c, w, isTall() ? 440 : 520);
       /* 表格本身拉到軟木板的高度：多出來的高度平均分給每一節 */
       if (tb && k) { var extra = c.clientHeight / k - w.offsetHeight; if (extra > 4) tb.style.height = (tb.offsetHeight + extra - 2) + 'px'; }
     }
     var f = document.querySelector('.stu-fcv'); if (f) fitBox(f, document.getElementById('stuFcIn'), fcWidth());
     fitLine();
   }
-  addEventListener('resize', function () { if (document.body.classList.contains('stu-home')) fitRoom(); });
+  /* ⭐ 平板直拿（2026-11-06 他要的）：16:10 的工作室在 768 寬只剩上面一半、字最小 7px。
+     直拿時換成 4:5 的直式工作室——同一批物件、同一份功能，只是重新擺位置（CSS 的 body.stu-tall）。
+     手機（isPhone，≤600）照舊不套場景；橫拿、電腦照舊 16:10。 */
+  var TALL_MQ = '(orientation:portrait) and (min-width:601px) and (max-width:1100px)';
+  function isTall() { return !isPhone() && matchMedia(TALL_MQ).matches; }
+  function setTall() { document.body.classList.toggle('stu-tall', isTall()); }
+  addEventListener('resize', function () { setTall(); if (document.body.classList.contains('stu-home')) fitRoom(); });
 
   /* ══ 其他頁：夥伴的那一站 ══ */
   function buildStation(v, key) {
@@ -10078,6 +10144,7 @@ var PHONE = isPhone();
     if (!on) { phoneNav(); phoneScene(v0); return; }
     tools();
     var v = document.getElementById('views');
+    setTall();
     if (PAGE === 'home') { b.classList.add('stu-home'); buildRoom(v); }
     else buildStation(v, OF[curPg()] || 'dd');
   };
