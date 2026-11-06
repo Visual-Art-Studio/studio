@@ -1065,7 +1065,9 @@ body.sw:not(.sw-in) .x-top{grid-template-columns:auto;justify-content:center}
 body.sw:not(.sw-in) .x-lead,body.sw:not(.sw-in) .x-plate{display:none}
 body.sw:not(.sw-in) #body{flex:1;padding:74px 16px 12vh}
 body.sw:not(.sw-in) .foot{display:none}
-body.sw:not(.sw-in) .wrap::after{content:"";position:absolute;bottom:3vh;left:calc(50% + 250px);width:170px;height:210px;
+/* ⚠️ 2026-11-06 健檢：原本 left:50%+250px＋寬 170 → 右緣在 50%+420，窄於 840 就凸出畫面（iPad 直拿 768 會橫向捲動）。
+   改成從右邊算：840 以上位置一模一樣；更窄時貼右邊 8px、寬度縮到不碰展牌（展牌右緣 50%+220）。 */
+body.sw:not(.sw-in) .wrap::after{content:"";position:absolute;bottom:3vh;right:max(8px,calc(50% - 420px));width:min(170px,calc(50% - 238px));height:210px;
   background:url(studio/tt_front.webp) center bottom/contain no-repeat;filter:drop-shadow(0 8px 6px rgba(90,60,30,.18));pointer-events:none}
 body.sw #body>.card.gate,body.sw #body>.loading{position:relative;max-width:440px;margin:0 auto;background:none !important;box-shadow:none !important;
   -webkit-backdrop-filter:none !important;backdrop-filter:none !important;

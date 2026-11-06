@@ -2836,7 +2836,8 @@ textarea:focus{
   .mov-i{padding-right:46px}
   .mov-i .x{width:40px; height:40px; top:2px; right:2px; font-size:16px}
   .btn.ghost{min-width:40px}
-  .seat button, .res-i .f .x{min-width:40px; min-height:40px}
+  /* ⚠️ 2026-11-06 健檢：「上週沒來」那一排的 ✓ 被 .qk-pend .seat button{min-width:30px}（多一個 class）蓋掉，手機只有 30 寬 → 一起列進來 */
+  .seat button, .qk-pend .seat button, .res-i .f .x{min-width:40px; min-height:40px}
   .hol-i .x{width:40px; height:40px}
   details.fold>summary{min-height:40px}
   .res-i .t a{padding:10px 0; margin:-10px 0}
@@ -3983,7 +3984,7 @@ body.stu-boot #boot .lock .err{color:#ffc2b5}
 /* 這一支檔案（畫面）自己的版本。
    Code.gs 的 APP_VER 只認得伺服器那一支——只貼 Index.html、沒動 Code.gs 的時候，
    光看那個對不出來有沒有貼成功。系統設定頁會把兩個版本一起列出來。 */
-var UI_VER = '2026-11-02e';
+var UI_VER = '2026-11-06a';
 
 var S = null;
 var PAGE = 'home';
