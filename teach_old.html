@@ -7637,15 +7637,15 @@ function vRes() {
            esc(u.nameZh || u.nameEn) + ' <span class="en2">' + esc(u.nameEn) + '</span>'
          : '📦 共用資源 <span class="en2">Shared</span>') +
       '<span class="right hint">' + (g.rows.length + (g.vids || []).length) + ' 項</span></h3>' +
-      ((g.vids || []).length ? '<div class="res-grid">' + g.vids.map(function (v) {
+      '<div class="res-grid">' + (g.vids || []).map(function (v) {
         /* 小劇院的影片：自動帶進來，不能在這裡刪（要改去工作室的宣傳部） */
         var url = 'https://youtu.be/' + encodeURIComponent(v.id);
         return '<div class="res-i"><a class="pic" href="' + url + '" target="_blank" rel="noopener">' +
           '<img src="https://i.ytimg.com/vi/' + esc(v.id) + '/mqdefault.jpg" alt="' + esc(v.title) + '"></a>' +
           '<div class="t"><a href="' + url + '" target="_blank" rel="noopener">' + esc(v.title) + '</a></div>' +
           '<div class="f"><span class="hint">🎬 小劇院影片</span></div></div>';
-      }).join('') + '</div>' : '') +
-      (g.rows.length ? '<div class="res-grid">' + g.rows.map(function (r) {
+      }).join('') +
+      g.rows.map(function (r) {
         var img = (r.kind === 'file' && String(r.mime || '').indexOf('image/') === 0 && r.fileId);
         return '<div class="res-i">' +
           (img
@@ -7659,7 +7659,7 @@ function vRes() {
           '<div class="f"><span class="hint">' + esc(String(r.at).slice(0, 10)) + '</span>' +
           '<button class="x no-print" data-dr="' + esc(r.id) + '" title="刪除">✕</button></div>' +
           '</div>';
-      }).join('') + '</div>' : '') +
+      }).join('') + '</div>' +   /* 影片和資源排在同一組格線（2026-11-12：分兩組會各佔一列） */
       '</div>';
   }).join('') || '<div class="card empty-note">還沒有任何教學資源。上面加第一筆吧。</div>';
 
