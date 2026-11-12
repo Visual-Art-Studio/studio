@@ -7569,15 +7569,29 @@ function kindIcon(r) {
 /* 小劇院（教室網站）的影片清單，照單元代號分好（2026-11-12）。抓一次就記著；抓不到就當沒有，不影響這一頁 */
 var CINEMA_URL = 'https://visual-arts-fun-studio.longpuchris.workers.dev/videos.json';
 var CINEMA = null;
-function cinemaVids(u) {
-  if (!u || !String(u.code || '').trim()) return [];
+function cinemaLoad() {
   if (CINEMA === null) {
     CINEMA = {};
     fetch(CINEMA_URL, { credentials: 'omit' }).then(function (r) { return r.json(); })
       .then(function (o) { CINEMA = o || {}; if (PAGE === 'res') render(); })
       .catch(function () {});
   }
-  return CINEMA[String(u.code).trim()] || [];
+  return CINEMA;
+}
+function cinemaVids(u) {
+  if (!u || !String(u.code || '').trim()) return [];
+  return cinemaLoad()[String(u.code).trim()] || [];
+}
+/* 單元 00（開學用具檢查之類）不屬於任何單元 → 放進「📦 共用資源」。
+   只收這學期的（單元代號的前兩字，例如「二上」）；單元都沒填代號就全收（2026-11-12） */
+function cinemaShared() {
+  var c = cinemaLoad(), terms = {};
+  S.units.forEach(function (u) { var k = String(u.code || '').trim(); if (k) terms[k.slice(0, 2)] = 1; });
+  var any = Object.keys(terms).length > 0, out = [];
+  Object.keys(c).sort().forEach(function (k) {
+    if (/-00$/.test(k) && (!any || terms[k.slice(0, 2)])) out = out.concat(c[k]);
+  });
+  return out;
 }
 
 function vRes() {
@@ -7611,7 +7625,7 @@ function vRes() {
     return { u:u, rows:S.resources.filter(function (r) { return String(r.unitId) === String(u.id); }),
              vids:cinemaVids(u) };
   });
-  groups.push({ u:null, rows:S.resources.filter(function (r) { return !r.unitId; }) });
+  groups.push({ u:null, rows:S.resources.filter(function (r) { return !r.unitId; }), vids:cinemaShared() });
 
   /* ⚠️ 以前每個單元都印一張卡，六個單元裡有五個是空的，
      整頁都在捲「這個單元還沒有教學資源」。現在空的收成最下面一行。 */
