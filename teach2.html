@@ -4043,7 +4043,7 @@ body.stu-tall .stu-week .tt thead th span:not(.wd):not(.dt), body.stu-tall .stu-
 /* 這一支檔案（畫面）自己的版本。
    Code.gs 的 APP_VER 只認得伺服器那一支——只貼 Index.html、沒動 Code.gs 的時候，
    光看那個對不出來有沒有貼成功。系統設定頁會把兩個版本一起列出來。 */
-var UI_VER = '2026-11-06a';
+var UI_VER = '2026-11-12a';
 
 var S = null;
 var PAGE = 'home';
@@ -7016,6 +7016,12 @@ function editUnit(id) {
       '<input type="text" id="uEn" value="' + esc(u.nameEn || '') + '" placeholder="All About Me"></div>' +
     '<div class="field"><label>中文名稱</label>' +
       '<input type="text" id="uZh" value="' + esc(u.nameZh || '') + '" placeholder="關於我"></div></div>' +
+    /* 單元代號（2026-11-12）：跟故事動畫工作室、小劇院對得上；教學資源會自動列出這個單元的小劇院影片 */
+    '<div class="field" style="margin-top:12px;max-width:260px"><label>單元代號（小劇院影片用）</label>' +
+      '<input type="text" id="uCode" value="' + esc(u.code || '') + '" placeholder="二上-05"></div>' +
+    '<div class="field" style="margin-top:12px"><label>早完成挑戰（小劇院的挑戰箱，一行一題；英文可寫在「｜」後面）</label>' +
+      '<textarea id="uFin" rows="3" placeholder="幫國王設計一個新寶座｜Draw a new throne.">' + esc(u.finish || '') + '</textarea>' +
+      '<div class="hint">小劇院已經有每單元三題預設題目，這裡寫的會接在後面。</div></div>' +
     '<div class="field" style="margin-top:12px"><label>中文說明</label>' +
       '<input type="text" id="uDz" value="' + esc(u.descZh || '') + '" placeholder="探索自我 · 自畫像"></div>' +
     '<div class="field" style="margin-top:12px"><label>英文說明</label>' +
@@ -7109,7 +7115,7 @@ function editUnit(id) {
           '<div class="hint">連同這個單元的進度紀錄與作品照片一起刪掉，無法復原。</div></div>' : ''),
     function () {
       var o = {
-        id:id, ord:Number($('uOrd').value) || 1,
+        id:id, ord:Number($('uOrd').value) || 1, code:$('uCode').value.trim(), finish:$('uFin').value.trim(),
         nameEn:$('uEn').value.trim(), nameZh:$('uZh').value.trim(),
         descZh:$('uDz').value.trim(), descEn:$('uDe').value.trim(),
         goalZh:$('uGz').value.trim(), goalEn:$('uGe').value.trim(),
@@ -8501,6 +8507,20 @@ function kindIcon(r) {
   return '📎';
 }
 
+/* 小劇院（教室網站）的影片清單，照單元代號分好（2026-11-12）。抓一次就記著；抓不到就當沒有，不影響這一頁 */
+var CINEMA_URL = 'https://visual-arts-fun-studio.longpuchris.workers.dev/videos.json';
+var CINEMA = null;
+function cinemaVids(u) {
+  if (!u || !String(u.code || '').trim()) return [];
+  if (CINEMA === null) {
+    CINEMA = {};
+    fetch(CINEMA_URL, { credentials: 'omit' }).then(function (r) { return r.json(); })
+      .then(function (o) { CINEMA = o || {}; if (PAGE === 'res') render(); })
+      .catch(function () {});
+  }
+  return CINEMA[String(u.code).trim()] || [];
+}
+
 function vRes() {
   var h = hero('Resources', '教學資源', '學習單、簡報、網站，都收在單元底下。',
     'Worksheets, slides, links — all filed under the right unit.',
@@ -8529,20 +8549,29 @@ function vRes() {
 
   var units = sortedUnits();
   var groups = units.map(function (u) {
-    return { u:u, rows:S.resources.filter(function (r) { return String(r.unitId) === String(u.id); }) };
+    return { u:u, rows:S.resources.filter(function (r) { return String(r.unitId) === String(u.id); }),
+             vids:cinemaVids(u) };
   });
   groups.push({ u:null, rows:S.resources.filter(function (r) { return !r.unitId; }) });
 
   /* ⚠️ 以前每個單元都印一張卡，六個單元裡有五個是空的，
      整頁都在捲「這個單元還沒有教學資源」。現在空的收成最下面一行。 */
-  var empty = groups.filter(function (g) { return g.u && !g.rows.length; });
-  h += groups.filter(function (g) { return g.rows.length; }).map(function (g) {
+  var empty = groups.filter(function (g) { return g.u && !g.rows.length && !(g.vids || []).length; });
+  h += groups.filter(function (g) { return g.rows.length || (g.vids || []).length; }).map(function (g) {
     var u = g.u;
     return '<div class="card"><h3>' +
       (u ? '<span class="dot c-' + (u.color || 'blue') + '">' + esc(u.ord) + '</span>' +
            esc(u.nameZh || u.nameEn) + ' <span class="en2">' + esc(u.nameEn) + '</span>'
          : '📦 共用資源 <span class="en2">Shared</span>') +
-      '<span class="right hint">' + g.rows.length + ' 項</span></h3>' +
+      '<span class="right hint">' + (g.rows.length + (g.vids || []).length) + ' 項</span></h3>' +
+      ((g.vids || []).length ? '<div class="res-grid">' + g.vids.map(function (v) {
+        /* 小劇院的影片：自動帶進來，不能在這裡刪（要改去工作室的宣傳部） */
+        var url = 'https://youtu.be/' + encodeURIComponent(v.id);
+        return '<div class="res-i"><a class="pic" href="' + url + '" target="_blank" rel="noopener">' +
+          '<img src="https://i.ytimg.com/vi/' + esc(v.id) + '/mqdefault.jpg" alt="' + esc(v.title) + '"></a>' +
+          '<div class="t"><a href="' + url + '" target="_blank" rel="noopener">' + esc(v.title) + '</a></div>' +
+          '<div class="f"><span class="hint">🎬 小劇院影片</span></div></div>';
+      }).join('') + '</div>' : '') +
       (g.rows.length ? '<div class="res-grid">' + g.rows.map(function (r) {
         var img = (r.kind === 'file' && String(r.mime || '').indexOf('image/') === 0 && r.fileId);
         return '<div class="res-i">' +
