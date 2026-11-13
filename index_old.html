@@ -884,6 +884,32 @@ body{
     box-shadow:none !important;
   }
 }
+
+/* ══ 🎬 預告（2026-11-13）══════════════════════════════════
+   還沒開始的單元，老師在管理頁把預告開給這一班、小劇院也有那支影片，
+   「藝術旅程」那一格就不再是灰的：字換成「🎬 預告」，點了跳出一張小卡放影片。
+   ⚠️ 已經開放成果的單元完全不受影響（那些格子沒有 .trl）。 */
+.jrn .step.soon.trl{opacity:1; cursor:pointer}
+.jrn .step.soon.trl .soon-t{color:#b0472e; font-weight:700}
+.trl-m{
+  position:fixed; inset:0; z-index:110; background:rgba(28,32,24,.72);
+  display:flex; align-items:center; justify-content:center; padding:16px;
+}
+.trl-c{
+  position:relative; width:min(560px,100%); max-height:100%; overflow:auto;
+  background:#fffdf6; border-radius:16px; padding:16px 16px 18px;
+  box-shadow:0 10px 30px rgba(0,0,0,.25); color:var(--ink, #22332d);
+}
+.trl-c .k{display:block; font-size:12px; font-weight:700; letter-spacing:.07em; color:#b0472e}
+.trl-c h3{margin:2px 44px 10px 0; font-size:19px; line-height:1.35}
+.trl-c h3 small{display:block; font-size:13px; font-weight:400; color:#7a705c}
+.trl-c .v{position:relative; aspect-ratio:16/9; background:#000; border-radius:10px; overflow:hidden}
+.trl-c .v iframe{position:absolute; inset:0; width:100%; height:100%; border:0}
+.trl-c p{margin:12px 2px 0; font-size:15.5px; line-height:1.6}
+.trl-c .x{
+  position:absolute; top:10px; right:10px; width:40px; height:40px; border-radius:50%;
+  border:0; background:#efe5d0; font-size:18px; cursor:pointer; color:#22332d;
+}
 </style>
 </head>
 <body>
@@ -1322,7 +1348,62 @@ function syncFold() {
 }
 window.addEventListener('resize', syncFold);
 
+/* ── 🎬 預告（2026-11-13）──────────────────────────────────
+ *  後端只說「這一班的這個單元開了預告」（trip 的 trailer）和單元代號（code）；
+ *  影片是哪一支，問小劇院的 trailers.json（{"二上-05": {"id": "YouTube 代號", "title": …}}）。
+ *  ⚠️ 在瀏覽器抓：小劇院換片不用動後台。抓不到（還沒上線、404、斷網）就當作沒有預告，
+ *     格子維持灰的「還沒開始」，不報錯。抓到之後才重畫一次（有開預告的班才需要）。
+ *  ⚠️ 影片是「不公開」的，用 youtube-nocookie 嵌入，不帶追蹤 cookie。 */
+var TRL_URL = 'https://visual-arts-fun-studio.longpuchris.workers.dev/trailers.json';
+var TRL = window.__TRL__ || null;     /* 本機預覽可以先放一份假的 */
+var TRL_ASKED = !!TRL;
+function loadTrl() {
+  if (TRL_ASKED) return;
+  TRL_ASKED = true;
+  fetch(TRL_URL, { credentials: 'omit', cache: 'no-cache' })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function (o) {
+      TRL = o || {};
+      if (DATA && (DATA.trip || []).some(trlOf)) show(DATA);
+    })
+    .catch(function () { TRL = {}; });
+}
+function trlOf(t) {
+  if (!t || t.done || !t.trailer || !t.code || !TRL) return null;
+  var v = TRL[t.code];
+  return (v && /^[\w-]{6,20}$/.test(String(v.id || ''))) ? v : null;
+}
+function openTrl(ord) {
+  var trip = (DATA && DATA.trip) || [], i = -1;
+  for (var k = 0; k < trip.length; k++) if (Number(trip[k].ord) === ord) i = k;
+  var t = trip[i], v = trlOf(t);
+  if (!v) return;
+  closeTrl();
+  var m = document.createElement('div');
+  m.className = 'trl-m'; m.id = 'trl';
+  m.innerHTML = '<div class="trl-c" role="dialog" aria-label="預告">' +
+    '<button class="x" aria-label="關閉">✕</button>' +
+    '<span class="k">UNIT ' + ('0' + (i + 1)).slice(-2) + '　🎬 預告</span>' +
+    '<h3>' + esc(t.nameZh || t.nameEn) + (t.nameZh && t.nameEn ? '<small>' + esc(t.nameEn) + '</small>' : '') + '</h3>' +
+    '<div class="v"><iframe src="https://www.youtube-nocookie.com/embed/' + encodeURIComponent(v.id) +
+      '?rel=0&playsinline=1" title="' + esc(v.title || t.nameZh || '預告') + '"' +
+      ' allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>' +
+    '<p>' + (t.descZh ? '下一個單元，我們要一起：<b>' + esc(t.descZh) + '</b>' : '下一個單元，先來看看預告吧！') + '</p>' +
+    '</div>';
+  m.onclick = function (e) { if (e.target === m || e.target.className === 'x') closeTrl(); };
+  document.body.appendChild(m);
+}
+/* 關掉就整個拿掉（連 iframe），影片才會停 */
+function closeTrl() { var m = $('trl'); if (m) m.parentNode.removeChild(m); }
+function bindTrl() {
+  Array.prototype.forEach.call(document.querySelectorAll('[data-trl]'), function (b) {
+    b.onclick = function () { openTrl(Number(b.dataset.trl)); };
+  });
+}
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeTrl(); });
+
 function show(d) {
+  loadTrl();
   DATA = d;
   /* ⭐ 第一屏的縮圖是跟著 apiShowEnter 那一包一起送來的（見 Code.gs 的 seed）。
      先塞進 CACHE，下面 loadThumbs() 就會直接 img.src=，
@@ -1377,13 +1458,14 @@ function show(d) {
   if ((d.trip || []).length) {
     h += '<div class="sec-t">我們的藝術旅程 <em>Our Art Journey</em></div>' +
       '<div class="jrn">' + d.trip.map(function (t, i) {
-        return '<button class="step ' + (t.done ? '' : 'soon') +
+        var tr = trlOf(t);     /* 🎬 開了預告的：一樣是 soon 的樣子，但點得開 */
+        return '<button class="step ' + (t.done ? '' : 'soon') + (tr ? ' trl' : '') +
           (t.ord === TAB ? ' on' : '') + '"' +
-          (t.done ? ' data-tab="' + t.ord + '"' : ' disabled') + '>' +
+          (t.done ? ' data-tab="' + t.ord + '"' : tr ? ' data-trl="' + t.ord + '"' : ' disabled') + '>' +
           /* 「還沒開始」自己一個 span：放不下時整段掉到下一行，
              不會把整張頁籤撐寬（見 .jrn .step .soon-t）。 */
           '<span class="num"><span class="u">UNIT ' + ('0' + (i + 1)).slice(-2) + '</span>' +
-            (t.done ? '' : '<span class="soon-t">還沒開始</span>') + '</span>' +
+            (t.done ? '' : '<span class="soon-t">' + (tr ? '🎬 預告' : '還沒開始') + '</span>') + '</span>' +
           '<b>' + esc(t.nameZh || t.nameEn) + '</b></button>';
       }).join('') + '</div>';
   }
@@ -1487,6 +1569,7 @@ function show(d) {
       if (j) j.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
   });
+  bindTrl();
   Array.prototype.forEach.call(document.querySelectorAll('details.fold'), function (dd) {
     dd.addEventListener('toggle', function () { dd.dataset.touched = '1'; });
   });

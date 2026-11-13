@@ -1033,6 +1033,11 @@ textarea{min-height:92px; resize:vertical; line-height:1.7}
 .cls-grid .cells>*{text-align:center}
 .cls-grid .cells .dot{width:24px; height:24px; font-size:13px; justify-self:center}
 .cell-cls{font-size:13px; font-weight:700; border-radius:6px; padding:2px 0}
+/* 🎬 預告開關（2026-11-13）：教學進度單元卡「預告」那一排。關著＝淡淡的灰，開了＝亮起來 */
+.cls-grid .cells .trl-t{padding:0; font:inherit; font-size:12px; line-height:1; cursor:pointer;
+  background:#fff; filter:grayscale(1); opacity:.45}
+.cls-grid .cells .trl-t.on{filter:none; opacity:1; background:#fde8dc; border-color:#e0a58c}
+.trl-all{margin-top:6px; display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; font-size:13px}
 
 /* ── 單元省思卡（教學札記那一頁的重點）─────────────────────
    一個單元一張。欄數自己算，同一列的卡用 subgrid 對齊
@@ -3102,7 +3107,7 @@ h3 .ci, summary .ci{width:1.2em; height:1.2em; vertical-align:-.25em}
 /* 這一支檔案（畫面）自己的版本。
    Code.gs 的 APP_VER 只認得伺服器那一支——只貼 Index.html、沒動 Code.gs 的時候，
    光看那個對不出來有沒有貼成功。系統設定頁會把兩個版本一起列出來。 */
-var UI_VER = '2026-11-12a';
+var UI_VER = '2026-11-13a';
 
 var S = null;
 var PAGE = 'home';
@@ -5858,6 +5863,27 @@ function onceWire(date, period) {
    3. 教學進度 Teaching Progress
       看的是「每個單元，各班進行到哪裡」的總覽。
    ══════════════════════════════════════════════════════════════ */
+/* ── 🎬 預告（2026-11-13）────────────────────────────────────
+   哪些單元有預告片，問小劇院的 trailers.json（照單元代號 code）。在瀏覽器抓，後台不用管影片。
+   抓不到（還沒上線、404）就當作都沒有：教學進度不出現「預告」那一排。
+   開給哪幾班存在單元的 trailer 欄（Code.gs 的 apiSetTrailer），家長成果頁照這個決定要不要亮。 */
+var TRL_URL = 'https://visual-arts-fun-studio.longpuchris.workers.dev/trailers.json';
+var TRL = window.__TRL__ || null, TRL_ASKED = !!TRL;
+function loadTrl() {
+  if (TRL_ASKED) return;
+  TRL_ASKED = true;
+  fetch(TRL_URL, { credentials: 'omit', cache: 'no-cache' })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function (o) { TRL = o || {}; if (PAGE === 'prog') render(); })
+    .catch(function () { TRL = {}; });
+}
+function hasTrl(u) { var c = String(u.code || '').trim(); return !!(c && TRL && TRL[c] && TRL[c].id); }
+function trlOn(u) {
+  var o = {};
+  String(u.trailer == null ? '' : u.trailer).split(/[|,、\s]+/).forEach(function (c) { if (c) o[c] = 1; });
+  return o;
+}
+
 function unitStage(u, classes) {
   var rows = S.progress.filter(function (p) {
     return String(p.unitId) === String(u.id) &&
@@ -5875,6 +5901,7 @@ function vProg() {
      橫幅、學期切換、年級／班級篩選、統計卡、狀態對照全部收起來，
      還沒開始的單元也不列——沒開始的看了也沒資訊。 */
   var phone = isPhone();
+  loadTrl();
   var h = phone ? '' : hero('Teaching Progress', '教學進度', '追蹤孩子的學習旅程，看見創意的成長！',
     'Track the learning journey. Nurture creativity. Celebrate every step!',
     '每個單元，各班進行到哪裡，這一頁一次看完。');
@@ -5994,8 +6021,33 @@ function vProg() {
                   (phone ? '（點一下去記錄）' : '')) + '">' +
                 (s ? stMark(p.status) : '–') + '</span>';
             }).join('') + '</span></div>' +
+          trlRow(u) +
         '</div>' +
       '</div></div>';
+  }
+
+  /* 🎬 預告那一排：只有小劇院真的有這個單元的預告片才出現。
+     每一班一顆開關，只給**還沒開始**的班（已經開過的也留著，才關得掉）；
+     下面再一顆「整個年級一起開」：年級照單元代號第一個字（二上-05 → 二年級的班），對不到就用這張卡上的班。 */
+  function trlRow(u) {
+    if (!hasTrl(u)) return '';
+    var on = trlOn(u);
+    var cells = classes.map(function (c) {
+      var k = String(c.code);
+      if (progOf(k, u.id) && !on[k]) return '<span></span>';
+      return '<button type="button" class="dot trl-t' + (on[k] ? ' on' : '') + '" data-trl="' + esc(u.id) + '|' + esc(k) + '"' +
+        ' title="' + esc(k + (on[k] ? ' 已開放預告（點一下關掉）' : ' 開放預告')) + '">🎬</button>';
+    }).join('');
+    var g0 = String(u.code || '').trim().charAt(0);
+    var gc = classes.filter(function (c) { return String(c.grade || '').charAt(0) === g0; });
+    if (!gc.length) gc = classes;
+    var todo = gc.filter(function (c) { return !progOf(String(c.code), u.id); });
+    var all = todo.length && todo.every(function (c) { return on[String(c.code)]; });
+    return '<div class="r"><span class="lb">預告</span><span class="cells">' + cells + '</span></div>' +
+      (todo.length ? '<div class="trl-all no-print"><span class="hint">🎬 開放預告：家長成果頁點得開</span>' +
+        '<button type="button" class="btn ghost sm" data-trlg="' + esc(u.id) + '|' + (all ? '0' : '1') + '|' +
+          esc(todo.map(function (c) { return c.code; }).join(',')) + '">' +
+          (all ? '全部關閉' : '整個' + esc(gc[0].grade || '年級') + '開放') + '</button></div>' : '');
   }
 
   h += '<div class="grid g2 units">';
@@ -6051,6 +6103,26 @@ function aprog() {
   if ($('uAdd'))   $('uAdd').onclick    = function () { editUnit(null); };
   Array.prototype.forEach.call(document.querySelectorAll('[data-eu]'), function (b) {
     b.onclick = function () { editUnit(b.dataset.eu); };
+  });
+  /* 🎬 預告開關：一班一顆／整個年級一顆 */
+  function setTrl(unitId, list, on, btn) {
+    if (isArchived()) return toast('這個學期已封存，只能查看。', true);
+    btn.disabled = true;
+    call('apiSetTrailer', unitId, list, on)
+      .then(function (d) { refresh(d, (list.length > 1 ? list.length + ' 班' : list[0] + ' 班') + (on ? '已開放預告 🎬' : '已關閉預告')); })
+      .catch(function (e) { btn.disabled = false; fail(e); });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('[data-trl]'), function (b) {
+    b.onclick = function () {
+      var x = b.dataset.trl.split('|');
+      setTrl(x[0], [x[1]], b.className.indexOf(' on') < 0, b);
+    };
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-trlg]'), function (b) {
+    b.onclick = function () {
+      var x = b.dataset.trlg.split('|');
+      setTrl(x[0], x[2].split(','), x[1] === '1', b);
+    };
   });
   /* 手機：點某一班的圓點 → 帶著那個班、那個單元跳進快速記錄 */
   Array.prototype.forEach.call(document.querySelectorAll('[data-qgo]'), function (b) {
