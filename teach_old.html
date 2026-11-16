@@ -1564,6 +1564,13 @@ html.cam-on, html.cam-on body{overflow:hidden}
 }
 .modal h3{font-size:19px; margin-bottom:14px}
 .modal .acts{display:flex; gap:10px; justify-content:flex-end; margin-top:18px}
+/* 📨 家長訊息卡（2026-11-16）：班號一排、LINE 綠（加深到白字對比 5.6，原色 #06c755 只有 2.3） */
+.pm-box .pm-cls{display:flex; flex-wrap:wrap; gap:6px}
+.pm-box .pm-cls .dot{width:auto; min-width:44px; height:36px; padding:0 8px; border-radius:18px; font-weight:700; cursor:pointer}
+.pm-box .pm-cls .dot.on{outline:3px solid var(--ink); outline-offset:1px}
+.pm-box .pm-cls .dot[disabled]{opacity:.35; cursor:default}
+.pm-box .acts{flex-wrap:wrap}
+.btn.pm-line{background:#037a35; border-color:#037a35; color:#fff}
 /* ask()／say()／askText() 的樣子。窄一點，因為裡面只有一句話。 */
 .modal.ask{width:min(430px,100%)}
 .modal .ask-t{
@@ -3107,7 +3114,7 @@ h3 .ci, summary .ci{width:1.2em; height:1.2em; vertical-align:-.25em}
 /* 這一支檔案（畫面）自己的版本。
    Code.gs 的 APP_VER 只認得伺服器那一支——只貼 Index.html、沒動 Code.gs 的時候，
    光看那個對不出來有沒有貼成功。系統設定頁會把兩個版本一起列出來。 */
-var UI_VER = '2026-11-13a';
+var UI_VER = '2026-11-16a';
 
 var S = null;
 var PAGE = 'home';
@@ -5135,8 +5142,11 @@ function aquick() {
     okToDropProgress(q.cls, q.unitId, q.prgId, q.status).then(function (go) {
       if (!go) return;
       $('qSave').disabled = true;
+      var was = progOf(q.cls, q.unitId), wasDone = !!(was && was.status === 'done');
+      var cls0 = q.cls, unit0 = q.unitId, st0 = q.status;
       saveQuick().then(function (d) {
         refresh(d, q.cls + ' 班已儲存');
+        if (st0 === 'done' && !wasDone) openParentMsg(unit0, cls0);   /* 📨 剛變成全部完成 */
       }).catch(function (e) {
         $('qSave').disabled = false;
         fail(e);
@@ -5993,7 +6003,8 @@ function vProg() {
       /* ⚠️ 中文在前、英文在後（全站同一條規則，2026-09-20 統一）。 */
       '<div class="nm"><span class="z">' + esc(u.nameZh) + '</span>' +
         '<span class="e">' + esc(u.nameEn) + '</span></div>' +
-      '<button class="btn ghost sm no-print" style="margin-left:auto" data-eu="' + esc(u.id) + '">編輯</button>' +
+      (doneN ? '<button class="btn ghost sm no-print" style="margin-left:auto" data-pm="' + esc(u.id) + '" title="複製給家長的完成訊息">📨 家長訊息</button>' : '') +
+      '<button class="btn ghost sm no-print"' + (doneN ? '' : ' style="margin-left:auto"') + ' data-eu="' + esc(u.id) + '">編輯</button>' +
       '</div>' +
       '<div class="cover c-' + (u.color || 'blue') + '">' + coverInner(u) + '</div>' +
       '<div class="bd">' +
@@ -6104,6 +6115,9 @@ function aprog() {
   Array.prototype.forEach.call(document.querySelectorAll('[data-eu]'), function (b) {
     b.onclick = function () { editUnit(b.dataset.eu); };
   });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-pm]'), function (b) {
+    b.onclick = function () { openParentMsg(b.dataset.pm, ''); };
+  });
   /* 🎬 預告開關：一班一顆／整個年級一顆 */
   function setTrl(unitId, list, on, btn) {
     if (isArchived()) return toast('這個學期已封存，只能查看。', true);
@@ -6153,6 +6167,10 @@ function editUnit(id) {
     '<div class="field" style="margin-top:12px"><label>🍿 挑戰爆米花（小劇院大廳的爆米花機，一行一題；英文可寫在「｜」後面）</label>' +
       '<textarea id="uFin" rows="3" placeholder="幫國王設計一個新寶座｜Draw a new throne.">' + esc(u.finish || '') + '</textarea>' +
       '<div class="hint">小劇院已經有每單元三題預設題目，這裡寫的會接在後面。</div></div>' +
+    /* 📨 完成時給家長的話（2026-11-16）：一個單元寫一次，九個班共用，{連結} 換成各班成果頁網址 */
+    '<div class="field" style="margin-top:12px"><label>📨 完成時給家長的話</label>' +
+      '<textarea id="uPmsg" rows="10" placeholder="各位家長好😊&#10;&#10;「單元名稱」單元順利完成囉！…&#10;{連結}&#10;&#10;Teacher Chris">' + esc(u.parentMsg || '') + '</textarea>' +
+      '<div class="hint">九個班共用這一段，<b>{連結}</b> 會換成各班的成果頁網址。按「全部完成」存好之後就會跳出來給你複製。</div></div>' +
     '<div class="field" style="margin-top:12px"><label>中文說明</label>' +
       '<input type="text" id="uDz" value="' + esc(u.descZh || '') + '" placeholder="探索自我 · 自畫像"></div>' +
     '<div class="field" style="margin-top:12px"><label>英文說明</label>' +
@@ -6258,7 +6276,8 @@ function editUnit(id) {
         skills:$('uSkl').value.trim(),    noteZh:$('uNote').value.trim(),
         quoteZh:$('uQuote').value.trim(), homeQ:$('uHomeQ').value.trim(),
         homeTip:$('uHomeT').value.trim(),
-        galZh:$('uGalZ').value.trim(),    galEn:$('uGalE').value.trim()
+        galZh:$('uGalZ').value.trim(),    galEn:$('uGalE').value.trim(),
+        parentMsg:$('uPmsg').value.trim()
       };
       if (!o.nameEn && !o.nameZh) { toast('請至少填一個單元名稱。', true); return false; }
       call('apiSaveUnit', o).then(function (d) { closeModal(); refresh(d, '單元已儲存'); }).catch(fail);
@@ -6789,7 +6808,15 @@ function acheck() {
   if ($('kNote')) $('kNote').oninput = function () { c.note = this.value; };
   $('kSeats').oninput = function () { c.seats = this.value; };
 
-  $('kSave').onclick = function () { saveCheck(c.status); };
+  /* 📨 剛變成「全部完成」才跳家長訊息（本來就完成、只是改札記的不跳）。
+     ⚠️ 只接在這顆按鈕上：ensureCheckPrg（還沒存就先拍照）也走 saveCheck，那條路不能跳出來擋住相機。 */
+  $('kSave').onclick = function () {
+    var was = progOf(c.cls, c.unitId), wasDone = !!(was && was.status === 'done');
+    var cls0 = c.cls, unit0 = c.unitId, st0 = c.status;
+    saveCheck(c.status).then(function (d) {
+      if (d && st0 === 'done' && !wasDone) openParentMsg(unit0, cls0);
+    }).catch(function () { /* saveCheck 已經報過錯 */ });
+  };
   $('kCopy').onclick = function () {
     call('apiCopyLast', c.cls, c.unitId).then(function (r) {
       if (!r) return toast('這一班還沒有其他紀錄可以複製。', true);
@@ -8379,6 +8406,110 @@ function findShow(cls) {
     if (String(SHOW_ROWS[i].cls) === String(cls)) return SHOW_ROWS[i];
   }
   return null;
+}
+
+/* ══ 📨 單元完成時給家長的訊息（2026-11-16）══════════════════════
+   每上完一個單元，他都要在九個班的家長群組各貼一次一樣的話，只有成果頁網址不同。
+   單元裡存一份（parentMsg，單元的編輯那一格），這裡把 {連結}／{班級} 換成那一班的，給他一鍵複製。
+   三個入口，都叫 openParentMsg：
+     1. 快速記錄／進度檢核按「全部完成」存好之後（只有「剛變成」完成才跳，改札記不跳）
+     2. 單元卡上的「📨 家長訊息」（有班完成才出現）
+     3. 工作室版單元記錄本裡的「📨 家長訊息」（studio.js）
+   ⚠️ 網址拿 apiShowList（系統設定 → 班級成果頁那一份），第一次開才去抓，之後用 SHOW_ROWS。
+   ⚠️ 單元還沒寫訊息時，用成果頁的「今天在學什麼」湊一版，並提醒他去寫。 */
+var PM_COPIED = {};                       /* 這次開網頁已經複製過哪幾班（只是給他對照，不存） */
+function pmsgDraft(u) {
+  var name = u.nameZh || u.nameEn || '';
+  var body = String(u.learnZh || u.descZh || '').trim();
+  return '各位家長好😊\n\n「' + name + '」單元順利完成囉！🎨\n\n' +
+    (body ? body + '\n\n' : '') +
+    (String(u.quoteZh || '').trim() ? String(u.quoteZh).trim() + '\n\n' : '') +
+    '這次的課堂照片也已經更新囉，歡迎大家到網站看看孩子們創作時的模樣😊\n{連結}\n\n' +
+    '謝謝大家這段時間的配合與協助！\n\nTeacher Chris';
+}
+function pmsgText(u, cls) {
+  var t = String(u.parentMsg || '').trim() || pmsgDraft(u);
+  var r = findShow(cls);
+  var url = r && r.url && String(r.url).indexOf('?s=') > 0 && String(r.url).indexOf('（') < 0
+    ? String(r.url) : '（' + cls + ' 班的成果頁網址還沒有，請到 系統設定 → 班級成果頁）';
+  t = t.split('{班級}').join(String(cls));
+  return t.indexOf('{連結}') >= 0 ? t.split('{連結}').join(url) : t + '\n\n' + url;
+}
+function copyFrom(ta) {
+  ta.focus(); ta.select(); ta.setSelectionRange(0, 99999);
+  var ok = false;
+  try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+  if (ok) return Promise.resolve(true);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(ta.value).then(function () { return true; }, function () { return false; });
+  }
+  return Promise.resolve(false);
+}
+function openParentMsg(unitId, cls) {
+  var u = unitOf(unitId);
+  if (!u) return;
+  var done = S.classes.filter(function (c) {
+    var p = progOf(c.code, u.id); return p && p.status === 'done';
+  }).map(function (c) { return String(c.code); });
+  if (!cls) cls = done.filter(function (k) { return !PM_COPIED[u.id + '|' + k]; })[0] || done[0] || '';
+  if (!cls) return toast('這個單元還沒有班級全部完成。', true);
+  var own = !!String(u.parentMsg || '').trim();
+
+  function draw() {
+    var r = findShow(cls);
+    openMask('<div class="modal pm-box"><h3>📨 給 ' + esc(cls) + ' 班家長的訊息</h3>' +
+      '<div class="hint" style="margin:-4px 0 8px">「' + esc(u.nameZh || u.nameEn) + '」' +
+        (own ? '' : '　⚠️ 這個單元還沒寫「完成時給家長的話」，先用成果頁內容湊了一版') + '</div>' +
+      /* 已完成的班一班一顆：點了換那一班；複製過的打勾，九個班貼到哪裡一眼看得出來 */
+      '<div class="pm-cls">' + S.classes.map(function (c) {
+        var k = String(c.code), ok = done.indexOf(k) >= 0;
+        return '<button type="button" class="dot ' + (k === cls ? 'on ' : '') + 'c-' + colorOf(k) + '"' +
+          (ok ? ' data-pmc="' + esc(k) + '"' : ' disabled title="還沒全部完成"') + '>' + esc(k) +
+          (PM_COPIED[u.id + '|' + k] ? ' ✓' : '') + '</button>';
+      }).join('') + '</div>' +
+      (r && !r.open ? '<div class="hint" style="color:#b0472e;margin-top:6px">⚠️ ' + esc(cls) +
+        ' 班的成果頁還沒開放，家長點連結會進不去（系統設定 → 班級成果頁）。</div>' : '') +
+      '<textarea id="pmTx" rows="14" style="margin-top:10px;width:100%;font-size:16px;line-height:1.6">' +
+        esc(SHOW_ROWS.length ? pmsgText(u, cls) : '讀取各班網址中…') + '</textarea>' +
+      '<div class="hint">這裡改的字只影響這一次複製；要每班都換，請按「改這個單元的訊息」。</div>' +
+      '<div class="acts">' + (isArchived() ? '' : '<button class="btn ghost" id="pmEdit" style="margin-right:auto">✏️ 改這個單元的訊息</button>') +
+        '<button class="btn ghost" id="mCancel">關閉</button>' +
+        '<button class="btn ghost" id="pmCopy">📋 複製</button>' +
+        '<button class="btn pm-line" id="pmLine">💬 傳到 LINE</button></div></div>');
+    $('mCancel').onclick = closeModal;
+    if ($('pmEdit')) $('pmEdit').onclick = function () { editUnit(u.id); };
+    Array.prototype.forEach.call(document.querySelectorAll('[data-pmc]'), function (b) {
+      b.onclick = function () { cls = b.dataset.pmc; draw(); };
+    });
+    /* 💬 LINE 官方的分享網址：手機上會打開 LINE、讓他挑群組，文字已經填好（他 11-16：手機上直接貼去 LINE）。
+       電腦上沒有 LINE app 的話會開 LINE 的網頁，那邊用「複製」比較順。 */
+    $('pmLine').onclick = function () {
+      if (!SHOW_ROWS.length) return toast('網址還在讀，等一下再按。', true);
+      PM_COPIED[u.id + '|' + cls] = 1;
+      var t = $('pmTx').value;
+      draw();
+      var url = 'https://line.me/R/share?text=' + encodeURIComponent(t);
+      /* ⚠️ 不能直接換掉這一頁（電腦上會把管理頁換走）；開新分頁，被擋才退回本頁跳轉 */
+      if (!window.open(url, '_blank')) window.location.href = url;
+    };
+    $('pmCopy').onclick = function () {
+      if (!SHOW_ROWS.length) return toast('網址還在讀，等一下再按。', true);
+      copyFrom($('pmTx')).then(function (ok) {
+        if (!ok) return toast('複製不了，文字已經選起來了，請自己按複製', true);
+        PM_COPIED[u.id + '|' + cls] = 1;
+        var next = done.filter(function (k) { return !PM_COPIED[u.id + '|' + k]; })[0];
+        toast(cls + ' 班的訊息已複製' + (next ? '' : '，完成的班都複製過了'));
+        draw();
+      });
+    };
+  }
+  draw();
+  if (!SHOW_ROWS.length) {
+    call('apiShowList').then(function (d) {
+      SHOW_ROWS = d.rows || [];
+      if ($('pmTx')) draw();
+    }).catch(fail);
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════
