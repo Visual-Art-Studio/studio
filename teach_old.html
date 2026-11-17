@@ -3114,7 +3114,7 @@ h3 .ci, summary .ci{width:1.2em; height:1.2em; vertical-align:-.25em}
 /* 這一支檔案（畫面）自己的版本。
    Code.gs 的 APP_VER 只認得伺服器那一支——只貼 Index.html、沒動 Code.gs 的時候，
    光看那個對不出來有沒有貼成功。系統設定頁會把兩個版本一起列出來。 */
-var UI_VER = '2026-11-16a';
+var UI_VER = '2026-11-17a';
 
 var S = null;
 var PAGE = 'home';
@@ -8435,15 +8435,32 @@ function pmsgText(u, cls) {
   t = t.split('{班級}').join(String(cls));
   return t.indexOf('{連結}') >= 0 ? t.split('{連結}').join(url) : t + '\n\n' + url;
 }
+/* ⚠️ 不能先 focus() 輸入框再複製（2026-11-17 他在 iPhone 上踩到）：focus 會把鍵盤叫出來，
+   複製完卡片一重畫、那個輸入框被拿掉，鍵盤沒有正常收起，關掉卡片後整頁停在「鍵盤還在」的位置——
+   底部的儲存列卡在畫面中間、下面空一大段、捲動怪怪的。
+   所以：先用 navigator.clipboard（https 都有，不碰輸入框）；不行才退回選取＋execCommand，
+   而且選之前設成唯讀（iPhone 對唯讀的框不叫鍵盤），複製完立刻 blur。 */
 function copyFrom(ta) {
-  ta.focus(); ta.select(); ta.setSelectionRange(0, 99999);
-  var ok = false;
-  try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
-  if (ok) return Promise.resolve(true);
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    return navigator.clipboard.writeText(ta.value).then(function () { return true; }, function () { return false; });
+  var text = ta.value;
+  function legacy() {
+    var ro = ta.readOnly, ok = false;
+    ta.readOnly = true;
+    ta.select(); ta.setSelectionRange(0, 99999);
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    ta.readOnly = ro;
+    ta.blur();
+    return ok;
   }
-  return Promise.resolve(false);
+  if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+    return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return legacy(); });
+  }
+  return Promise.resolve(legacy());
+}
+/* 彈窗裡有東西正被點著（輸入框＝鍵盤開著）就先放開，再拿掉／重畫彈窗。
+   直接把被 focus 的元素從畫面上拿掉，iPhone 的鍵盤收不乾淨，整頁會歪掉（見 copyFrom）。 */
+function blurMask() {
+  var a = document.activeElement;
+  if (a && a !== document.body && $('mask') && $('mask').contains(a) && a.blur) a.blur();
 }
 function openParentMsg(unitId, cls) {
   var u = unitOf(unitId);
@@ -8457,6 +8474,7 @@ function openParentMsg(unitId, cls) {
 
   function draw() {
     var r = findShow(cls);
+    blurMask();                    /* 重畫前先收鍵盤（他可能正在改字），見 copyFrom */
     openMask('<div class="modal pm-box"><h3>📨 給 ' + esc(cls) + ' 班家長的訊息</h3>' +
       '<div class="hint" style="margin:-4px 0 8px">「' + esc(u.nameZh || u.nameEn) + '」' +
         (own ? '' : '　⚠️ 這個單元還沒寫「完成時給家長的話」，先用成果頁內容湊了一版') + '</div>' +
@@ -8522,6 +8540,7 @@ function openMask(html) {
 }
 function closeModal() {
   askDone(ASK_NO);                 /* 還沒回答的問題一律當成「取消」 */
+  blurMask();                      /* 先收鍵盤再拿掉彈窗（iPhone，見 copyFrom） */
   $('mask').className = 'mask';
   $('maskBody').innerHTML = '';
 }
