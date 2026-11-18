@@ -1479,6 +1479,13 @@ textarea{min-height:92px; resize:vertical; line-height:1.7}
 /* ⚠️ 底色不能再用淡黃：教學札記整頁的底色就是淡黃（--pg-sheet），
    兩邊撞在一起整張卡就消失了（2026-09-15 他圈的）。
    改成白底＋左邊一條琥珀色，字也放大一級。 */
+.upd-bar{
+  position:fixed; left:50%; top:calc(8px + env(safe-area-inset-top)); transform:translateX(-50%);
+  z-index:140; max-width:92vw; border:0; border-radius:999px; padding:10px 18px; min-height:44px;
+  background:#285a4a; color:#fff; font-family:inherit; font-weight:700; font-size:15.5px; line-height:1.3;
+  white-space:nowrap; cursor:pointer;
+  box-shadow:0 6px 20px rgba(40,44,34,.3);
+}
 .toast{
   position:fixed; left:50%; bottom:26px; transform:translateX(-50%);
   background:#2b3a33; color:#fff; padding:12px 22px; border-radius:12px;
@@ -4055,7 +4062,7 @@ body.stu-tall .stu-week .tt thead th span:not(.wd):not(.dt), body.stu-tall .stu-
 /* 這一支檔案（畫面）自己的版本。
    Code.gs 的 APP_VER 只認得伺服器那一支——只貼 Index.html、沒動 Code.gs 的時候，
    光看那個對不出來有沒有貼成功。系統設定頁會把兩個版本一起列出來。 */
-var UI_VER = '2026-11-18a';
+var UI_VER = '2026-11-18b';
 
 var S = null;
 var PAGE = 'home';
@@ -9669,6 +9676,43 @@ var PHONE = isPhone();
   document.addEventListener('input', later, true);
   document.addEventListener('click', later, true);
 })();
+
+/* ══ 🆕 有新版就提示（2026-11-18）══════════════════════════════
+   他把管理頁存成 iPhone 主畫面 App：那種 App 沒有網址列、不能下拉重新整理，
+   要從多工畫面滑掉再開才會換版，而且 GitHub Pages 的網頁快取 10 分鐘。
+   所以打開時、從背景切回來時，自己去抓一次線上的這一頁（不吃快取），比對 UI_VER；
+   不一樣就在頂端放一條「有新版，點一下更新」。
+   ⚠️ 只在 GitHub Pages 版（有 window.API_URL）做；Apps Script 版在沙箱 iframe 裡，抓不到自己。
+   ⚠️ 更新＝帶一個新的 ?u= 重新載入（換了網址就不會拿到快取的舊頁），?admin=、#頁面都保留。
+   ⚠️ 照片還在佇列裡上傳時不更新（重新載入會中斷正在傳的那一張；佇列在 IndexedDB，回來會續傳，但不要冒險）。
+   ⚠️ 檢查最多 5 分鐘一次；抓不到（沒網路）就安靜放過，不打擾。 */
+var UPD_AT = 0;
+function checkUpdate(force) {
+  if (!window.API_URL && !force) return;
+  if (!force && Date.now() - UPD_AT < 5 * 60 * 1000) return;
+  UPD_AT = Date.now();
+  if (!window.fetch) return;
+  fetch(location.pathname + '?chk=' + Date.now(), { cache: 'no-store', credentials: 'omit' })
+    .then(function (r) { return r.ok ? r.text() : ''; })
+    .then(function (t) {
+      var m = /var UI_VER = '([^']+)'/.exec(t || '');
+      if (!m || m[1] === UI_VER || $('updBar')) return;
+      var b = document.createElement('button');
+      b.id = 'updBar'; b.type = 'button'; b.className = 'upd-bar no-print';
+      b.textContent = '🆕 有新版，點一下更新';
+      b.onclick = function () {
+        if ((typeof PQ !== 'undefined' && PQ.length) || (typeof PQ_PREPN !== 'undefined' && PQ_PREPN)) {
+          return toast('照片還在上傳，傳完再按一次更新。', true);
+        }
+        var q = location.search.replace(/[?&]u=[^&]*/g, '').replace(/^&/, '?');
+        location.replace(location.pathname + (q && q !== '?' ? q + '&' : '?') + 'u=' + encodeURIComponent(m[1]) + location.hash);
+      };
+      document.body.appendChild(b);
+    })
+    .catch(function () { /* 沒網路就算了 */ });
+}
+document.addEventListener('visibilitychange', function () { if (!document.hidden) checkUpdate(); });
+setTimeout(checkUpdate, 4000);      /* 開頁先讓資料載完，再去問 */
 
 (function init() {
   var id = location.hash.replace('#', '');
