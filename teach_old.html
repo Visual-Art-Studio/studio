@@ -3114,7 +3114,7 @@ h3 .ci, summary .ci{width:1.2em; height:1.2em; vertical-align:-.25em}
 /* 這一支檔案（畫面）自己的版本。
    Code.gs 的 APP_VER 只認得伺服器那一支——只貼 Index.html、沒動 Code.gs 的時候，
    光看那個對不出來有沒有貼成功。系統設定頁會把兩個版本一起列出來。 */
-var UI_VER = '2026-11-17a';
+var UI_VER = '2026-11-18a';
 
 var S = null;
 var PAGE = 'home';
@@ -7098,6 +7098,13 @@ var CAM = null;          /* { stream, prgId, n } */
    一張大約 0.5～1 MB，縮圖（640）不變，格子和成果頁的速度不受影響。 */
 var CAM_Q = { max: 2048, q: 0.9 };
 var CAM_PEND = 3;        /* 最多幾張畫面在排隊縮圖（見 shootCam） */
+/* 2026-11-18 他在課堂上：上一班相機開得起來，下一班一按就是「沒有拿到相機權限」，也沒有再問允許。
+   iPhone 的 NotAllowedError 不只代表「按了不允許」：切到 LINE／別的 App 再回來會收回權限，
+   要求又不在手指點擊的當下（例如 4:3 要不到、改要第二次）也會被直接拒絕、不再問。
+   所以：① 記住這支手機要不到 4:3（CAM_NO43），之後第一次就要拿得到的，兩次變一次、都在點擊當下；
+         ② 被拒時跳一張卡（camDenied），「再開一次」是新的一次點擊，iPhone 會重新問；原始錯誤照登。 */
+var CAM_EVER = false;    /* 這一頁打開以來相機成功開過嗎 */
+var CAM_NO43 = false;    /* 這支手機給不了 4:3（第一次要求被 Overconstrained 退回） */
 function openCam(prgReady) {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     return toast('這台裝置的瀏覽器開不了網頁相機，請改用下面的「匯入照片」。', true);
@@ -7131,11 +7138,14 @@ function openCam(prgReady) {
      iPhone 實際給多少，相機上方那行小字會寫出來。 */
   var big = { facingMode: { ideal: 'environment' }, width: { ideal: 4032 }, height: { ideal: 3024 } };
   var want43 = { facingMode: big.facingMode, width: big.width, aspectRatio: { exact: 4 / 3 } };
-  navigator.mediaDevices.getUserMedia({ audio: false, video: want43 }).catch(function (e) {
+  navigator.mediaDevices.getUserMedia({ audio: false, video: CAM_NO43 ? big : want43 }).catch(function (e) {
     if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) throw e;   /* 沒權限就不用再試 */
+    if (CAM_NO43) throw e;                                  /* 已經是「拿得到的就好」那種，再要一次也一樣 */
+    if (e && e.name === 'OverconstrainedError') CAM_NO43 = true;
     return navigator.mediaDevices.getUserMedia({ audio: false, video: big });
   }).then(function (st) {
     if (CAM !== me) { st.getTracks().forEach(function (t) { t.stop(); }); return; }
+    CAM_EVER = true;
     me.stream = st;
     var v = $('camV');
     v.srcObject = st;
@@ -7143,12 +7153,32 @@ function openCam(prgReady) {
     if (pl && pl.catch) pl.catch(function () {});
     v.onloadedmetadata = camReady;
   }).catch(function (e) {
+    var pid = me.prgId;
     closeCam();
-    var n = e && e.name;
-    toast(n === 'NotAllowedError'
-      ? '沒有拿到相機權限。到「設定 › Safari › 相機」改成「允許」，或先用下面的「匯入照片」。'
-      : '打不開相機（' + (n || e) + '），請先用下面的「匯入照片」。', true);
+    camDenied(prgReady, pid, e);
   });
+}
+/* 相機打不開時的卡片。⚠️ 兩顆按鈕都要在 onclick 裡「同步」叫 openCam／pickPhotos——
+   不能先 ask() 再 .then：那就不算手指點擊的當下，iPhone 照樣直接拒絕（相機、選照片都是）。 */
+function camDenied(prgReady, prgId, e) {
+  var n = (e && e.name) || '', m = (e && e.message) || String(e || '');
+  var perm = n === 'NotAllowedError' || n === 'SecurityError';
+  var why = !perm
+    ? '這支手機現在打不開網頁相機。'
+    : CAM_EVER
+      ? '剛剛還能用，這次被 iPhone 擋下來了——切到 LINE 或別的 App 再回來，常常就會這樣。按「再開一次」，iPhone 會重新問你要不要允許。'
+      : '這次沒有拿到相機權限。按「再開一次」，iPhone 會再問一次。';
+  openMask('<div class="modal cam-deny"><h3>📷 相機沒有打開</h3>' +
+    '<p style="margin:0 0 8px;line-height:1.7">' + why + '</p>' +
+    (perm ? '<div class="hint">一直被擋、也不再問的話：點 Safari 網址列左邊的「ᴀA」→「網站設定」→「相機」→ 選「允許」，以後就不會再擋。</div>' : '') +
+    '<div class="hint" style="margin-top:6px">原始錯誤：' + esc((n ? n + '：' : '') + m) + '</div>' +
+    '<div class="acts">' +
+      (prgId ? '<button class="btn ghost" id="cdPick">🖼 改用匯入照片</button>' : '') +
+      '<button class="btn ghost" id="mCancel">關閉</button>' +
+      '<button class="btn" id="cdRetry">📷 再開一次</button></div></div>');
+  $('mCancel').onclick = closeModal;
+  $('cdRetry').onclick = function () { closeModal(); openCam(prgReady); };
+  if ($('cdPick')) $('cdPick').onclick = function () { closeModal(); pickPhotos(prgId); };
 }
 function camReady() {
   var v = $('camV');
