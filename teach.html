@@ -4062,7 +4062,7 @@ body.stu-tall .stu-week .tt thead th span:not(.wd):not(.dt), body.stu-tall .stu-
 /* 這一支檔案（畫面）自己的版本。
    Code.gs 的 APP_VER 只認得伺服器那一支——只貼 Index.html、沒動 Code.gs 的時候，
    光看那個對不出來有沒有貼成功。系統設定頁會把兩個版本一起列出來。 */
-var UI_VER = '2026-11-18b';
+var UI_VER = '2026-11-18c';
 
 var S = null;
 var PAGE = 'home';
@@ -4716,6 +4716,9 @@ function boot(week) {
     if (!boot.bk) { boot.bk = true; call('apiMaybeBackup').catch(function () {}); }
     /* 上次沒傳完、還存在這台手機裡的照片，接著傳（見「照片佇列」） */
     if (!boot.pq) { boot.pq = true; pqResume(); }
+    /* 📨 家長訊息要用的各班網址：先在背景抓好（2026-11-18 他說按完全部完成，訊息要等好幾秒才出來）。
+       錯開 2.5 秒，不跟開頁那一包、備份搶。失敗不吵，開訊息卡時會再抓一次。 */
+    if (!boot.sh && !isArchived()) { boot.sh = true; setTimeout(function () { showLinksRefresh().catch(function () {}); }, 2500); }
   }).catch(function (e) {
     if (isLocked(e)) return askPass(function () { boot(week); });
     $('boot').style.display = '';
@@ -9376,9 +9379,32 @@ function drawShow(d) {
   });
 
   SHOW_ROWS = d.rows;
+  showLinksSave(SHOW_ROWS);
 }
 
 var SHOW_ROWS = [];
+/* 各班成果頁網址記一份在這台手機（2026-11-18）：網址幾乎不會變，訊息卡一打開就有，不用等後台一趟 2～5 秒。
+   ⚠️ 只記班號／網址／開放沒有，**不記確認碼**。換新網址（apiShowRegen）後 drawShow 會蓋掉；
+   開訊息卡時一律在背景再抓一次，有變就重畫，所以舊的頂多被看到一下、不會被複製出去太久。 */
+var SHOW_LS = 'tpShowLinks';
+function showLinksSave(rows) {
+  try {
+    localStorage.setItem(SHOW_LS, JSON.stringify((rows || []).map(function (r) {
+      return { cls: String(r.cls), url: String(r.url || ''), open: !!r.open };
+    })));
+  } catch (e) { /* 私密瀏覽存不了就算了 */ }
+}
+function showLinksLoad() {
+  if (SHOW_ROWS.length) return;
+  try { SHOW_ROWS = JSON.parse(localStorage.getItem(SHOW_LS) || '[]') || []; } catch (e) { SHOW_ROWS = []; }
+}
+function showLinksRefresh() {
+  return call('apiShowList').then(function (d) {
+    SHOW_ROWS = d.rows || [];
+    showLinksSave(SHOW_ROWS);
+    return SHOW_ROWS;
+  });
+}
 function findShow(cls) {
   for (var i = 0; i < SHOW_ROWS.length; i++) {
     if (String(SHOW_ROWS[i].cls) === String(cls)) return SHOW_ROWS[i];
@@ -9449,6 +9475,7 @@ function openParentMsg(unitId, cls) {
   if (!cls) cls = done.filter(function (k) { return !PM_COPIED[u.id + '|' + k]; })[0] || done[0] || '';
   if (!cls) return toast('這個單元還沒有班級全部完成。', true);
   var own = !!String(u.parentMsg || '').trim();
+  showLinksLoad();                 /* 背景預抓過、或上次記在手機上的網址，一打開就有 */
 
   function draw() {
     var r = findShow(cls);
@@ -9500,12 +9527,13 @@ function openParentMsg(unitId, cls) {
     };
   }
   draw();
-  if (!SHOW_ROWS.length) {
-    call('apiShowList').then(function (d) {
-      SHOW_ROWS = d.rows || [];
-      if ($('pmTx')) draw();
-    }).catch(fail);
-  }
+  /* 網址還是要跟後台對一次（換過網址、開放狀態變了）。已經有一份就安靜地在背景對，
+     有變才重畫（他正在改的字會被重畫掉，所以沒變就不動）；一份都沒有才等它、失敗才報錯。 */
+  var had = JSON.stringify(SHOW_ROWS.map(function (r) { return [String(r.cls), String(r.url), !!r.open]; }));
+  showLinksRefresh().then(function (rows) {
+    var now = JSON.stringify(rows.map(function (r) { return [String(r.cls), String(r.url), !!r.open]; }));
+    if ($('pmTx') && now !== had) draw();
+  }).catch(function (e) { if (had === '[]') fail(e); });
 }
 
 /* ══════════════════════════════════════════════════════════════
