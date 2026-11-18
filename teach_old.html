@@ -1038,6 +1038,7 @@ textarea{min-height:92px; resize:vertical; line-height:1.7}
   background:#fff; filter:grayscale(1); opacity:.45}
 .cls-grid .cells .trl-t.on{filter:none; opacity:1; background:#fde8dc; border-color:#e0a58c}
 .trl-all{margin-top:6px; display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; font-size:13px}
+.trl-all .btn{min-height:40px}   /* 手機上也在這裡開預告（2026-11-18），按鈕要好按 */
 
 /* ── 單元省思卡（教學札記那一頁的重點）─────────────────────
    一個單元一張。欄數自己算，同一列的卡用 subgrid 對齊
@@ -3121,7 +3122,7 @@ h3 .ci, summary .ci{width:1.2em; height:1.2em; vertical-align:-.25em}
 /* 這一支檔案（畫面）自己的版本。
    Code.gs 的 APP_VER 只認得伺服器那一支——只貼 Index.html、沒動 Code.gs 的時候，
    光看那個對不出來有沒有貼成功。系統設定頁會把兩個版本一起列出來。 */
-var UI_VER = '2026-11-18c';
+var UI_VER = '2026-11-18d';
 
 var S = null;
 var PAGE = 'home';
@@ -5964,7 +5965,10 @@ function vProg() {
       statCard('<i class="ci ci-done" aria-hidden="true">✅</i>', 'pink',   'Completed',        '已完成',   cnt.done,     '個單元') +
       '</div>';
   } else {
-    units = units.filter(function (u) { return unitStage(u, classes) !== 'none'; });
+    /* 手機只列已經開始的單元——但「下個單元」要能在手機上開預告（2026-11-18 他要的）：
+       還沒開始、小劇院也有預告片的單元，照順序取第一個，排在最後。只多這一張，其餘照舊精簡。 */
+    var nextTrl = units.filter(function (u) { return unitStage(u, classes) === 'none' && hasTrl(u); })[0];
+    units = units.filter(function (u) { return unitStage(u, classes) !== 'none' || u === nextTrl; });
   }
 
   /* ⚠️ 這一頁整頁共用同一組四欄格線：上面四張統計卡、中間狀態對照、下面單元卡，

@@ -1038,6 +1038,7 @@ textarea{min-height:92px; resize:vertical; line-height:1.7}
   background:#fff; filter:grayscale(1); opacity:.45}
 .cls-grid .cells .trl-t.on{filter:none; opacity:1; background:#fde8dc; border-color:#e0a58c}
 .trl-all{margin-top:6px; display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; font-size:13px}
+.trl-all .btn{min-height:40px}   /* 手機上也在這裡開預告（2026-11-18），按鈕要好按 */
 
 /* ── 單元省思卡（教學札記那一頁的重點）─────────────────────
    一個單元一張。欄數自己算，同一列的卡用 subgrid 對齊
@@ -3938,6 +3939,12 @@ body.stu-boot #boot .lock .err{color:#ffc2b5}
   #stuGate .gt-m.xx{left:calc(50% + 90px);background-image:url(studio/m_xx_front.webp)}
   body.stu-boot #boot{padding:12px 14px 16px;border-width:20px;border-image-width:20px}
 }
+/* 手機直拿：招牌和黑板一起往下，讓開最上面那排掛畫（2026-11-18 他圈的）。
+   背景 studio_bg2 在直拿時是「照高度縮放、貼底」，掛畫繩在原圖第 0–99 列（共 992）＝畫面高度的 10%。 */
+@media (max-width:760px) and (orientation:portrait){
+  #stuGate .gt-title{top:calc(10vh + 8px)}
+  body.stu-boot #boot{margin-top:calc(10vh + 8px + min(560px,82vw) * .334 + 22px)}
+}
 
 /* ══ 平板直拿：直式工作室（2026-11-06）══════════════════════════════
    16:10 的工作室在 iPad 直拿（768 寬）只剩畫面上面 46%、最小的字 7px、下面一整片空白。
@@ -4062,7 +4069,7 @@ body.stu-tall .stu-week .tt thead th span:not(.wd):not(.dt), body.stu-tall .stu-
 /* 這一支檔案（畫面）自己的版本。
    Code.gs 的 APP_VER 只認得伺服器那一支——只貼 Index.html、沒動 Code.gs 的時候，
    光看那個對不出來有沒有貼成功。系統設定頁會把兩個版本一起列出來。 */
-var UI_VER = '2026-11-18c';
+var UI_VER = '2026-11-18d';
 
 var S = null;
 var PAGE = 'home';
@@ -6905,7 +6912,10 @@ function vProg() {
       statCard('<i class="ci ci-done" aria-hidden="true">✅</i>', 'pink',   'Completed',        '已完成',   cnt.done,     '個單元') +
       '</div>';
   } else {
-    units = units.filter(function (u) { return unitStage(u, classes) !== 'none'; });
+    /* 手機只列已經開始的單元——但「下個單元」要能在手機上開預告（2026-11-18 他要的）：
+       還沒開始、小劇院也有預告片的單元，照順序取第一個，排在最後。只多這一張，其餘照舊精簡。 */
+    var nextTrl = units.filter(function (u) { return unitStage(u, classes) === 'none' && hasTrl(u); })[0];
+    units = units.filter(function (u) { return unitStage(u, classes) !== 'none' || u === nextTrl; });
   }
 
   /* ⚠️ 這一頁整頁共用同一組四欄格線：上面四張統計卡、中間狀態對照、下面單元卡，
