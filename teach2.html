@@ -4058,6 +4058,7 @@ body.stu-tall .stu-week .tt thead th span:not(.wd):not(.dt), body.stu-tall .stu-
 <div class="pq-pill" id="pqPill" role="status" aria-live="polite"></div>
 <div class="mask" id="mask"><div id="maskBody"></div></div>
 <input type="file" id="filePick" accept="image/*" multiple style="display:none">
+<input type="file" id="camPick" accept="image/*" capture="environment" style="display:none">
 <input type="file" id="docPick" style="display:none">
 
 <script>
@@ -4069,7 +4070,7 @@ body.stu-tall .stu-week .tt thead th span:not(.wd):not(.dt), body.stu-tall .stu-
 /* 這一支檔案（畫面）自己的版本。
    Code.gs 的 APP_VER 只認得伺服器那一支——只貼 Index.html、沒動 Code.gs 的時候，
    光看那個對不出來有沒有貼成功。系統設定頁會把兩個版本一起列出來。 */
-var UI_VER = '2026-11-18d';
+var UI_VER = '2026-11-19a';
 
 var S = null;
 var PAGE = 'home';
@@ -4725,6 +4726,7 @@ function boot(week) {
     if (!boot.pq) { boot.pq = true; pqResume(); }
     /* 📨 家長訊息要用的各班網址：先在背景抓好（2026-11-18 他說按完全部完成，訊息要等好幾秒才出來）。
        錯開 2.5 秒，不跟開頁那一包、備份搶。失敗不吵，開訊息卡時會再抓一次。 */
+    if (!boot.cr) { boot.cr = true; camResume(); }     /* 📷 相機壞掉、重新載入回來的那一次 */
     if (!boot.sh && !isArchived()) { boot.sh = true; setTimeout(function () { showLinksRefresh().catch(function () {}); }, 2500); }
   }).catch(function (e) {
     if (isLocked(e)) return askPass(function () { boot(week); });
@@ -8121,25 +8123,78 @@ function openCam(prgReady) {
 }
 /* 相機打不開時的卡片。⚠️ 兩顆按鈕都要在 onclick 裡「同步」叫 openCam／pickPhotos——
    不能先 ask() 再 .then：那就不算手指點擊的當下，iPhone 照樣直接拒絕（相機、選照片都是）。 */
+/* 相機打不開時的卡片。
+   2026-11-19 他回報：上一班按完全部完成（多半接著去 LINE 傳家長訊息），下一班相機就打不開，按「再開一次」也一樣被拒。
+   他是用「加入主畫面」的 App 在拍——WebKit 有好幾份回報：主畫面 App 切到背景再回來，網頁相機會壞掉，
+   重新要求也沒用，只有重新載入整頁才會好（bugs.webkit.org 185448／212040）。所以這張卡給兩條一定走得通的路：
+     ① 🔄 重新載入後開相機：記下現在的班級＋單元（sessionStorage tpCamResume），整頁重新載入，
+        回來停在同一班，再跳一顆「📷 開相機」（要他再點一下：開相機一定要在手指點擊的當下）。
+     ② 📸 用 iPhone 相機拍：<input capture> 直接開系統相機，一次一張、不走網頁相機權限，一定開得起來。
+   ⚠️ 兩顆按鈕都要在 onclick 裡「同步」做事（叫 openCam、點 input），不能先 ask() 再 .then。 */
+var CAM_RESUME_K = 'tpCamResume';
 function camDenied(prgReady, prgId, e) {
   var n = (e && e.name) || '', m = (e && e.message) || String(e || '');
   var perm = n === 'NotAllowedError' || n === 'SecurityError';
+  var standalone = !!(window.navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches));
+  var canReload = PAGE === 'quick' && UI.quick && UI.quick.cls && UI.quick.unitId;
   var why = !perm
     ? '這支手機現在打不開網頁相機。'
     : CAM_EVER
-      ? '剛剛還能用，這次被 iPhone 擋下來了——切到 LINE 或別的 App 再回來，常常就會這樣。按「再開一次」，iPhone 會重新問你要不要允許。'
-      : '這次沒有拿到相機權限。按「再開一次」，iPhone 會再問一次。';
+      ? '剛剛還能用，這次被 iPhone 擋下來了——切到 LINE 或別的 App 再回來，' +
+        (standalone ? '主畫面的 App 常常就會這樣，而且要重新載入才會好。' : '常常就會這樣。')
+      : '這次沒有拿到相機權限。';
   openMask('<div class="modal cam-deny"><h3>📷 相機沒有打開</h3>' +
     '<p style="margin:0 0 8px;line-height:1.7">' + why + '</p>' +
-    (perm ? '<div class="hint">一直被擋、也不再問的話：點 Safari 網址列左邊的「ᴀA」→「網站設定」→「相機」→ 選「允許」，以後就不會再擋。</div>' : '') +
+    '<div class="hint">「📸 用 iPhone 相機拍」一定開得起來，只是一次拍一張（拍完按「使用照片」，再按一次拍下一張）。</div>' +
+    (perm && !standalone ? '<div class="hint" style="margin-top:6px">常常被擋的話：點 Safari 網址列左邊的「ᴀA」→「網站設定」→「相機」→ 選「允許」。</div>' : '') +
     '<div class="hint" style="margin-top:6px">原始錯誤：' + esc((n ? n + '：' : '') + m) + '</div>' +
     '<div class="acts">' +
-      (prgId ? '<button class="btn ghost" id="cdPick">🖼 改用匯入照片</button>' : '') +
       '<button class="btn ghost" id="mCancel">關閉</button>' +
-      '<button class="btn" id="cdRetry">📷 再開一次</button></div></div>');
+      '<button class="btn ghost" id="cdShot">📸 用 iPhone 相機拍</button>' +
+      (canReload ? '<button class="btn" id="cdReload">🔄 重新載入後開相機</button>'
+                 : '<button class="btn" id="cdRetry">📷 再開一次</button>') + '</div></div>');
   $('mCancel').onclick = closeModal;
-  $('cdRetry').onclick = function () { closeModal(); openCam(prgReady); };
-  if ($('cdPick')) $('cdPick').onclick = function () { closeModal(); pickPhotos(prgId); };
+  if ($('cdRetry')) $('cdRetry').onclick = function () { closeModal(); openCam(prgReady); };
+  if ($('cdReload')) $('cdReload').onclick = function () {
+    if ((typeof PQ !== 'undefined' && PQ.length) || PQ_PREPN) {
+      return toast('還有照片在上傳，等傳完（或先用「📸 用 iPhone 相機拍」）再重新載入。', true);
+    }
+    try {
+      sessionStorage.setItem(CAM_RESUME_K, JSON.stringify({ cls: UI.quick.cls, unitId: UI.quick.unitId, period: UI.quick.period || '', at: Date.now() }));
+    } catch (x) {}
+    location.reload();
+  };
+  $('cdShot').onclick = function () { closeModal(); shootNative(prgReady); };
+}
+/* 系統相機拍一張（一定要在點擊當下 click()）。拍完才等進度紀錄（prgReady），再丟進照片佇列。 */
+function shootNative(prgReady) {
+  var inp = $('camPick');
+  inp.value = '';
+  inp.onchange = function () {
+    var files = Array.prototype.slice.call(inp.files || []);
+    if (!files.length) return;
+    Promise.resolve(prgReady).then(function (id) {
+      if (!id) return;
+      queuePhotos(String(id), files);
+      toast('已加入上傳，要再拍就再按一次「拍照」→「📸 用 iPhone 相機拍」');
+    }).catch(fail);
+  };
+  inp.click();
+}
+/* 重新載入回來：停在同一班、同一單元，跳一顆「開相機」給他點（boot 畫完之後叫） */
+function camResume() {
+  var o = null;
+  try { o = JSON.parse(sessionStorage.getItem(CAM_RESUME_K) || 'null'); sessionStorage.removeItem(CAM_RESUME_K); } catch (x) {}
+  if (!o || !o.cls || Date.now() - (o.at || 0) > 5 * 60 * 1000) return;
+  if (!clsOf(o.cls) || !unitOf(o.unitId)) return;
+  UI.quick.cls = o.cls; UI.quick.unitId = o.unitId; UI.quick.period = o.period || periodFor(o.cls);
+  quickLoad(); go('quick');           /* 跟教學進度點圓點進快速記錄同一條路 */
+  openMask('<div class="modal cam-deny"><h3>📷 相機準備好了</h3>' +
+    '<p style="margin:0 0 8px;line-height:1.7">' + esc(o.cls) + ' 班「' + esc((unitOf(o.unitId) || {}).nameZh || '') + '」。點下面的按鈕開始連拍。</p>' +
+    '<div class="acts"><button class="btn ghost" id="mCancel">先不用</button>' +
+    '<button class="btn" id="crGo">📷 開相機</button></div></div>');
+  $('mCancel').onclick = closeModal;
+  $('crGo').onclick = function () { closeModal(); openCam(ensurePrg()); };
 }
 function camReady() {
   var v = $('camV');
