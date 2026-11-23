@@ -1038,7 +1038,8 @@ textarea{min-height:92px; resize:vertical; line-height:1.7}
   background:#fff; filter:grayscale(1); opacity:.45}
 .cls-grid .cells .trl-t.on{filter:none; opacity:1; background:#fde8dc; border-color:#e0a58c}
 .trl-all{margin-top:6px; display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; font-size:13px}
-.trl-all .btn{min-height:40px}   /* 手機上也在這裡開預告（2026-11-18），按鈕要好按 */
+.trl-all .btn{min-height:40px}
+.trl-all .btn{margin-left:auto}   /* 按鈕一律靠右，說明在左（預告、家長訊息兩列同一種排法） */   /* 手機上也在這裡開預告（2026-11-18），按鈕要好按 */
 
 /* ── 單元省思卡（教學札記那一頁的重點）─────────────────────
    一個單元一張。欄數自己算，同一列的卡用 subgrid 對齊
@@ -4070,7 +4071,7 @@ body.stu-tall .stu-week .tt thead th span:not(.wd):not(.dt), body.stu-tall .stu-
 /* 這一支檔案（畫面）自己的版本。
    Code.gs 的 APP_VER 只認得伺服器那一支——只貼 Index.html、沒動 Code.gs 的時候，
    光看那個對不出來有沒有貼成功。系統設定頁會把兩個版本一起列出來。 */
-var UI_VER = '2026-11-19a';
+var UI_VER = '2026-11-23a';
 
 var S = null;
 var PAGE = 'home';
@@ -6966,8 +6967,9 @@ function vProg() {
       /* ⚠️ 中文在前、英文在後（全站同一條規則，2026-09-20 統一）。 */
       '<div class="nm"><span class="z">' + esc(u.nameZh) + '</span>' +
         '<span class="e">' + esc(u.nameEn) + '</span></div>' +
-      (doneN ? '<button class="btn ghost sm no-print" style="margin-left:auto" data-pm="' + esc(u.id) + '" title="複製給家長的完成訊息">📨 家長訊息</button>' : '') +
-      '<button class="btn ghost sm no-print"' + (doneN ? '' : ' style="margin-left:auto"') + ' data-eu="' + esc(u.id) + '">編輯</button>' +
+      /* 📨 家長訊息：桌機放標題列右邊；手機改放卡片最下面一列（2026-11-23 他截圖：手機上擠得單元名稱折成三行） */
+      (doneN && !phone ? '<button class="btn ghost sm no-print" style="margin-left:auto" data-pm="' + esc(u.id) + '" title="複製給家長的完成訊息">📨 家長訊息</button>' : '') +
+      '<button class="btn ghost sm no-print"' + (doneN && !phone ? '' : ' style="margin-left:auto"') + ' data-eu="' + esc(u.id) + '">編輯</button>' +
       '</div>' +
       '<div class="cover c-' + (u.color || 'blue') + '">' + coverInner(u) + '</div>' +
       '<div class="bd">' +
@@ -6996,6 +6998,8 @@ function vProg() {
                 (s ? stMark(p.status) : '–') + '</span>';
             }).join('') + '</span></div>' +
           trlRow(u) +
+          (doneN && phone ? '<div class="trl-all pm-row no-print"><span class="hint">📨 ' + doneN + ' 班已完成，可以傳給家長</span>' +
+            '<button type="button" class="btn ghost sm" data-pm="' + esc(u.id) + '">📨 家長訊息</button></div>' : '') +
         '</div>' +
       '</div></div>';
   }
