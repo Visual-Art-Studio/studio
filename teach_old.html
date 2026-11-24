@@ -1630,12 +1630,31 @@ html.cam-on, html.cam-on body{overflow:hidden}
   overflow:hidden; pointer-events:none; opacity:0; transition:opacity .15s;
 }
 html.busy .loadbar{opacity:1}
+/* 觸控裝置（手機、平板）：彈窗後面和提示泡泡不做毛玻璃、背景不固定（2026-11-24 手機優化）。
+   共用規則：fixed 背景＋backdrop-filter 在 iPhone 會吃光記憶體、黑屏；而且每捲一格都要重算模糊。
+   ⚠️ 用 !important：studio.css 在後面又寫了 body 的 fixed 背景。 */
+@media (hover:none) and (pointer:coarse){
+  .mask, .toast{ -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
+  body{ background-attachment:scroll !important; }
+}
+/* 換頁時內容淡入一下（180ms），看得出「換了一頁」；系統設了減少動態就不動 */
+#views.pg-in{ animation:pgin .18s ease-out; }
+@keyframes pgin{ from{opacity:0; transform:translate(var(--pgx,0px), var(--pgy,6px))} to{opacity:1; transform:none} }
+@media (prefers-reduced-motion:reduce){ #views.pg-in{ animation:none; } }
+/* 先顯示上次資料的那幾秒：右上角一顆小牌子（bootCache） */
+.stale-tag{ position:fixed; left:50%; transform:translateX(-50%); bottom:calc(104px + env(safe-area-inset-bottom)); z-index:130; white-space:nowrap;
+  background:#fffdf6; color:#285a4a; border:1px solid #d9cfb8; border-radius:999px; padding:4px 12px;
+  font-size:13px; font-weight:700; box-shadow:0 4px 12px rgba(88,72,44,.15); display:none; }
+html.stale .stale-tag{ display:block; }
 .loadbar i{
   display:block; height:100%; width:38%; border-radius:0 3px 3px 0;
   background:linear-gradient(90deg,rgba(40,90,74,0),var(--grn));
-  animation:loadslide 1.05s ease-in-out infinite;
 }
-@keyframes loadslide{ from{margin-left:-38%} to{margin-left:100%} }
+/* ⚠️ 2026-11-24 手機優化：以前這條動畫「永遠在跑」（看不見時只是 opacity:0），而且動的是 margin-left——
+   每一格都要重新排版，手機什麼都沒做也在一直重排、耗電、滑動會頓。改成只有 busy 時才動，用 transform 動（不重排）。
+   38% 寬：從 -100%（自己的寬）走到 263%（＝100% 畫面寬 ÷ 38%）。 */
+html.busy .loadbar i{ animation:loadslide 1.05s ease-in-out infinite; }
+@keyframes loadslide{ from{transform:translateX(-100%)} to{transform:translateX(263%)} }
 /* 切換中的那顆先變色（畫面先切過去），再淡一點表示還在等伺服器 */
 .pill-term button{transition:background .12s}
 .pill-term button.wait{opacity:.72}
@@ -3109,6 +3128,7 @@ h3 .ci, summary .ci{width:1.2em; height:1.2em; vertical-align:-.25em}
 
 <div class="loadbar" id="loadbar"><i></i></div>
 <div class="toast" id="toast"></div>
+<div class="stale-tag" id="staleTag" aria-live="polite">🔄 更新資料中…</div>
 <div class="pq-pill" id="pqPill" role="status" aria-live="polite"></div>
 <div class="mask" id="mask"><div id="maskBody"></div></div>
 <input type="file" id="filePick" accept="image/*" multiple style="display:none">
@@ -3124,7 +3144,7 @@ h3 .ci, summary .ci{width:1.2em; height:1.2em; vertical-align:-.25em}
 /* 這一支檔案（畫面）自己的版本。
    Code.gs 的 APP_VER 只認得伺服器那一支——只貼 Index.html、沒動 Code.gs 的時候，
    光看那個對不出來有沒有貼成功。系統設定頁會把兩個版本一起列出來。 */
-var UI_VER = '2026-11-23a';
+var UI_VER = '2026-11-24a';
 
 var S = null;
 var PAGE = 'home';
@@ -3395,6 +3415,12 @@ function busy(on) {
 var INFLIGHT = {};
 var GUARD_RE = /^api(Save|Delete|New|Seat|Copy|ShowSet|ShowRegen|Switch|Set|Admin(?!Unlock))/;
 function call(fn) {
+  /* 先顯示上次資料的那幾秒，「存」的動作等新資料到了才送（見 bootCache） */
+  if (STALE && BOOT_FRESH && (GUARD_RE.test(fn) || fn === 'apiAddPhoto')) {
+    var a0 = arguments;
+    toast('資料更新中，好了就幫你存…');
+    return BOOT_FRESH.then(function (err) { if (err) throw err; return call.apply(null, a0); });
+  }
   var args = Array.prototype.slice.call(arguments, 1);
   var gk = GUARD_RE.test(fn) ? fn + ':' + JSON.stringify(args) : '';
   if (gk && INFLIGHT[gk]) return Promise.reject(new Error('上一次的儲存還在進行，請稍等一下。'));
@@ -3758,7 +3784,62 @@ function unlock(pass, done) {
 }
 
 /* ── 啟動 ───────────────────────────────────────────────── */
+/* ══ 先顯示上次的資料（2026-11-24 手機優化）══════════════════════════
+   打開網頁要等後台一趟 2～5 秒（「工作室開門中…」）。這台手機上次載到的那一包記在 localStorage，
+   下次打開**先用它畫**，右上角掛「🔄 更新資料中…」，後台的新資料一到就換掉、牌子收起來。
+   規則（都是為了「看到的東西不會錯」）：
+   · 只用**今天**記的那一份（換日就不用：今天的課表、週次都會不一樣）。
+   · 有設管理通行碼就**不用**：通行碼是擋「拿到這台手機的人」，先秀出資料等於繞過它。
+   · 新資料到之前，任何「存」的動作都先排隊（call() 等 BOOT_FRESH），新資料一到才送——不會拿舊資料去存。
+   · 快速記錄如果還沒動過（沒有草稿），新資料到了就照新資料重選一次；動過就保留他按的。
+   · 新資料抓失敗：通行碼過期就照原本的流程問通行碼（先把畫面收起來）；其他錯誤留著舊畫面＋改成「⚠️ 沒連上」。
+   ⚠️ 只在 GitHub Pages 版（API_URL）和本機預覽做；Apps Script 舊版不做。 */
+var BOOT_LS = 'tpBootCache', STALE = false, BOOT_FRESH = null, _bootFreshOk = null;
+function localYmd() {
+  var d = new Date();
+  return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+}
+function bootCacheSave() {
+  if (!(window.API_URL || window.__MOCK__) || !S || STALE) return;
+  clearTimeout(bootCacheSave.t);
+  bootCacheSave.t = setTimeout(function () {
+    try {
+      if (S.pass && S.pass.on) return localStorage.removeItem(BOOT_LS);
+      localStorage.setItem(BOOT_LS, JSON.stringify({ day: localYmd(), d: S }));
+    } catch (e) { try { localStorage.removeItem(BOOT_LS); } catch (x) {} }   /* 太大存不下就不存 */
+  }, 1200);
+}
+function bootCacheRead() {
+  if (!(window.API_URL || window.__MOCK__)) return null;
+  try {
+    var o = JSON.parse(localStorage.getItem(BOOT_LS) || 'null');
+    if (!o || !o.d || o.day !== localYmd()) return null;
+    if (o.d.pass && o.d.pass.on) return null;
+    if (o.d.today && o.d.today !== localYmd()) return null;
+    return o.d;
+  } catch (e) { return null; }
+}
+function showApp() {
+  $('boot').style.display = 'none';
+  $('boot').className = 'loading';
+  $('app').style.display = '';
+  drawTop();
+  drawNav();
+  render();
+}
+
 function boot(week) {
+  /* 先用上次的資料畫（只有第一次開頁、看本週時） */
+  if (!week && !S && !boot.cached) {
+    var cached = bootCacheRead();
+    if (cached) {
+      boot.cached = true;
+      S = cached; STALE = true;
+      BOOT_FRESH = new Promise(function (ok) { _bootFreshOk = ok; });
+      document.documentElement.classList.add('stale');
+      showApp();
+    }
+  }
   /* 第一次開頁：網頁最上面已經先把這一包要了（window.__BOOT__，GitHub Pages 版才有，
      見 tools/make_web.py 的 PREFETCH），跟下載網頁同時跑。
      那一份失敗（通行碼過期、網路斷）就照原本的路再問一次，錯誤處理全部走下面同一套。 */
@@ -3766,13 +3847,24 @@ function boot(week) {
   window.__BOOT__ = null;
   (pre ? pre.then(null, function () { return call('apiBootstrap', ''); })
        : call('apiBootstrap', week || '')).then(function (data) {
+    var wasStale = STALE;
     S = data;
-    $('boot').style.display = 'none';
-    $('boot').className = 'loading';
-    $('app').style.display = '';
-    drawTop();
-    drawNav();
-    render();
+    if (wasStale) {
+      STALE = false;
+      document.documentElement.classList.remove('stale');
+      /* 快速記錄還沒動過就照新資料重選（班級、單元、狀態都可能變了）；動過就保留，只補上新的紀錄編號 */
+      if (UI.quick) {
+        if (!draftRead()) UI.quick.loaded = '';
+        else { var p0 = progOf(UI.quick.cls, UI.quick.unitId); UI.quick.prgId = p0 ? p0.id : ''; }
+      }
+      var y = window.scrollY;
+      drawTop(); drawNav(); render();
+      window.scrollTo(0, y);                         /* 換新資料不要把他捲的位置跳回最上面 */
+      if (_bootFreshOk) { _bootFreshOk(); _bootFreshOk = null; }
+    } else {
+      showApp();
+    }
+    bootCacheSave();
     /* 每週自動備份：畫面先出來，再在背景問一聲（一週才真的做一次）。
        ⚠️ 失敗不吵——結果寫在系統設定的「系統狀態」裡。 */
     if (!boot.bk) { boot.bk = true; call('apiMaybeBackup').catch(function () {}); }
@@ -3783,6 +3875,17 @@ function boot(week) {
     if (!boot.cr) { boot.cr = true; camResume(); }     /* 📷 相機壞掉、重新載入回來的那一次 */
     if (!boot.sh && !isArchived()) { boot.sh = true; setTimeout(function () { showLinksRefresh().catch(function () {}); }, 2500); }
   }).catch(function (e) {
+    if (STALE && !isLocked(e)) {                     /* 舊畫面留著，牌子改成沒連上；排隊的存檔一起報錯 */
+      $('staleTag').textContent = '⚠️ 沒連上，顯示的是今天稍早的資料';
+      if (_bootFreshOk) { _bootFreshOk(e); _bootFreshOk = null; }
+      return;
+    }
+    if (STALE) {                                     /* 通行碼過期：舊畫面收起來，照原本的流程 */
+      STALE = false; S = null; boot.cached = false;
+      document.documentElement.classList.remove('stale');
+      $('app').style.display = 'none';
+      if (_bootFreshOk) { _bootFreshOk(e); _bootFreshOk = null; }
+    }
     if (isLocked(e)) return askPass(function () { boot(week); });
     $('boot').style.display = '';
     $('boot').className = 'loading';
@@ -3882,18 +3985,67 @@ function drawNav() {
   fitNav();
   applyTint();
   Array.prototype.forEach.call($('nav').querySelectorAll('a'), function (a) {
-    a.onclick = function (ev) { ev.preventDefault(); go(a.dataset.p); };
+    a.onclick = function (ev) { ev.preventDefault(); go(a.dataset.p, true); };
   });
 }
 
-function go(id) {
+/* 換頁（2026-11-24 手機優化）：淡入一下；從導覽列切回首頁／教學進度，回到上次捲到的位置
+   （快速記錄一律從最上面開始——那一頁是「現在要記哪一班」）。 */
+var PG_Y = {};
+function go(id, keepY, dir) {
   id = fallbackPage(id);
+  if (PAGE) PG_Y[PAGE] = window.scrollY || 0;
+  var same = PAGE === id;
   PAGE = id;
   location.hash = id;
   drawNav();
   render();
-  window.scrollTo(0, 0);
+  window.scrollTo(0, keepY && id !== 'quick' ? (PG_Y[id] || 0) : 0);
+  if (!same) {
+    var v = $('views');
+    /* dir：左右滑動換頁時，新的一頁從滑過來的那一邊進來 */
+    v.style.setProperty('--pgx', dir ? (dir > 0 ? '28px' : '-28px') : '0px');
+    v.style.setProperty('--pgy', dir ? '0px' : '6px');
+    v.classList.remove('pg-in'); void v.offsetWidth; v.classList.add('pg-in');
+  }
 }
+
+/* 手機：左右滑動換頁（2026-11-24 手機優化）。往左滑＝下一頁、往右滑＝上一頁，只在導覽列那幾頁之間。
+   不會觸發的情況（避免誤觸）：
+   · 從螢幕最左／右 28px 起滑（那是 iPhone 的「返回」手勢）
+   · 手指在可以左右捲的東西上（照片列、班級列……）、在輸入框裡
+   · 彈窗、相機開著
+   · 滑得不夠遠（< 70px）、太慢（> 0.6 秒）、或比較像上下捲（橫向沒有直向的兩倍） */
+(function swipeNav() {
+  var sx = 0, sy = 0, st = 0, ok = false;
+  document.addEventListener('touchstart', function (e) {
+    ok = false;
+    if (!PHONE || !S || e.touches.length !== 1) return;
+    var t = e.touches[0];
+    if (t.clientX < 28 || t.clientX > window.innerWidth - 28) return;
+    if (($('mask') && /\bon\b/.test($('mask').className)) || $('cam')) return;
+    var tg = e.target;
+    if (!tg || !tg.closest || tg.closest('input, textarea, select, [contenteditable], [data-noswipe]')) return;
+    for (var n = tg; n && n !== document.body; n = n.parentElement) {
+      if (n.scrollWidth > n.clientWidth + 4) {
+        var ox = getComputedStyle(n).overflowX;
+        if (ox === 'auto' || ox === 'scroll') return;
+      }
+    }
+    sx = t.clientX; sy = t.clientY; st = Date.now(); ok = true;
+  }, { passive: true });
+  document.addEventListener('touchend', function (e) {
+    if (!ok) return;
+    ok = false;
+    var t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+    if (Date.now() - st > 600 || Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 2) return;
+    var ps = navPages().map(function (p) { return p.id; }), i = ps.indexOf(PAGE);
+    if (i < 0) return;
+    var j = i + (dx < 0 ? 1 : -1);
+    if (j < 0 || j >= ps.length) return;
+    go(ps[j], true, dx < 0 ? 1 : -1);
+  }, { passive: true });
+})();
 
 /* 重新載入整包資料後再畫一次 */
 function refresh(data, msg, again) {
@@ -3915,6 +4067,7 @@ function refresh(data, msg, again) {
   drawTop();
   render();
   if (msg) toast(msg);
+  if (data) bootCacheSave();
 }
 
 function render() {
