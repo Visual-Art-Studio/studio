@@ -3144,7 +3144,7 @@ h3 .ci, summary .ci{width:1.2em; height:1.2em; vertical-align:-.25em}
 /* 這一支檔案（畫面）自己的版本。
    Code.gs 的 APP_VER 只認得伺服器那一支——只貼 Index.html、沒動 Code.gs 的時候，
    光看那個對不出來有沒有貼成功。系統設定頁會把兩個版本一起列出來。 */
-var UI_VER = '2026-11-24a';
+var UI_VER = '2026-11-24b';
 
 var S = null;
 var PAGE = 'home';
@@ -5339,6 +5339,16 @@ function okToDropProgress(cls, unitId, prgId, status) {
     '要刪掉 ' + cls + ' 班「' + name + '」的進度紀錄嗎？');
 }
 
+/* ⚡ 存完課堂紀錄，後台回的是「有變的那四份」（part）就套在現有資料上；
+   舊版後台回整包（data）就照舊用整包（2026-11-24 儲存加速，見 Code.gs 的 classRecordPart_）。 */
+function recordData(r) {
+  if (r.data) return r.data;
+  var d = {};
+  for (var k in S) d[k] = S[k];
+  for (var j in (r.part || {})) d[j] = r.part[j];
+  return d;
+}
+
 function saveQuick() {
   var q = UI.quick;
   if (!q.unitId) return Promise.reject(new Error('請先選一個單元。'));
@@ -5346,11 +5356,11 @@ function saveQuick() {
   return call('apiSaveClassRecord', {
     cls: q.cls, unitId: q.unitId, status: q.status,
     date: S.today, note: q.note, period: q.period,
-    week: weekOfDate(S.today), seats: q.seats.join(',')
+    week: weekOfDate(S.today), seats: q.seats.join(','), lite: true
   }).then(function (r) {
     q.prgId = r.prgId;
     draftClear();            /* 存進去了，草稿就不用留了 */
-    return r.data;
+    return recordData(r);
   });
 }
 
@@ -7042,10 +7052,10 @@ function saveCheck(status) {
        回傳 Promise，「還沒存就先按拍照」那條路才接得上。 */
     return call('apiSaveClassRecord', { cls:c.cls, unitId:c.unitId, status:status,
                                  date:c.date, note:c.note, period:c.period,
-                                 week:weekOfDate(c.date), seats:c.seats })
+                                 week:weekOfDate(c.date), seats:c.seats, lite:true })
       .then(function (r) {
         c.prgId = r.prgId;
-        return r.data;
+        return recordData(r);
       })
       .then(function (d) {
         refresh(d, '已儲存 ' + c.cls + ' 班的紀錄' + (status === 'done' ? '，單元標記為完成' : ''));
