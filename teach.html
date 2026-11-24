@@ -1493,6 +1493,7 @@ textarea{min-height:92px; resize:vertical; line-height:1.7}
   background:#2b3a33; color:#fff; padding:12px 22px; border-radius:12px;
   box-shadow:0 8px 28px rgba(0,0,0,.28); z-index:200; max-width:88vw;
   font-size:15px; display:none;
+  pointer-events:none;   /* 2026-11-24 實測：手機上它正好疊在「儲存」鈕中間，2.6～6.5 秒內按儲存會被它吃掉，像按了沒反應 */
 }
 .toast.err{background:#98243c}
 .toast.on{display:block}
@@ -1633,6 +1634,11 @@ html.busy .loadbar{opacity:1}
 /* 觸控裝置（手機、平板）：彈窗後面和提示泡泡不做毛玻璃、背景不固定（2026-11-24 手機優化）。
    共用規則：fixed 背景＋backdrop-filter 在 iPhone 會吃光記憶體、黑屏；而且每捲一格都要重算模糊。
    ⚠️ 用 !important：studio.css 在後面又寫了 body 的 fixed 背景。 */
+/* 手機：提示泡泡挪到底部儲存列的上面，不蓋住「儲存」鈕的字 */
+@media (max-width:600px), (max-height:520px) and (max-width:1024px){
+  .toast{ bottom:calc(100px + env(safe-area-inset-bottom)); }
+  .stale-tag{ bottom:calc(160px + env(safe-area-inset-bottom)) !important; }
+}
 @media (hover:none) and (pointer:coarse){
   .mask, .toast{ -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
   body{ background-attachment:scroll !important; }
@@ -4091,7 +4097,7 @@ body.stu-tall .stu-week .tt thead th span:not(.wd):not(.dt), body.stu-tall .stu-
 /* 這一支檔案（畫面）自己的版本。
    Code.gs 的 APP_VER 只認得伺服器那一支——只貼 Index.html、沒動 Code.gs 的時候，
    光看那個對不出來有沒有貼成功。系統設定頁會把兩個版本一起列出來。 */
-var UI_VER = '2026-11-24b';
+var UI_VER = '2026-11-24c';
 
 var S = null;
 var PAGE = 'home';
